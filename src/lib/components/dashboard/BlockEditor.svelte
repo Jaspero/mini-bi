@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
-  import type { Block } from '../../types/index.js';
+  import type { Block, ChartType } from '../../types/index.js';
 
   export let block: Block | null = null;
   export let isOpen = false;
@@ -12,7 +12,7 @@
 
   let editedBlock: Block | null = null;
   let editorInstance: any = null;
-  let editorElement: HTMLElement;
+  let editorElement: HTMLTextAreaElement;
   let ckeditorLoaded = false;
   let ckeditorError = false;
 
@@ -39,7 +39,8 @@
 
     try {
       // Dynamically import CKEditor 5 Classic Build
-      const { default: ClassicEditor } = await import('@ckeditor/ckeditor5-build-classic');
+      const CKEditorModule = await import('@ckeditor/ckeditor5-build-classic');
+      const ClassicEditor = CKEditorModule.default;
       
       if (editorElement && !editorInstance) {
         // Set initial content in the textarea before CKEditor initialization
@@ -48,7 +49,7 @@
           editorElement.value = content;
         }
 
-        editorInstance = await ClassicEditor.create(editorElement, {
+        editorInstance = await (ClassicEditor as any).create(editorElement, {
           toolbar: {
             items: [
               'undo', 'redo',
@@ -193,6 +194,22 @@
           </div>
         </div>
 
+        {#if editedBlock.type === 'graph'}
+          <div class="form-group">
+            <label for="chart-type">Chart Type</label>
+            <select id="chart-type" bind:value={(editedBlock.config as any).chartType}>
+              <option value="bar">Bar Chart</option>
+              <option value="line">Line Chart</option>
+              <option value="pie">Pie Chart</option>
+              <option value="area">Area Chart</option>
+              <option value="scatter">Scatter Plot</option>
+              <option value="donut">Donut Chart</option>
+              <option value="gauge">Gauge Chart</option>
+              <option value="heatmap">Heatmap</option>
+            </select>
+          </div>
+        {/if}
+
         {#if editedBlock.type === 'text'}
           <div class="form-group">
             <label for="text-content">Content</label>
@@ -307,7 +324,8 @@
   }
 
   .form-group input,
-  .form-group textarea {
+  .form-group textarea,
+  .form-group select {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid #d1d5db;
@@ -318,7 +336,8 @@
   }
 
   .form-group input:focus,
-  .form-group textarea:focus {
+  .form-group textarea:focus,
+  .form-group select:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 1px #3b82f6;
