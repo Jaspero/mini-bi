@@ -120,19 +120,6 @@ export class MockDashboardService implements IDashboardService {
           } as any
         }
       ],
-      queries: [
-        {
-          id: 'sales-query',
-          name: 'Monthly Sales Data',
-          description: 'Retrieves monthly sales and target data',
-          sql: 'SELECT month, sales, target FROM monthly_sales ORDER BY month',
-          parameters: [],
-          created: new Date('2024-01-15'),
-          lastModified: new Date('2024-06-01'),
-          lastExecuted: new Date('2024-06-01'),
-          isActive: true
-        }
-      ],
       variables: {
         companyName: 'Acme Corp',
         currentQuarter: 'Q2 2024'
@@ -209,20 +196,55 @@ export class MockDashboardService implements IDashboardService {
             }
           } as any
         }
-      ],
-      queries: [
-        {
-          id: 'campaign-query',
-          name: 'Campaign Performance Data',
-          description: 'Retrieves campaign performance metrics',
-          sql: 'SELECT campaign_name, impressions, clicks FROM campaign_stats ORDER BY campaign_name',
-          parameters: [],
-          created: new Date('2024-02-20'),
-          lastModified: new Date('2024-05-15'),
-          lastExecuted: new Date('2024-05-15'),
-          isActive: true
-        }
       ]
+    }
+  ];
+
+  // Global queries storage
+  private globalQueries: Query[] = [
+    {
+      id: 'sales-query',
+      name: 'Monthly Sales Data',
+      description: 'Retrieves monthly sales and target data',
+      sql: 'SELECT month, sales, target FROM monthly_sales ORDER BY month',
+      parameters: [],
+      created: new Date('2024-01-15'),
+      lastModified: new Date('2024-06-01'),
+      lastExecuted: new Date('2024-06-01'),
+      isActive: true
+    },
+    {
+      id: 'campaign-query',
+      name: 'Campaign Performance Data',
+      description: 'Retrieves campaign performance metrics',
+      sql: 'SELECT campaign_name, impressions, clicks FROM campaign_stats ORDER BY campaign_name',
+      parameters: [],
+      created: new Date('2024-02-20'),
+      lastModified: new Date('2024-05-15'),
+      lastExecuted: new Date('2024-05-15'),
+      isActive: true
+    },
+    {
+      id: 'user-growth-query',
+      name: 'User Growth Analytics',
+      description: 'Monthly user registration and churn data',
+      sql: 'SELECT month, new_users, churned_users FROM user_analytics ORDER BY month',
+      parameters: [],
+      created: new Date('2024-02-01'),
+      lastModified: new Date('2024-05-15'),
+      lastExecuted: new Date('2024-05-15'),
+      isActive: true
+    },
+    {
+      id: 'revenue-query',
+      name: 'Revenue Breakdown',
+      description: 'Revenue by product category',
+      sql: 'SELECT category, revenue, profit_margin FROM revenue_breakdown ORDER BY revenue DESC',
+      parameters: [],
+      created: new Date('2024-03-10'),
+      lastModified: new Date('2024-05-20'),
+      lastExecuted: new Date('2024-05-20'),
+      isActive: true
     }
   ];
 
@@ -261,7 +283,6 @@ export class MockDashboardService implements IDashboardService {
       lastModified: new Date(),
       layout: request.layout,
       blocks: request.blocks || [],
-      queries: request.queries || [],
       variables: request.variables || {}
     };
     
@@ -334,12 +355,8 @@ export class MockDashboardService implements IDashboardService {
   async executeQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult> {
     await this.delay(300);
     
-    // Find the query in all dashboards
-    let query: Query | undefined;
-    for (const dashboard of this.dashboards) {
-      query = dashboard.queries?.find(q => q.id === queryId);
-      if (query) break;
-    }
+    // Find the query in global queries
+    const query = this.globalQueries.find(q => q.id === queryId);
     
     if (!query) {
       throw new Error(`Query with id ${queryId} not found`);
@@ -535,5 +552,50 @@ export class MockDashboardService implements IDashboardService {
 
   private generateId(): string {
     return Math.random().toString(36).substr(2, 9);
+  }
+
+  // Global Query Management Methods
+  async loadGlobalQueries(): Promise<Query[]> {
+    return [...this.globalQueries];
+  }
+
+  async saveGlobalQuery(query: Omit<Query, 'id' | 'created'>): Promise<Query> {
+    const newQuery: Query = {
+      ...query,
+      id: `query-${Date.now()}`,
+      created: new Date(),
+      lastModified: new Date()
+    };
+    
+    this.globalQueries.push(newQuery);
+    return newQuery;
+  }
+
+  async updateGlobalQuery(queryId: string, updates: Partial<Query>): Promise<Query> {
+    const queryIndex = this.globalQueries.findIndex(q => q.id === queryId);
+    if (queryIndex === -1) {
+      throw new Error(`Query with id ${queryId} not found`);
+    }
+    
+    this.globalQueries[queryIndex] = {
+      ...this.globalQueries[queryIndex],
+      ...updates,
+      lastModified: new Date()
+    };
+    
+    return this.globalQueries[queryIndex];
+  }
+
+  async deleteGlobalQuery(queryId: string): Promise<void> {
+    const queryIndex = this.globalQueries.findIndex(q => q.id === queryId);
+    if (queryIndex === -1) {
+      throw new Error(`Query with id ${queryId} not found`);
+    }
+    
+    this.globalQueries.splice(queryIndex, 1);
+  }
+
+  async getGlobalQuery(queryId: string): Promise<Query | null> {
+    return this.globalQueries.find(q => q.id === queryId) || null;
   }
 }

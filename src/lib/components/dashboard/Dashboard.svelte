@@ -3,10 +3,10 @@
   import type { Dashboard, Block, IDashboardService, BlockConfig, Query } from '../../types/index.js';
   import DashboardCanvas from './DashboardCanvas.svelte';
   import BlockEditor from './BlockEditor.svelte';
-  import QueryManager from './QueryManager.svelte';
 
   export let dashboardId: string | null = null;
   export let dashboardService: IDashboardService;
+  export let queries: Query[] = [];
   export let editable = true;
 
   const dispatch = createEventDispatcher<{
@@ -26,7 +26,6 @@
   let showBlockEditor = false;
   let editMode = true; // true = edit mode (controls visible, no drag/resize), false = move mode (drag/resize enabled, no controls)
   let showAddBlockDropdown = false;
-  let showQueryManager = false;
 
   onMount(async () => {
     if (dashboardId) {
@@ -82,7 +81,6 @@
         gap: 10
       },
       blocks: [],
-      queries: [],
       variables: {}
     };
   }
@@ -101,7 +99,6 @@
           description: dashboard.description,
           layout: dashboard.layout,
           blocks: dashboard.blocks,
-          queries: dashboard.queries,
           variables: dashboard.variables
         });
       } else {
@@ -111,7 +108,6 @@
           description: dashboard.description,
           layout: dashboard.layout,
           blocks: dashboard.blocks,
-          queries: dashboard.queries,
           variables: dashboard.variables
         });
       }
@@ -317,22 +313,6 @@
       }
     }
   }
-
-  function openQueryManager() {
-    showQueryManager = true;
-  }
-
-  function handleQueriesUpdated(event: CustomEvent<{ queries: Query[] }>) {
-    if (dashboard) {
-      dashboard.queries = event.detail.queries;
-      hasUnsavedChanges = true;
-      dispatch('dashboard-updated', { dashboard });
-    }
-  }
-
-  function handleQueryManagerClose() {
-    showQueryManager = false;
-  }
 </script>
 
 <div class="dashboard">
@@ -407,16 +387,6 @@
             {/if}
           </div>
           <button 
-            class="queries-btn"
-            on:click={openQueryManager}
-            aria-label="Manage SQL queries"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            Manage Queries
-          </button>
-          <button 
             class="save-btn" 
             class:saving
             disabled={saving || !hasUnsavedChanges}
@@ -460,6 +430,7 @@
       <DashboardCanvas 
         {dashboard} 
         {dashboardService}
+        {queries}
         editable={editable && !editMode}
         editMode={editable && editMode}
         on:dashboard-updated={handleDashboardUpdated}
@@ -476,18 +447,9 @@
 <BlockEditor 
   block={editingBlock}
   isOpen={showBlockEditor}
-  queries={dashboard?.queries || []}
+  queries={queries}
   on:block-updated={handleBlockEditorSave}
   on:close={handleBlockEditorClose}
-/>
-
-<!-- Query Manager Modal -->
-<QueryManager 
-  queries={dashboard?.queries || []}
-  {dashboardService}
-  isOpen={showQueryManager}
-  on:queries-updated={handleQueriesUpdated}
-  on:close={handleQueryManagerClose}
 />
 
 <style>
@@ -743,25 +705,6 @@
 
   .dropdown-item:not(:last-child) {
     border-bottom: 1px solid #f3f4f6;
-  }
-
-  .queries-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    background: #8b5cf6;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .queries-btn:hover {
-    background: #7c3aed;
   }
 
   .dashboard-content {

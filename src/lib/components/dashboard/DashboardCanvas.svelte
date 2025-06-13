@@ -1,12 +1,13 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
-  import type { Dashboard, Block, Position, Size, IDashboardService } from '../../types/index.js';
+  import type { Dashboard, Block, Position, Size, IDashboardService, Query } from '../../types/index.js';
   import TableBlock from '../blocks/TableBlock.svelte';
   import GraphBlock from '../blocks/GraphBlock.svelte';
   import TextBlock from '../blocks/TextBlock.svelte';
 
   export let dashboard: Dashboard;
   export let dashboardService: IDashboardService;
+  export let queries: Query[] = [];
   export let editable = true;
   export let editMode = false; // Controls whether block edit controls are shown
 

@@ -1,16 +1,20 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { DashboardComponent, DashboardManager, MockDashboardService, type Dashboard } from '$lib';
+  import { DashboardComponent, DashboardManager, GlobalQueryManager, MockDashboardService, type Dashboard, type Query } from '$lib';
 
   let dashboardService = new MockDashboardService();
   let selectedDashboardId: string | null = null;
   let availableDashboards: Dashboard[] = [];
+  let globalQueries: Query[] = [];
   let loading = true;
   let showManager = false;
+  let showQueryManager = false;
 
   onMount(async () => {
-    // Load available dashboards
+    // Load available dashboards and queries
     availableDashboards = await dashboardService.loadDashboards();
+    globalQueries = await dashboardService.loadGlobalQueries();
+    
     // Select the first dashboard by default
     if (availableDashboards.length > 0) {
       selectedDashboardId = availableDashboards[0].id;
@@ -51,8 +55,35 @@
     console.log('Block deleted:', event.detail.blockId);
   }
 
+  // Query management handlers
+  function handleQueryCreated(event: CustomEvent<{ query: Query }>) {
+    globalQueries = [...globalQueries, event.detail.query];
+  }
+
+  function handleQueryUpdated(event: CustomEvent<{ query: Query }>) {
+    const index = globalQueries.findIndex(q => q.id === event.detail.query.id);
+    if (index !== -1) {
+      globalQueries[index] = event.detail.query;
+      globalQueries = [...globalQueries];
+    }
+  }
+
+  function handleQueryDeleted(event: CustomEvent<{ queryId: string }>) {
+    globalQueries = globalQueries.filter(q => q.id !== event.detail.queryId);
+  }
+
   function toggleManager() {
     showManager = !showManager;
+    if (showManager) {
+      showQueryManager = false;
+    }
+  }
+
+  function toggleQueryManager() {
+    showQueryManager = !showQueryManager;
+    if (showQueryManager) {
+      showManager = false;
+    }
   }
 
   function getCurrentDashboardName(): string {
@@ -76,14 +107,24 @@
       <div class="current-dashboard">
         <span class="dashboard-label">Current Dashboard:</span>
         <span class="dashboard-name">{getCurrentDashboardName()}</span>
+        <span class="queries-count">({globalQueries.length} queries available)</span>
       </div>
       
-      <button class="manage-btn" on:click={toggleManager}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-        </svg>
-        {showManager ? 'Close Manager' : 'Manage Dashboards'}
-      </button>
+      <div class="control-buttons">
+        <button class="manage-btn" on:click={toggleQueryManager}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 6H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM4 18V8h16v10H4zm2-8h4v2H6v-2zm6 0h8v2h-8v-2zm-6 4h4v2H6v-2zm6 0h8v2h-8v-2z"/>
+          </svg>
+          {showQueryManager ? 'Close Queries' : 'Manage Queries'}
+        </button>
+        
+        <button class="manage-btn" on:click={toggleManager}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+          {showManager ? 'Close Manager' : 'Manage Dashboards'}
+        </button>
+      </div>
     </div>
   </header>
 
@@ -101,10 +142,20 @@
         on:dashboard-created={handleDashboardCreated}
         on:dashboard-deleted={handleDashboardDeleted}
       />
+    {:else if showQueryManager}
+      <GlobalQueryManager
+        {dashboardService}
+        isOpen={showQueryManager}
+        on:close={toggleQueryManager}
+        on:query-created={handleQueryCreated}
+        on:query-updated={handleQueryUpdated}
+        on:query-deleted={handleQueryDeleted}
+      />
     {:else}
       <DashboardComponent
         dashboardId={selectedDashboardId}
         {dashboardService}
+        queries={globalQueries}
         editable={true}
         on:dashboard-loaded={handleDashboardLoaded}
         on:dashboard-updated={handleDashboardUpdated}
@@ -153,11 +204,21 @@
     margin-top: 1rem;
   }
 
+  .control-buttons {
+    display: flex;
+    gap: 1rem;
+  }
+
   .current-dashboard {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 1rem;
+  }
+
+  .queries-count {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    font-style: italic;
   }
 
   .dashboard-label {

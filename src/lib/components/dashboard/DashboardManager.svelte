@@ -55,6 +55,13 @@
     newDashboardDescription = '';
   }
 
+  function handleOverlayClick(event: Event) {
+    // Only close if clicking the overlay itself, not its contents
+    if (event.target === event.currentTarget) {
+      cancelCreate();
+    }
+  }
+
   async function createDashboard() {
     if (!newDashboardName.trim()) {
       error = 'Dashboard name is required';
@@ -142,81 +149,103 @@
     </div>
   {/if}
 
+  <!-- Dashboard Creation Modal -->
   {#if showCreateForm}
-    <div class="create-form">
-      <h3>Create New Dashboard</h3>
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="dashboard-name">Dashboard Name *</label>
-          <input 
-            id="dashboard-name"
-            type="text" 
-            bind:value={newDashboardName} 
-            placeholder="Enter dashboard name"
-            maxlength="100"
-          />
-        </div>
+    <div class="modal-overlay" on:click={handleOverlayClick} on:keydown={handleOverlayClick} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content" role="document">
+        <header class="modal-header">
+          <h2>Create New Dashboard</h2>
+          <button class="close-btn" on:click={cancelCreate} aria-label="Close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+            </svg>
+          </button>
+        </header>
 
-        <div class="form-group">
-          <label for="dashboard-description">Description</label>
-          <textarea 
-            id="dashboard-description"
-            bind:value={newDashboardDescription} 
-            placeholder="Optional description"
-            rows="3"
-            maxlength="500"
-          ></textarea>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="grid-size">Grid Size (px)</label>
-            <input 
-              id="grid-size"
-              type="number" 
-              bind:value={gridSize} 
-              min="20" 
-              max="200" 
-              step="10"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="columns">Columns</label>
-            <input 
-              id="columns"
-              type="number" 
-              bind:value={columns} 
-              min="6" 
-              max="50"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="rows">Rows</label>
-            <input 
-              id="rows"
-              type="number" 
-              bind:value={rows} 
-              min="6" 
-              max="30"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <button class="cancel-btn" on:click={cancelCreate} disabled={creating}>
-          Cancel
-        </button>
-        <button class="submit-btn" on:click={createDashboard} disabled={creating}>
-          {#if creating}
-            <div class="spinner"></div>
-            Creating...
-          {:else}
-            Create Dashboard
+        <div class="modal-body">
+          {#if error}
+            <div class="error-message">{error}</div>
           {/if}
-        </button>
+
+          <div class="form-content">
+            <div class="form-group">
+              <label for="dashboard-name">Dashboard Name *</label>
+              <input 
+                id="dashboard-name"
+                type="text" 
+                bind:value={newDashboardName} 
+                placeholder="Enter dashboard name"
+                maxlength="100"
+                disabled={creating}
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="dashboard-description">Description</label>
+              <textarea 
+                id="dashboard-description"
+                bind:value={newDashboardDescription} 
+                placeholder="Optional description"
+                rows="3"
+                maxlength="500"
+                disabled={creating}
+              ></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="grid-size">Grid Size (px)</label>
+                <input 
+                  id="grid-size"
+                  type="number" 
+                  bind:value={gridSize} 
+                  min="20" 
+                  max="200" 
+                  step="10"
+                  disabled={creating}
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="columns">Columns</label>
+                <input 
+                  id="columns"
+                  type="number" 
+                  bind:value={columns} 
+                  min="6" 
+                  max="50"
+                  disabled={creating}
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="rows">Rows</label>
+                <input 
+                  id="rows"
+                  type="number" 
+                  bind:value={rows} 
+                  min="6" 
+                  max="30"
+                  disabled={creating}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-footer">
+          <button class="cancel-btn" on:click={cancelCreate} disabled={creating}>
+            Cancel
+          </button>
+          <button class="submit-btn" on:click={createDashboard} disabled={creating}>
+            {#if creating}
+              <div class="spinner"></div>
+              Creating...
+            {:else}
+              Create Dashboard
+            {/if}
+          </button>
+        </div>
       </div>
     </div>
   {/if}
@@ -338,14 +367,11 @@
   }
 
   .error-message {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
     background: #fef2f2;
     border: 1px solid #fecaca;
     border-radius: 6px;
     color: #dc2626;
+    padding: 12px 16px;
     margin-bottom: 16px;
   }
 
@@ -360,36 +386,95 @@
     height: 24px;
   }
 
-  .create-form {
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+
+  .modal-content {
     background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
-  .create-form h3 {
-    margin: 0 0 20px 0;
-    font-size: 18px;
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+    flex-shrink: 0;
+  }
+
+  .modal-header h2 {
+    margin: 0;
+    color: #111827;
+    font-size: 1.5rem;
     font-weight: 600;
-    color: #1f2937;
   }
 
-  .form-grid {
-    display: grid;
+  .close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .close-btn:hover {
+    color: #374151;
+    background: #e5e7eb;
+  }
+
+  .modal-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 24px;
+  }
+
+  .form-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     gap: 16px;
   }
 
-  .form-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 16px;
+  .form-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-shrink: 0;
   }
 
   .form-group {
     display: flex;
     flex-direction: column;
+    margin-bottom: 16px;
   }
 
   .form-group label {
@@ -401,9 +486,10 @@
 
   .form-group input,
   .form-group textarea {
+    width: 100%;
     padding: 8px 12px;
     border: 1px solid #d1d5db;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 14px;
     transition: border-color 0.2s;
   }
@@ -412,53 +498,53 @@
   .form-group textarea:focus {
     outline: none;
     border-color: #3b82f6;
-    box-shadow: 0 0 0 1px #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 20px;
+  .form-group textarea {
+    resize: vertical;
   }
 
-  .cancel-btn {
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+  }
+
+  .cancel-btn, .submit-btn {
     padding: 8px 16px;
-    background: white;
-    color: #374151;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
   }
 
+  .cancel-btn {
+    background: #6b7280;
+    color: white;
+    border: none;
+  }
+
   .cancel-btn:hover:not(:disabled) {
-    background: #f3f4f6;
-    border-color: #9ca3af;
+    background: #4b5563;
   }
 
   .submit-btn {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
     background: #3b82f6;
     color: white;
     border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
   }
 
   .submit-btn:hover:not(:disabled) {
     background: #2563eb;
   }
 
-  .submit-btn:disabled {
-    background: #9ca3af;
+  .cancel-btn:disabled, .submit-btn:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
@@ -617,5 +703,24 @@
 
   .block-count {
     font-weight: 500;
+  }
+
+  @media (max-width: 768px) {
+    .modal-content {
+      max-width: 95vw;
+      max-height: 90vh;
+    }
+    
+    .form-footer {
+      flex-direction: column;
+    }
+    
+    .cancel-btn, .submit-btn {
+      width: 100%;
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

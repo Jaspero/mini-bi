@@ -778,6 +778,7 @@
     padding: 20px 24px;
     border-top: 1px solid #e5e7eb;
     background: #f9fafb;
+    flex-shrink: 0;
   }
 
   .btn-cancel, .btn-save {

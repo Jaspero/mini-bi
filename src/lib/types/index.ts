@@ -23,7 +23,6 @@ export interface Dashboard {
   lastModified: Date;
   layout: DashboardLayout;
   blocks: Block[];
-  queries: Query[];
   variables?: Record<string, any>;
 }
 
@@ -196,7 +195,6 @@ export interface CreateDashboardRequest {
   description?: string;
   layout: DashboardLayout;
   blocks?: Block[];
-  queries?: Query[];
   variables?: Record<string, any>;
 }
 
@@ -205,7 +203,6 @@ export interface UpdateDashboardRequest {
   description?: string;
   layout?: DashboardLayout;
   blocks?: Block[];
-  queries?: Query[];
   variables?: Record<string, any>;
 }
 
@@ -227,12 +224,19 @@ export interface IDashboardService {
   deleteDashboard(id: string): Promise<void>;
   
   // Block data operations
-  loadBlockData(blockId: string, blockType: BlockType, config: BlockConfig): Promise<BlockData>;
+  loadBlockData(blockId: string, blockType: BlockType, config: BlockConfig, dataSource?: DataSourceConfig): Promise<BlockData>;
   
   // Query operations
   executeQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult>;
   validateQuery(sql: string): Promise<{ isValid: boolean; error?: string }>;
   getQueryPreview(sql: string, limit?: number): Promise<QueryResult>;
+  
+  // Global Query Management
+  loadGlobalQueries(): Promise<Query[]>;
+  saveGlobalQuery(query: Omit<Query, 'id' | 'created'>): Promise<Query>;
+  updateGlobalQuery(queryId: string, updates: Partial<Query>): Promise<Query>;
+  deleteGlobalQuery(queryId: string): Promise<void>;
+  getGlobalQuery(queryId: string): Promise<Query | null>;
 }
 
 // Events

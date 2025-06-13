@@ -21,7 +21,9 @@
   let dataSourceType: 'api' | 'static' | 'mock' | 'query' = 'mock';
   let selectedQueryId: string = '';
 
-  $: if (block && isOpen) {
+  // Initialize editedBlock when modal opens or block changes
+  $: if (block && isOpen && (!editedBlock || editedBlock.id !== block.id)) {
+    console.log('Initializing editedBlock with:', block);
     editedBlock = structuredClone(block);
     
     // Initialize dataSource if it doesn't exist
@@ -35,6 +37,8 @@
     dataSourceType = editedBlock.dataSource.type;
     selectedQueryId = editedBlock.dataSource.queryId || '';
     
+    console.log('editedBlock initialized:', editedBlock);
+    
     ckeditorLoaded = false;
     ckeditorError = false;
     // Initialize CKEditor when opening text block
@@ -43,13 +47,15 @@
     }
   }
 
-  // Sync changes back to editedBlock
-  $: if (editedBlock?.dataSource) {
-    editedBlock.dataSource.type = dataSourceType;
-    if (dataSourceType === 'query') {
-      editedBlock.dataSource.queryId = selectedQueryId;
-    } else {
-      delete editedBlock.dataSource.queryId;
+  // Sync data source changes back to editedBlock when user changes the form
+  function updateDataSource() {
+    if (editedBlock?.dataSource) {
+      editedBlock.dataSource.type = dataSourceType;
+      if (dataSourceType === 'query') {
+        editedBlock.dataSource.queryId = selectedQueryId;
+      } else {
+        delete editedBlock.dataSource.queryId;
+      }
     }
   }
 
@@ -128,6 +134,7 @@
 
   function handleClose() {
     destroyCKEditor();
+    editedBlock = null;
     dispatch('close', {});
   }
 
@@ -184,28 +191,34 @@
             type="text"
             bind:value={editedBlock.title}
             placeholder="Enter block title"
+            on:input={() => console.log('Title changed to:', editedBlock?.title)}
           />
-        </div>
-
-        <div class="form-group">
-          <label for="block-description">Description</label>
-          <textarea
-            id="block-description"
-            bind:value={editedBlock.title}
-            placeholder="Enter block description (optional)"
-            rows="3"
-          ></textarea>
+          <small>Current value: {editedBlock.title}</small>
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label for="block-x">X Position</label>
-            <input id="block-x" type="number" bind:value={editedBlock.position.x} min="0" />
+            <input 
+              id="block-x" 
+              type="number" 
+              bind:value={editedBlock.position.x} 
+              min="0"
+              on:input={() => console.log('X position changed to:', editedBlock?.position.x)}
+            />
+            <small>Current X: {editedBlock.position.x}</small>
           </div>
 
           <div class="form-group">
             <label for="block-y">Y Position</label>
-            <input id="block-y" type="number" bind:value={editedBlock.position.y} min="0" />
+            <input 
+              id="block-y" 
+              type="number" 
+              bind:value={editedBlock.position.y} 
+              min="0"
+              on:input={() => console.log('Y position changed to:', editedBlock?.position.y)}
+            />
+            <small>Current Y: {editedBlock.position.y}</small>
           </div>
         </div>
 
@@ -224,7 +237,7 @@
         {#if editedBlock.type === 'table' || editedBlock.type === 'graph'}
           <div class="form-group">
             <label for="data-source">Data Source</label>
-            <select id="data-source" bind:value={dataSourceType}>
+            <select id="data-source" bind:value={dataSourceType} on:change={updateDataSource}>
               <option value="mock">Mock Data</option>
               <option value="static">Static Data</option>
               <option value="query">SQL Query</option>
@@ -235,7 +248,7 @@
           {#if dataSourceType === 'query'}
             <div class="form-group">
               <label for="query-select">Select Query</label>
-              <select id="query-select" bind:value={selectedQueryId}>
+              <select id="query-select" bind:value={selectedQueryId} on:change={updateDataSource}>
                 <option value="">-- Select a query --</option>
                 {#each queries.filter(q => q.isActive) as query}
                   <option value={query.id}>{query.name}</option>
@@ -443,6 +456,7 @@
     padding: 20px 24px;
     border-top: 1px solid #e5e7eb;
     background: #f9fafb;
+    flex-shrink: 0;
   }
 
   .cancel-btn {
