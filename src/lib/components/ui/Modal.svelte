@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, onDestroy } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 
   export let isOpen = false;
   export let title: string | null = null;
@@ -12,6 +12,8 @@
     close: {};
   }>();
 
+  let modalElement: HTMLDivElement;
+
   // Size variants
   const sizeClasses = {
     small: 'max-w-md',
@@ -20,6 +22,11 @@
     xlarge: 'max-w-6xl',
     full: 'max-w-[95vw]'
   };
+
+  // Focus management and keyboard event handling
+  $: if (isOpen && modalElement) {
+    modalElement.focus();
+  }
 
   // Prevent body scroll when modal is open
   $: if (isOpen) {
@@ -37,25 +44,25 @@
     dispatch('close', {});
   }
 
-  function handleOverlayClick(event: MouseEvent | KeyboardEvent) {
-    if (event.type === 'click' && closeOnOverlayClick) {
-      if (event.target === event.currentTarget) {
-        handleClose();
-      }
-    } else if (event.type === 'keydown' && closeOnEscape) {
-      const keyEvent = event as KeyboardEvent;
-      if (keyEvent.key === 'Escape') {
-        handleClose();
-      }
+  function handleOverlayClick(event: MouseEvent) {
+    if (closeOnOverlayClick && event.target === event.currentTarget) {
+      handleClose();
+    }
+  }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (closeOnEscape && event.key === 'Escape') {
+      handleClose();
     }
   }
 </script>
 
 {#if isOpen}
   <div
+    bind:this={modalElement}
     class="fixed inset-0 bg-transparent backdrop-blur-md flex items-center justify-center p-4 z-50"
     on:click={handleOverlayClick}
-    on:keydown={handleOverlayClick}
+    on:keydown={handleKeyDown}
     role="dialog"
     aria-modal="true"
     tabindex="-1"

@@ -6,9 +6,10 @@ A reusable modal dialog component with transparent backdrop and scroll preventio
 
 - ✅ **Transparent backdrop** with blur effect (`bg-transparent backdrop-blur-md`)
 - ✅ **Automatic scroll prevention** when modal is open
+- ✅ **Escape key to close** - Press Escape to close any modal
 - ✅ **Customizable sizes**: small, medium, large, xlarge, full
 - ✅ **Flexible slots**: header, content, footer
-- ✅ **Keyboard navigation** (Escape key to close)
+- ✅ **Auto-focus management** - Modal receives focus when opened
 - ✅ **Click outside to close** (optional)
 - ✅ **ARIA accessibility** attributes
 - ✅ **TypeScript support**

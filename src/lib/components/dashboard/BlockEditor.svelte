@@ -179,12 +179,6 @@
       handleClose();
     }
   }
-
-  function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      handleClose();
-    }
-  }
 </script>
 
 {#if editedBlock}
