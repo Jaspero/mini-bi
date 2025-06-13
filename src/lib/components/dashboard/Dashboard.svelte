@@ -315,118 +315,133 @@
   }
 </script>
 
-<div class="dashboard">
+<div class="min-h-screen bg-gray-50">
   {#if loading}
-    <div class="dashboard-loading">
-      <div class="loading-spinner"></div>
-      <p>Loading dashboard...</p>
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading dashboard...</p>
+      </div>
     </div>
   {:else if error}
-    <div class="dashboard-error">
-      <h2>Error Loading Dashboard</h2>
-      <p>{error}</p>
-      <button class="retry-btn" on:click={refresh}>
-        Try Again
-      </button>
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">
+        <h2 class="text-xl font-semibold text-red-600 mb-4">Error Loading Dashboard</h2>
+        <p class="text-gray-600 mb-6">{error}</p>
+        <button class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600" on:click={refresh}>
+          Try Again
+        </button>
+      </div>
     </div>
   {:else if dashboard}
-    <div class="dashboard-header">
-      <div class="dashboard-info">
-        <h1 class="dashboard-title">{dashboard.name}</h1>
-        {#if dashboard.description}
-          <p class="dashboard-description">{dashboard.description}</p>
-        {/if}
-      </div>
-      
-      {#if editable}
-        <div class="dashboard-actions">
-          {#if hasUnsavedChanges}
-            <span class="unsaved-indicator">Unsaved changes</span>
-          {/if}
-          <div class="add-block-container">
-            <button 
-              class="add-block-btn"
-              on:click={toggleAddBlockDropdown}
-              aria-label="Add new block"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-              </svg>
-              Add Block
-            </button>
-            {#if showAddBlockDropdown}
-              <div class="add-block-dropdown">
-                <button 
-                  class="dropdown-item"
-                  on:click={() => handleAddBlock('table')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h18v2H3v-2zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"/>
-                  </svg>
-                  Table Block
-                </button>
-                <button 
-                  class="dropdown-item"
-                  on:click={() => handleAddBlock('graph')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-                  </svg>
-                  Graph Block
-                </button>
-                <button 
-                  class="dropdown-item"
-                  on:click={() => handleAddBlock('text')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M5 4v3h5.5v12h3V7H19V4H5z"/>
-                  </svg>
-                  Text Block
-                </button>
-              </div>
+    <div class="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex-1">
+            <h1 class="text-2xl font-bold text-gray-900">{dashboard.name}</h1>
+            {#if dashboard.description}
+              <p class="text-gray-600 mt-1">{dashboard.description}</p>
             {/if}
           </div>
-          <button 
-            class="save-btn" 
-            class:saving
-            disabled={saving || !hasUnsavedChanges}
-            on:click={saveDashboard}
-          >
-            {#if saving}
-              <div class="button-spinner"></div>
-              Saving...
-            {:else}
-              Save Dashboard
-            {/if}
-          </button>
-          <button class="refresh-btn" on:click={refresh} aria-label="Refresh dashboard">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
-            </svg>
-          </button>
-          <button 
-            class="mode-toggle-btn" 
-            class:edit-mode={editMode}
-            on:click={toggleEditMode} 
-            aria-label={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
-          >
-            {#if editMode}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM19 20H5V9h14v11z"/>
-              </svg>
-              Move Mode
-            {:else}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41L18.37 3.29a.996.996 0 0 0-1.41 0L15.13 5.12l3.75 3.75 1.83-1.83z"/>
-              </svg>
-              Edit Mode
-            {/if}
-          </button>
+          
+          {#if editable}
+            <div class="flex items-center space-x-4">
+              {#if hasUnsavedChanges}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 001.414 1.414l2.293-2.293 4.293 4.293a1 1 0 001.414-1.414l-5-5z" clip-rule="evenodd" />
+                  </svg>
+                  Unsaved changes
+                </span>
+              {/if}
+              <div class="relative">
+                <button 
+                  class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  on:click={toggleAddBlockDropdown}
+                  aria-label="Add new block"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-2">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                  </svg>
+                  Add Block
+                </button>
+                {#if showAddBlockDropdown}
+                  <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                    <div class="py-1">
+                      <button 
+                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        on:click={() => handleAddBlock('table')}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-3">
+                          <path d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h18v2H3v-2zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"/>
+                        </svg>
+                        Table Block
+                      </button>
+                      <button 
+                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        on:click={() => handleAddBlock('graph')}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-3">
+                          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
+                        Graph Block
+                      </button>
+                      <button 
+                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        on:click={() => handleAddBlock('text')}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-3">
+                          <path d="M5 4v3h5.5v12h3V7H19V4H5z"/>
+                        </svg>
+                        Text Block
+                      </button>
+                    </div>
+                  </div>
+                {/if}
+              </div>
+              <button 
+                class="inline-flex items-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                class:animate-pulse={saving}
+                disabled={saving || !hasUnsavedChanges}
+                on:click={saveDashboard}
+              >
+                {#if saving}
+                  <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                {:else}
+                  Save Dashboard
+                {/if}
+              </button>
+              <button class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md" on:click={refresh} aria-label="Refresh dashboard">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                </svg>
+              </button>
+              <button 
+                class="inline-flex items-center px-3 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600"
+                class:bg-purple-600={editMode}
+                on:click={toggleEditMode} 
+                aria-label={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
+              >
+                {#if editMode}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-2">
+                    <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM19 20H5V9h14v11z"/>
+                  </svg>
+                  Move Mode
+                {:else}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-2">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41L18.37 3.29a.996.996 0 0 0-1.41 0L15.13 5.12l3.75 3.75 1.83-1.83z"/>
+                  </svg>
+                  Edit Mode
+                {/if}
+              </button>
+            </div>
+          {/if}
         </div>
-      {/if}
+      </div>
     </div>
 
-    <div class="dashboard-content">
+    <div class="flex-1 overflow-auto">
       <DashboardCanvas 
         {dashboard} 
         {dashboardService}
@@ -452,264 +467,4 @@
   on:close={handleBlockEditorClose}
 />
 
-<style>
-  .dashboard {
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #f8fafc;
-  }
 
-  .dashboard-loading {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: #6b7280;
-  }
-
-  .loading-spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid #e5e7eb;
-    border-top: 4px solid #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 16px;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  .dashboard-error {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: #dc2626;
-    padding: 40px;
-    text-align: center;
-  }
-
-  .dashboard-error h2 {
-    margin: 0 0 16px 0;
-    font-size: 24px;
-    font-weight: 600;
-  }
-
-  .dashboard-error p {
-    margin: 0 0 24px 0;
-    font-size: 16px;
-    max-width: 500px;
-    line-height: 1.6;
-  }
-
-  .retry-btn {
-    padding: 12px 24px;
-    background: #dc2626;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .retry-btn:hover {
-    background: #b91c1c;
-  }
-
-  .dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 24px 32px;
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .dashboard-info {
-    flex: 1;
-  }
-
-  .dashboard-title {
-    margin: 0 0 8px 0;
-    font-size: 28px;
-    font-weight: 700;
-    color: #1f2937;
-  }
-
-  .dashboard-description {
-    margin: 0;
-    font-size: 16px;
-    color: #6b7280;
-    line-height: 1.5;
-  }
-
-  .dashboard-actions {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .unsaved-indicator {
-    font-size: 14px;
-    color: #f59e0b;
-    font-weight: 500;
-  }
-
-  .save-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .save-btn:hover:not(:disabled) {
-    background: #2563eb;
-  }
-
-  .save-btn:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-  }
-
-  .save-btn.saving {
-    background: #6b7280;
-  }
-
-  .button-spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid transparent;
-    border-top: 2px solid currentColor;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  .refresh-btn {
-    padding: 12px;
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    color: #374151;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .refresh-btn:hover {
-    background: #e5e7eb;
-    border-color: #9ca3af;
-  }
-
-  .mode-toggle-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    color: #374151;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .mode-toggle-btn:hover {
-    background: #e5e7eb;
-    border-color: #9ca3af;
-  }
-
-  .mode-toggle-btn.edit-mode {
-    background: #dcfce7;
-    border-color: #16a34a;
-    color: #15803d;
-  }
-
-  .mode-toggle-btn.edit-mode:hover {
-    background: #bbf7d0;
-    border-color: #059669;
-  }
-
-  .add-block-container {
-    position: relative;
-  }
-
-  .add-block-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    background: #10b981;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .add-block-btn:hover {
-    background: #059669;
-  }
-
-  .add-block-dropdown {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    background: white;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    min-width: 180px;
-    overflow: hidden;
-  }
-
-  .dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 12px 16px;
-    background: white;
-    border: none;
-    color: #374151;
-    font-size: 14px;
-    text-align: left;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .dropdown-item:hover {
-    background: #f3f4f6;
-  }
-
-  .dropdown-item:not(:last-child) {
-    border-bottom: 1px solid #f3f4f6;
-  }
-
-  .dashboard-content {
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-  }
-</style>

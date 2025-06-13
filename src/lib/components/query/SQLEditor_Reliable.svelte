@@ -260,45 +260,45 @@
   }
 </script>
 
-<div class="sql-editor-container">
+<div class="flex h-[500px] border border-gray-300 rounded-md overflow-hidden relative resize-y min-h-[300px] max-h-[80vh]">
   <!-- Schema Panel -->
-  <div class="schema-panel" class:open={showSchema}>
-    <div class="schema-header">
-      <h3>Database Schema</h3>
-      <button class="close-schema-btn" on:click={() => showSchema = false}>×</button>
+  <div class="w-0 overflow-hidden bg-gray-50 border-r border-gray-300 transition-all duration-300 ease-in-out flex-shrink-0" class:!w-[300px]={showSchema}>
+    <div class="flex justify-between items-center p-3 border-b border-gray-300 bg-white">
+      <h3 class="m-0 text-sm font-semibold">Database Schema</h3>
+      <button class="bg-none border-none text-lg cursor-pointer p-1 rounded hover:bg-gray-100" on:click={() => showSchema = false}>×</button>
     </div>
     
-    <div class="schema-content">
+    <div class="overflow-y-auto h-[calc(100%-49px)] p-2">
       <!-- Templates -->
-      <div class="templates-section">
-        <h4>SQL Templates</h4>
+      <div class="mb-4">
+        <h4 class="m-0 mb-2 text-xs font-semibold text-gray-700 uppercase">SQL Templates</h4>
         {#each sqlTemplates as template}
-          <button class="template-item" on:click={() => insertTemplate(template.sql)}>
+          <button class="block w-full p-1.5 bg-blue-500 text-white border-none rounded text-xs cursor-pointer mb-1 text-left hover:bg-blue-600" on:click={() => insertTemplate(template.sql)}>
             {template.name}
           </button>
         {/each}
       </div>
 
       <!-- Tables -->
-      <div class="schema-section">
-        <h4>Tables</h4>
+      <div class="mb-4">
+        <h4 class="m-0 mb-2 text-xs font-semibold text-gray-700 uppercase">Tables</h4>
         {#each mockSchema.tables as table}
-          <div class="table-item">
-            <div class="table-header" on:click={() => selectTable(table)} on:keydown={(e) => e.key === 'Enter' && selectTable(table)} role="button" tabindex="0">
-              <span class="table-name">{table.name}</span>
-              <div class="table-actions">
-                <button on:click|stopPropagation={() => insertTableName(table.name)} title="Insert table">+</button>
-                <button on:click|stopPropagation={() => insertSelectAll(table.name)} title="SELECT *">★</button>
+          <div class="mb-2">
+            <div class="flex items-center justify-between p-2 bg-white border border-gray-300 rounded cursor-pointer hover:border-blue-500" on:click={() => selectTable(table)} on:keydown={(e) => e.key === 'Enter' && selectTable(table)} role="button" tabindex="0">
+              <span class="font-medium text-gray-700 text-sm">{table.name}</span>
+              <div class="flex gap-1">
+                <button class="bg-blue-500 text-white border-none rounded w-5 h-5 text-xs cursor-pointer" on:click|stopPropagation={() => insertTableName(table.name)} title="Insert table">+</button>
+                <button class="bg-blue-500 text-white border-none rounded w-5 h-5 text-xs cursor-pointer" on:click|stopPropagation={() => insertSelectAll(table.name)} title="SELECT *">★</button>
               </div>
             </div>
             
             {#if selectedTable === table}
-              <div class="columns-list">
+              <div class="mt-1 pl-4">
                 {#each table.columns as column}
-                  <div class="column-item" on:click={() => insertColumnName(table.name, column.name)} on:keydown={(e) => e.key === 'Enter' && insertColumnName(table.name, column.name)} role="button" tabindex="0">
-                    <span class="column-name">{column.name}</span>
-                    <span class="column-type">{column.type}</span>
-                    {#if column.primary}<span class="badge">PK</span>{/if}
+                  <div class="flex justify-between items-center p-1 bg-white border border-gray-100 rounded mb-0.5 cursor-pointer text-xs hover:border-blue-500 hover:bg-blue-50" on:click={() => insertColumnName(table.name, column.name)} on:keydown={(e) => e.key === 'Enter' && insertColumnName(table.name, column.name)} role="button" tabindex="0">
+                    <span class="font-medium">{column.name}</span>
+                    <span class="text-gray-500 font-mono text-[10px]">{column.type}</span>
+                    {#if column.primary}<span class="bg-yellow-200 text-yellow-800 text-[9px] px-1 py-0.5 rounded font-semibold">PK</span>{/if}
                   </div>
                 {/each}
               </div>
@@ -310,309 +310,42 @@
   </div>
 
   <!-- Editor Area -->
-  <div class="editor-area">
-    <div class="editor-toolbar">
-      <button class="toolbar-btn" on:click={() => showSchema = !showSchema}>Schema</button>
-      <button class="toolbar-btn" on:click={formatSQL} disabled={!useMonaco}>Format</button>
-      <span class="editor-info">
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex justify-between items-center p-2 bg-gray-50 border-b border-gray-300 gap-2">
+      <button class="bg-blue-500 text-white border-none px-3 py-1.5 rounded text-xs cursor-pointer hover:bg-blue-600" on:click={() => showSchema = !showSchema}>Schema</button>
+      <button class="bg-blue-500 text-white border-none px-3 py-1.5 rounded text-xs cursor-pointer hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed" on:click={formatSQL} disabled={!useMonaco}>Format</button>
+      <span class="text-xs text-gray-500">
         {useMonaco ? 'Monaco SQL Editor' : 'Basic SQL Editor'} • Ctrl+Enter to execute
       </span>
       {#if !useMonaco && initializationAttempts < 3}
-        <button class="toolbar-btn retry" on:click={retryMonaco}>Try Monaco</button>
+        <button class="bg-yellow-500 text-white border-none px-3 py-1.5 rounded text-xs cursor-pointer hover:bg-yellow-600" on:click={retryMonaco}>Try Monaco</button>
       {/if}
     </div>
     
     <!-- Always show textarea (Monaco will overlay when ready) -->
-    <div class="editor-content">
+    <div class="flex-1 relative overflow-hidden">
       <textarea
         bind:this={textareaElement}
         bind:value={value}
         on:input={handleTextareaInput}
         on:keydown={handleKeydown}
         {disabled}
-        class="sql-textarea"
-        class:hidden={useMonaco}
+        class="absolute inset-0 border-none outline-none p-3 font-mono text-sm leading-relaxed resize-none bg-white text-gray-700 focus:outline-none transition-opacity duration-300"
+        class:opacity-0={useMonaco}
+        class:pointer-events-none={useMonaco}
         placeholder="Enter your SQL query here..."
         spellcheck="false"
       ></textarea>
       
       <!-- Monaco container (overlays textarea when ready) -->
       <div 
-        class="monaco-editor" 
-        class:active={useMonaco}
+        class="absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-300"
+        class:!opacity-100={useMonaco}
+        class:!pointer-events-auto={useMonaco}
         bind:this={editorContainer}
       ></div>
     </div>
   </div>
 </div>
 
-<style>
-  .sql-editor-container {
-    display: flex;
-    height: 500px;
-    border: 1px solid #e1e5e9;
-    border-radius: 6px;
-    overflow: hidden;
-    position: relative;
-    resize: vertical;
-    min-height: 300px;
-    max-height: 80vh;
-  }
 
-  .schema-panel {
-    width: 0;
-    overflow: hidden;
-    background: #f8f9fa;
-    border-right: 1px solid #e1e5e9;
-    transition: width 0.3s ease;
-    flex-shrink: 0;
-  }
-
-  .schema-panel.open {
-    width: 300px;
-  }
-
-  .schema-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    border-bottom: 1px solid #e1e5e9;
-    background: #fff;
-  }
-
-  .schema-header h3 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  .close-schema-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-  }
-
-  .close-schema-btn:hover {
-    background: #f3f4f6;
-  }
-
-  .schema-content {
-    overflow-y: auto;
-    height: calc(100% - 49px);
-    padding: 8px;
-  }
-
-  .templates-section, .schema-section {
-    margin-bottom: 16px;
-  }
-
-  .templates-section h4, .schema-section h4 {
-    margin: 0 0 8px 0;
-    font-size: 12px;
-    font-weight: 600;
-    color: #374151;
-    text-transform: uppercase;
-  }
-
-  .template-item {
-    display: block;
-    width: 100%;
-    padding: 6px 8px;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 11px;
-    cursor: pointer;
-    margin-bottom: 4px;
-    text-align: left;
-  }
-
-  .template-item:hover {
-    background: #2563eb;
-  }
-
-  .table-item {
-    margin-bottom: 8px;
-  }
-
-  .table-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px;
-    background: #fff;
-    border: 1px solid #e1e5e9;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .table-header:hover {
-    border-color: #3b82f6;
-  }
-
-  .table-name {
-    font-weight: 500;
-    color: #374151;
-    font-size: 13px;
-  }
-
-  .table-actions {
-    display: flex;
-    gap: 4px;
-  }
-
-  .table-actions button {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    width: 20px;
-    height: 20px;
-    font-size: 11px;
-    cursor: pointer;
-  }
-
-  .columns-list {
-    margin-top: 4px;
-    padding-left: 16px;
-  }
-
-  .column-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 4px 8px;
-    background: #fff;
-    border: 1px solid #f3f4f6;
-    border-radius: 3px;
-    margin-bottom: 2px;
-    cursor: pointer;
-    font-size: 12px;
-  }
-
-  .column-item:hover {
-    border-color: #3b82f6;
-    background: #eff6ff;
-  }
-
-  .column-name {
-    font-weight: 500;
-  }
-
-  .column-type {
-    color: #6b7280;
-    font-family: monospace;
-    font-size: 10px;
-  }
-
-  .badge {
-    background: #fef3c7;
-    color: #d97706;
-    font-size: 9px;
-    padding: 2px 4px;
-    border-radius: 2px;
-    font-weight: 600;
-  }
-
-  .editor-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .editor-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e1e5e9;
-    gap: 8px;
-  }
-
-  .toolbar-btn {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    cursor: pointer;
-  }
-
-  .toolbar-btn:hover:not(:disabled) {
-    background: #2563eb;
-  }
-
-  .toolbar-btn:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-  }
-
-  .toolbar-btn.retry {
-    background: #f59e0b;
-  }
-
-  .toolbar-btn.retry:hover {
-    background: #d97706;
-  }
-
-  .editor-info {
-    font-size: 12px;
-    color: #6b7280;
-  }
-
-  .editor-content {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .sql-textarea {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border: none;
-    outline: none;
-    padding: 12px;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    resize: none;
-    background: #ffffff;
-    color: #374151;
-  }
-
-  .sql-textarea.hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .sql-textarea:focus {
-    outline: none;
-  }
-
-  .monaco-editor {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-  }
-
-  .monaco-editor.active {
-    opacity: 1;
-    pointer-events: all;
-  }
-</style>

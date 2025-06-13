@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import type { Block, ChartType, Query } from '../../types/index.js';
+  import Modal from '../ui/Modal.svelte';
 
   export let block: Block | null = null;
   export let isOpen = false;
@@ -63,8 +64,32 @@
     destroyCKEditor();
   }
 
+  // Sync data source changes back to editedBlock when user changes the form
+  $: if (editedBlock && dataSourceType) {
+    editedBlock.dataSource = {
+      ...editedBlock.dataSource,
+      type: dataSourceType,
+      queryId: selectedQueryId || undefined
+    };
+  }
+
+  // Prevent body scroll when modal is open - now handled by Modal component
+  // $: if (isOpen) {
+  //   document.body.style.overflow = 'hidden';
+  // } else {
+  //   document.body.style.overflow = '';
+  // }
+
   onDestroy(() => {
-    destroyCKEditor();
+    // Cleanup CKEditor - scroll cleanup now handled by Modal component
+    // document.body.style.overflow = '';
+    if (editorInstance) {
+      try {
+        editorInstance.destroy();
+      } catch (error) {
+        console.warn('Error destroying CKEditor:', error);
+      }
+    }
   });
 
   async function initializeCKEditor() {
@@ -162,82 +187,83 @@
   }
 </script>
 
-{#if isOpen && editedBlock}
-  <div
-    class="modal-overlay"
-    on:click={handleOverlayClick}
-    on:keydown={handleKeyDown}
-    role="dialog"
-    aria-modal="true"
-    tabindex="-1"
-  >
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Edit Block</h2>
-        <button class="close-btn" on:click={handleClose} aria-label="Close">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-            />
-          </svg>
-        </button>
-      </div>
+{#if editedBlock}
+<Modal {isOpen} title="Edit Block" size="medium" on:close={handleClose}>
+  <div class="p-6 space-y-6">
+    <div class="space-y-2">
+      <label for="block-title" class="block text-sm font-medium text-gray-700">Title</label>
+      <input
+        id="block-title"
+        type="text"
+        bind:value={editedBlock.title}
+        placeholder="Enter block title"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        on:input={() => console.log('Title changed to:', editedBlock?.title)}
+      />
+      <small class="text-xs text-gray-500">Current value: {editedBlock.title}</small>
+    </div>
 
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="block-title">Title</label>
-          <input
-            id="block-title"
-            type="text"
-            bind:value={editedBlock.title}
-            placeholder="Enter block title"
-            on:input={() => console.log('Title changed to:', editedBlock?.title)}
-          />
-          <small>Current value: {editedBlock.title}</small>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="block-x">X Position</label>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label for="block-x" class="block text-sm font-medium text-gray-700">X Position</label>
             <input 
               id="block-x" 
               type="number" 
               bind:value={editedBlock.position.x} 
               min="0"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               on:input={() => console.log('X position changed to:', editedBlock?.position.x)}
             />
-            <small>Current X: {editedBlock.position.x}</small>
+            <small class="text-xs text-gray-500">Current X: {editedBlock.position.x}</small>
           </div>
 
-          <div class="form-group">
-            <label for="block-y">Y Position</label>
+          <div class="space-y-2">
+            <label for="block-y" class="block text-sm font-medium text-gray-700">Y Position</label>
             <input 
               id="block-y" 
               type="number" 
               bind:value={editedBlock.position.y} 
               min="0"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               on:input={() => console.log('Y position changed to:', editedBlock?.position.y)}
             />
-            <small>Current Y: {editedBlock.position.y}</small>
+            <small class="text-xs text-gray-500">Current Y: {editedBlock.position.y}</small>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="block-width">Width</label>
-            <input id="block-width" type="number" bind:value={editedBlock.size.width} min="1" />
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label for="block-width" class="block text-sm font-medium text-gray-700">Width</label>
+            <input 
+              id="block-width" 
+              type="number" 
+              bind:value={editedBlock.size.width} 
+              min="1" 
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
 
-          <div class="form-group">
-            <label for="block-height">Height</label>
-            <input id="block-height" type="number" bind:value={editedBlock.size.height} min="1" />
+          <div class="space-y-2">
+            <label for="block-height" class="block text-sm font-medium text-gray-700">Height</label>
+            <input 
+              id="block-height" 
+              type="number" 
+              bind:value={editedBlock.size.height} 
+              min="1" 
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
         </div>
 
         {#if editedBlock.type === 'table' || editedBlock.type === 'graph'}
-          <div class="form-group">
-            <label for="data-source">Data Source</label>
-            <select id="data-source" bind:value={dataSourceType} on:change={updateDataSource}>
+          <div class="space-y-2">
+            <label for="data-source" class="block text-sm font-medium text-gray-700">Data Source</label>
+            <select 
+              id="data-source" 
+              bind:value={dataSourceType} 
+              on:change={updateDataSource}
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
               <option value="mock">Mock Data</option>
               <option value="static">Static Data</option>
               <option value="query">SQL Query</option>
@@ -246,25 +272,34 @@
           </div>
 
           {#if dataSourceType === 'query'}
-            <div class="form-group">
-              <label for="query-select">Select Query</label>
-              <select id="query-select" bind:value={selectedQueryId} on:change={updateDataSource}>
+            <div class="space-y-2">
+              <label for="query-select" class="block text-sm font-medium text-gray-700">Select Query</label>
+              <select 
+                id="query-select" 
+                bind:value={selectedQueryId} 
+                on:change={updateDataSource}
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
                 <option value="">-- Select a query --</option>
                 {#each queries.filter(q => q.isActive) as query}
                   <option value={query.id}>{query.name}</option>
                 {/each}
               </select>
               {#if queries.filter(q => q.isActive).length === 0}
-                <p class="help-text">No active queries available. Create queries in the Query Manager.</p>
+                <p class="text-sm text-gray-600">No active queries available. Create queries in the Query Manager.</p>
               {/if}
             </div>
           {/if}
         {/if}
 
         {#if editedBlock.type === 'graph'}
-          <div class="form-group">
-            <label for="chart-type">Chart Type</label>
-            <select id="chart-type" bind:value={(editedBlock.config as any).chartType}>
+          <div class="space-y-2">
+            <label for="chart-type" class="block text-sm font-medium text-gray-700">Chart Type</label>
+            <select 
+              id="chart-type" 
+              bind:value={(editedBlock.config as any).chartType}
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
               <option value="bar">Bar Chart</option>
               <option value="line">Line Chart</option>
               <option value="pie">Pie Chart</option>
@@ -278,8 +313,8 @@
         {/if}
 
         {#if editedBlock.type === 'text'}
-          <div class="form-group">
-            <label for="text-content">Content</label>
+          <div class="space-y-2">
+            <label for="text-content" class="block text-sm font-medium text-gray-700">Content</label>
             {#if ckeditorError}
               <!-- Fallback textarea if CKEditor fails to load -->
               <textarea
@@ -287,13 +322,14 @@
                 bind:value={(editedBlock.config as any).content}
                 placeholder="Enter text content (supports HTML)"
                 rows="6"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               ></textarea>
             {:else}
               <!-- CKEditor 5 source element -->
               <textarea 
                 bind:this={editorElement} 
                 id="text-content-editor" 
-                class="ckeditor-source"
+                class="ckeditor-source w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-32"
                 placeholder="Enter text content..."
               ></textarea>
             {/if}
@@ -301,193 +337,21 @@
         {/if}
       </div>
 
-      <div class="modal-footer">
-        <button class="cancel-btn" on:click={handleClose}> Cancel </button>
-        <button class="save-btn" on:click={handleSave}> Save Changes </button>
-      </div>
-    </div>
+  <div slot="footer" class="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+    <button 
+      class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" 
+      on:click={handleClose}
+    > 
+      Cancel 
+    </button>
+    <button 
+      class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" 
+      on:click={handleSave}
+    > 
+      Save Changes 
+    </button>
   </div>
+</Modal>
 {/if}
 
-<style>
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
 
-  .modal-content {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    width: 90%;
-    max-width: 600px;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e5e7eb;
-    background: #f9fafb;
-  }
-
-  .modal-header h2 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: #1f2937;
-  }
-
-  .close-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    color: #6b7280;
-    transition: all 0.2s;
-  }
-
-  .close-btn:hover {
-    background: #e5e7eb;
-    color: #374151;
-  }
-
-  .modal-body {
-    padding: 24px;
-    overflow-y: auto;
-    flex: 1;
-  }
-
-  .form-group {
-    margin-bottom: 20px;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
-  }
-
-  .form-group input,
-  .form-group textarea,
-  .form-group select {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    font-size: 14px;
-    transition: border-color 0.2s;
-    box-sizing: border-box;
-  }
-
-  .form-group input:focus,
-  .form-group textarea:focus,
-  .form-group select:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 1px #3b82f6;
-  }
-
-  .ckeditor-source {
-    min-height: 200px;
-    resize: vertical;
-  }
-
-  .help-text {
-    margin-top: 6px;
-    font-size: 12px;
-    color: #6b7280;
-    font-style: italic;
-  }
-
-  /* CKEditor 5 styling adjustments */
-  :global(.ck-editor) {
-    min-height: 200px;
-  }
-
-  :global(.ck-editor__editable) {
-    min-height: 200px !important;
-    border: 1px solid #d1d5db !important;
-    border-radius: 6px !important;
-  }
-
-  :global(.ck-editor__editable:focus) {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 1px #3b82f6 !important;
-  }
-
-  :global(.ck-toolbar) {
-    border: 1px solid #d1d5db !important;
-    border-bottom: none !important;
-    border-radius: 6px 6px 0 0 !important;
-    background: #f9fafb !important;
-  }
-
-  :global(.ck-editor__editable_inline) {
-    border-radius: 0 0 6px 6px !important;
-  }
-
-  .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding: 20px 24px;
-    border-top: 1px solid #e5e7eb;
-    background: #f9fafb;
-    flex-shrink: 0;
-  }
-
-  .cancel-btn {
-    padding: 8px 16px;
-    background: white;
-    color: #374151;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .cancel-btn:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
-  }
-
-  .save-btn {
-    padding: 8px 16px;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .save-btn:hover {
-    background: #2563eb;
-  }
-</style>

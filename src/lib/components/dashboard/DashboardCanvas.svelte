@@ -231,13 +231,14 @@
   }
 </script>
 
-<div class="dashboard-canvas" bind:this={canvasElement}>
+<div class="w-full h-full overflow-auto bg-slate-50 relative" bind:this={canvasElement}>
   <div 
-    class="canvas-content"
+    class="relative m-5 min-w-full min-h-full"
     style="width: {canvasWidth}px; height: {canvasHeight}px;"
   >
     <!-- Grid background -->
-    <div class="grid-background" style="
+    <div class="absolute top-0 left-0 opacity-50 pointer-events-none" style="
+      background-image: linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
       background-size: {gridSize}px {gridSize}px;
       width: {canvasWidth}px; 
       height: {canvasHeight}px;
@@ -246,17 +247,14 @@
     <!-- Blocks -->
     {#each dashboard.blocks as block (block.id)}
       <div 
-        class="block-container"
-        class:dragging={draggedBlock === block}
-        class:resizing={resizingBlock === block}
-        class:edit-mode={editMode}
+        class="select-none cursor-move transition-shadow duration-200 ease-in-out hover:shadow-xl group {draggedBlock === block ? 'shadow-2xl [transform:rotate(2deg)]' : ''} {resizingBlock === block ? 'shadow-lg shadow-blue-400' : ''} {editMode ? 'cursor-default' : ''}"
         style={getBlockStyle(block)}
         on:mousedown={(e) => handleBlockMouseDown(e, block)}
         role="button"
         tabindex="0"
       >
         <!-- Block content -->
-        <div class="block-content">
+        <div class="w-full h-full pointer-events-auto {draggedBlock === block || resizingBlock === block ? 'pointer-events-none' : ''}">
           {#if block.type === 'table'}
             <TableBlock 
               {block} 
@@ -287,33 +285,33 @@
           {/if}
         </div>
 
-        <!-- Resize handles -->
+        <!-- Resize handles (only show when not in edit mode and editable) -->
         {#if editable && !editMode}
-          <div class="resize-handles">
+          <div class="absolute top-0 left-0 right-0 bottom-0 pointer-events-none">
             <!-- Corner handles -->
             <div 
-              class="resize-handle nw" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 -left-1 w-2 h-2 cursor-nw-resize" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'nw')}
               role="button"
               tabindex="0"
               aria-label="Resize northwest"
             ></div>
             <div 
-              class="resize-handle ne" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 -right-1 w-2 h-2 cursor-ne-resize" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'ne')}
               role="button"
               tabindex="0"
               aria-label="Resize northeast"
             ></div>
             <div 
-              class="resize-handle sw" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 -left-1 w-2 h-2 cursor-sw-resize" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'sw')}
               role="button"
               tabindex="0"
               aria-label="Resize southwest"
             ></div>
             <div 
-              class="resize-handle se" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 -right-1 w-2 h-2 cursor-se-resize" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'se')}
               role="button"
               tabindex="0"
@@ -322,28 +320,28 @@
             
             <!-- Edge handles -->
             <div 
-              class="resize-handle n" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 left-1/2 -translate-x-1/2 w-2 h-2 cursor-n-resize" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'n')}
               role="button"
               tabindex="0"
               aria-label="Resize north"
             ></div>
             <div 
-              class="resize-handle s" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 cursor-s-resize" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 's')}
               role="button"
               tabindex="0"
               aria-label="Resize south"
             ></div>
             <div 
-              class="resize-handle e" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -right-1 top-1/2 -translate-y-1/2 w-2 h-2 cursor-e-resize" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'e')}
               role="button"
               tabindex="0"
               aria-label="Resize east"
             ></div>
             <div 
-              class="resize-handle w" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -left-1 top-1/2 -translate-y-1/2 w-2 h-2 cursor-w-resize" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'w')}
               role="button"
               tabindex="0"
@@ -355,158 +353,3 @@
     {/each}
   </div>
 </div>
-
-<style>
-  .dashboard-canvas {
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background: #f8fafc;
-    position: relative;
-  }
-
-  .canvas-content {
-    position: relative;
-    margin: 20px;
-    min-width: 100%;
-    min-height: 100%;
-  }
-
-  .grid-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-image: 
-      linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-      linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
-    opacity: 0.5;
-    pointer-events: none;
-  }
-
-  .block-container {
-    user-select: none;
-    cursor: move;
-    transition: box-shadow 0.2s ease;
-  }
-
-  .block-container.edit-mode {
-    cursor: default;
-  }
-
-  .block-container:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  .block-container.dragging {
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-    transform: rotate(2deg);
-  }
-
-  .block-container.resizing {
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-  }
-
-  .block-content {
-    width: 100%;
-    height: 100%;
-    pointer-events: auto;
-  }
-
-  .resize-handles {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-  }
-
-  .resize-handle {
-    position: absolute;
-    background: #3b82f6;
-    border: 1px solid white;
-    pointer-events: auto;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-  }
-
-  .block-container:hover .resize-handle {
-    opacity: 1;
-  }
-
-  /* Corner handles */
-  .resize-handle.nw {
-    top: -4px;
-    left: -4px;
-    width: 8px;
-    height: 8px;
-    cursor: nw-resize;
-  }
-
-  .resize-handle.ne {
-    top: -4px;
-    right: -4px;
-    width: 8px;
-    height: 8px;
-    cursor: ne-resize;
-  }
-
-  .resize-handle.sw {
-    bottom: -4px;
-    left: -4px;
-    width: 8px;
-    height: 8px;
-    cursor: sw-resize;
-  }
-
-  .resize-handle.se {
-    bottom: -4px;
-    right: -4px;
-    width: 8px;
-    height: 8px;
-    cursor: se-resize;
-  }
-
-  /* Edge handles */
-  .resize-handle.n {
-    top: -4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 8px;
-    height: 8px;
-    cursor: n-resize;
-  }
-
-  .resize-handle.s {
-    bottom: -4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 8px;
-    height: 8px;
-    cursor: s-resize;
-  }
-
-  .resize-handle.e {
-    right: -4px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 8px;
-    height: 8px;
-    cursor: e-resize;
-  }
-
-  .resize-handle.w {
-    left: -4px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 8px;
-    height: 8px;
-    cursor: w-resize;
-  }
-
-  /* Disable pointer events on block content during drag/resize */
-  .block-container.dragging .block-content,
-  .block-container.resizing .block-content {
-    pointer-events: none;
-  }
-</style>
