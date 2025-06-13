@@ -89,7 +89,9 @@
         gridSize: 80,
         columns: 20,
         rows: 15,
-        gap: 10
+        gap: 10,
+        canvasWidth: { type: 'fixed', value: 1600 },
+        canvasHeight: { type: 'fixed', value: 1000 }
       },
       blocks: [],
       variables: {}
@@ -484,11 +486,10 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-auto">
+    <div class="flex-1">
       <DashboardCanvas
         {dashboard}
         {dashboardService}
-        {queries}
         editable={editable && !editMode}
         editMode={editable && editMode}
         on:dashboard-updated={handleDashboardUpdated}
@@ -501,7 +502,6 @@
   {/if}
 </div>
 
-<!-- Block Editor Modal -->
 <BlockEditor
   block={editingBlock}
   isOpen={showBlockEditor}

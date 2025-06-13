@@ -1,13 +1,12 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
-  import type { Dashboard, Block, Position, Size, IDashboardService, Query } from '../../types/index.js';
+  import type { Dashboard, Block, Position, Size, IDashboardService } from '../../types/index.js';
   import TableBlock from '../blocks/TableBlock.svelte';
   import GraphBlock from '../blocks/GraphBlock.svelte';
   import TextBlock from '../blocks/TextBlock.svelte';
 
   export let dashboard: Dashboard;
   export let dashboardService: IDashboardService;
-  export let queries: Query[] = [];
   export let editable = true;
   export let editMode = false; // Controls whether block edit controls are shown
 
@@ -32,23 +31,71 @@
   // Grid settings
   $: gridSize = dashboard.layout.gridSize;
   
+  // Calculate canvas dimensions based on dashboard configuration
+  $: {
+    if (dashboard.layout.canvasWidth) {
+      if (dashboard.layout.canvasWidth.type === 'screen') {
+        canvasWidth = window.innerWidth - 40; // Account for margins
+      } else {
+        canvasWidth = dashboard.layout.canvasWidth.value || 1600;
+      }
+    } else {
+      canvasWidth = 1600; // Default fallback
+    }
+
+    if (dashboard.layout.canvasHeight) {
+      if (dashboard.layout.canvasHeight.type === 'screen') {
+        canvasHeight = window.innerHeight - 120; // Account for margins and header
+      } else {
+        canvasHeight = dashboard.layout.canvasHeight.value || 1000;
+      }
+    } else {
+      canvasHeight = 1000; // Default fallback
+    }
+  }
+  
   // Update canvas size based on container and content
   onMount(() => {
     updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
+    window.addEventListener('resize', handleWindowResize);
+    return () => window.removeEventListener('resize', handleWindowResize);
   });
+
+  function handleWindowResize() {
+    // Update dimensions if using screen-based sizing
+    if (dashboard.layout.canvasWidth?.type === 'screen' || dashboard.layout.canvasHeight?.type === 'screen') {
+      updateCanvasSize();
+    }
+  }
 
   function updateCanvasSize() {
     if (canvasElement) {
-      const containerWidth = canvasElement.clientWidth - 40; // Account for margins
-      const containerHeight = canvasElement.clientHeight - 40;
+      const containerWidth = canvasElement.parentElement?.clientWidth || window.innerWidth;
+      const containerHeight = canvasElement.parentElement?.clientHeight || window.innerHeight;
       
+      // Update canvas dimensions based on configuration
+      if (dashboard.layout.canvasWidth) {
+        if (dashboard.layout.canvasWidth.type === 'screen') {
+          canvasWidth = containerWidth - 40; // Account for margins
+        } else {
+          canvasWidth = dashboard.layout.canvasWidth.value || 1600;
+        }
+      }
+
+      if (dashboard.layout.canvasHeight) {
+        if (dashboard.layout.canvasHeight.type === 'screen') {
+          canvasHeight = containerHeight - 120; // Account for margins and header
+        } else {
+          canvasHeight = dashboard.layout.canvasHeight.value || 1000;
+        }
+      }
+      
+      // Ensure minimum size based on grid layout
       const minWidth = dashboard.layout.columns * gridSize;
       const minHeight = dashboard.layout.rows * gridSize;
       
-      canvasWidth = Math.max(minWidth, containerWidth);
-      canvasHeight = Math.max(minHeight, containerHeight);
+      canvasWidth = Math.max(minWidth, canvasWidth);
+      canvasHeight = Math.max(minHeight, canvasHeight);
     }
   }
 
@@ -237,11 +284,9 @@
     style="width: {canvasWidth}px; height: {canvasHeight}px;"
   >
     <!-- Grid background -->
-    <div class="absolute top-0 left-0 opacity-50 pointer-events-none" style="
+    <div class="absolute top-0 left-0 w-full h-full opacity-50 pointer-events-none" style="
       background-image: linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
       background-size: {gridSize}px {gridSize}px;
-      width: {canvasWidth}px; 
-      height: {canvasHeight}px;
     "></div>
 
     <!-- Blocks -->

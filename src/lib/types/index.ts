@@ -31,6 +31,13 @@ export interface DashboardLayout {
   columns: number;
   rows: number;
   gap: number;
+  canvasWidth: CanvasDimension;
+  canvasHeight: CanvasDimension;
+}
+
+export interface CanvasDimension {
+  type: 'fixed' | 'screen';
+  value?: number; // Only used when type is 'fixed'
 }
 
 export interface Block {
