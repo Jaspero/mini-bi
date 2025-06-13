@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
   import type { Query, IDashboardService } from '../../types/index.js';
+  import SQLEditor from './SQLEditor_Reliable.svelte';
 
   export let dashboardService: IDashboardService;
   export let isOpen = false;
@@ -50,6 +51,17 @@
   function handleClose() {
     resetForm();
     dispatch('close', {});
+  }
+
+  function handleOverlayClick(event: Event) {
+    // Only close if clicking the overlay itself, not its contents
+    if (event.target === event.currentTarget) {
+      if (showQueryEditor) {
+        resetForm();
+      } else {
+        handleClose();
+      }
+    }
   }
 
   function startNewQuery() {
@@ -172,8 +184,8 @@
 </script>
 
 {#if isOpen}
-  <div class="modal-overlay" on:click={handleClose} on:keydown={handleClose} role="dialog" aria-modal="true" tabindex="-1">
-    <div class="modal-content" on:click|stopPropagation on:keydown|stopPropagation role="document">
+  <div class="modal-overlay" on:click={handleOverlayClick} on:keydown={handleOverlayClick} role="dialog" aria-modal="true" tabindex="-1">
+    <div class="modal-content" role="document">
       <header class="modal-header">
         <h2>Global Query Manager</h2>
         <button class="close-btn" on:click={handleClose} aria-label="Close">
@@ -255,8 +267,8 @@
 
 <!-- Query Editor Dialog -->
 {#if showQueryEditor}
-  <div class="modal-overlay editor-overlay" on:click={resetForm} on:keydown={resetForm} role="dialog" aria-modal="true" tabindex="-1">
-    <div class="modal-content editor-modal" on:click|stopPropagation on:keydown|stopPropagation role="document">
+  <div class="modal-overlay editor-overlay" on:click={handleOverlayClick} on:keydown={handleOverlayClick} role="dialog" aria-modal="true" tabindex="-1">
+    <div class="modal-content editor-modal" role="document">
       <header class="modal-header">
         <h2>{selectedQuery ? 'Edit Query' : 'New Query'}</h2>
         <button class="close-btn" on:click={resetForm} aria-label="Close">
@@ -297,14 +309,13 @@
 
           <div class="form-group">
             <label for="query-sql">SQL Query *</label>
-            <textarea 
-              id="query-sql" 
-              bind:value={sql} 
-              required 
+            <SQLEditor 
+              bind:value={sql}
               disabled={loading}
-              placeholder="SELECT * FROM table_name;"
-              rows="12"
-            ></textarea>
+              on:change={(e) => sql = e.detail.value}
+              on:execute={() => testQuery()}
+              on:save={() => saveQuery()}
+            />
           </div>
 
           <div class="form-group">
@@ -653,8 +664,7 @@
     font-size: 0.875rem;
   }
 
-  .form-group input,
-  .form-group textarea {
+  .form-group input {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid #d1d5db;
@@ -663,16 +673,10 @@
     transition: border-color 0.2s;
   }
 
-  .form-group input:focus,
-  .form-group textarea:focus {
+  .form-group input:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-
-  .form-group textarea {
-    resize: vertical;
-    font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
   }
 
   .checkbox-label {
