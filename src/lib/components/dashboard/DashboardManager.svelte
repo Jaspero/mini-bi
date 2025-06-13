@@ -133,9 +133,7 @@
       on:click={showCreateDashboard} 
       disabled={showCreateForm}
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
-      </svg>
+      <span class="material-symbols-outlined text-base">add</span>
       New Dashboard
     </button>
   </div>
@@ -280,9 +278,7 @@
       </div>
     {:else if dashboards.length === 0}
       <div class="flex flex-col items-center justify-center py-15 px-5 text-gray-500 text-center">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" class="mb-4 opacity-50">
-          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-        </svg>
+        <span class="material-symbols-outlined text-5xl mb-4 opacity-50">dashboard</span>
         <h3 class="m-0 mb-2 text-lg font-semibold">No Dashboards Found</h3>
         <p class="m-0 text-sm">Create your first dashboard to get started</p>
       </div>
@@ -297,9 +293,7 @@
           tabindex="0"
         >
           <div class="mb-3 opacity-70">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
-            </svg>
+            <span class="material-symbols-outlined text-3xl opacity-70">add</span>
           </div>
           <h4 class="m-0 text-base font-semibold text-gray-800 mb-1">Create New Dashboard</h4>
           <p class="m-0 text-sm">Start building a new dashboard</p>
@@ -323,9 +317,7 @@
                 disabled={deleting}
                 aria-label="Delete dashboard"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                </svg>
+                <span class="material-symbols-outlined text-base">delete</span>
               </button>
             </div>
             

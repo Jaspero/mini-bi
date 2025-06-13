@@ -1,6 +1,12 @@
 <script lang="ts">
   import { onMount, createEventDispatcher, onDestroy } from 'svelte';
-  import type { Dashboard, Block, IDashboardService, BlockConfig, Query } from '../../types/index.js';
+  import type {
+    Dashboard,
+    Block,
+    IDashboardService,
+    BlockConfig,
+    Query
+  } from '../../types/index.js';
   import DashboardCanvas from './DashboardCanvas.svelte';
   import BlockEditor from './BlockEditor.svelte';
 
@@ -8,6 +14,9 @@
   export let dashboardService: IDashboardService;
   export let queries: Query[] = [];
   export let editable = true;
+  export let currentDashboardName: string = '';
+  export let queryManagerOpen: boolean = false;
+  export let dashboardManagerOpen: boolean = false;
 
   const dispatch = createEventDispatcher<{
     'dashboard-loaded': { dashboard: Dashboard };
@@ -15,6 +24,8 @@
     'dashboard-saved': { dashboard: Dashboard };
     'block-edit': { block: Block };
     'block-delete': { blockId: string };
+    'toggle-query-manager': void;
+    'toggle-dashboard-manager': void;
   }>();
 
   let dashboard: Dashboard | null = null;
@@ -46,18 +57,18 @@
 
   async function loadDashboard() {
     if (!dashboardId) return;
-    
+
     try {
       loading = true;
       error = '';
-      
+
       const dashboards = await dashboardService.loadDashboards();
-      const foundDashboard = dashboards.find(d => d.id === dashboardId);
-      
+      const foundDashboard = dashboards.find((d) => d.id === dashboardId);
+
       if (!foundDashboard) {
         throw new Error(`Dashboard with ID ${dashboardId} not found`);
       }
-      
+
       dashboard = foundDashboard;
       dispatch('dashboard-loaded', { dashboard });
       loading = false;
@@ -87,10 +98,10 @@
 
   async function saveDashboard() {
     if (!dashboard) return;
-    
+
     try {
       saving = true;
-      
+
       let savedDashboard: Dashboard;
       if (dashboard.id) {
         // Update existing dashboard
@@ -111,7 +122,7 @@
           variables: dashboard.variables
         });
       }
-      
+
       dashboard = savedDashboard;
       hasUnsavedChanges = false;
       dispatch('dashboard-saved', { dashboard });
@@ -144,7 +155,7 @@
   function handleBlockDelete(event: CustomEvent<{ blockId: string }>) {
     // Remove the block from the dashboard
     if (dashboard) {
-      dashboard.blocks = dashboard.blocks.filter(block => block.id !== event.detail.blockId);
+      dashboard.blocks = dashboard.blocks.filter((block) => block.id !== event.detail.blockId);
       hasUnsavedChanges = true;
       dispatch('dashboard-updated', { dashboard });
       dispatch('block-delete', { blockId: event.detail.blockId });
@@ -153,7 +164,7 @@
 
   function handleBlockEditorSave(event: CustomEvent<{ block: Block }>) {
     if (dashboard) {
-      dashboard.blocks = dashboard.blocks.map(b => 
+      dashboard.blocks = dashboard.blocks.map((b) =>
         b.id === event.detail.block.id ? event.detail.block : b
       );
       hasUnsavedChanges = true;
@@ -186,13 +197,13 @@
     // Find a good position for the new block
     const gridSize = dashboard.layout.gridSize;
     const defaultSize = { width: 4, height: 3 };
-    
+
     // Simple placement algorithm - try to place blocks in a grid pattern
     const blocksPerRow = Math.floor(dashboard.layout.columns / defaultSize.width);
     const existingBlocks = dashboard.blocks.length;
     const row = Math.floor(existingBlocks / blocksPerRow);
     const col = existingBlocks % blocksPerRow;
-    
+
     const position = {
       x: col * defaultSize.width,
       y: row * defaultSize.height
@@ -219,15 +230,15 @@
       case 'table':
         return {
           columns: [
-            { 
-              key: 'name', 
+            {
+              key: 'name',
               header: 'Name',
               type: 'string',
               sortable: true,
               filterable: true
             },
-            { 
-              key: 'value', 
+            {
+              key: 'value',
               header: 'Value',
               type: 'string',
               sortable: true,
@@ -307,7 +318,7 @@
     if (showAddBlockDropdown) {
       const target = event.target as HTMLElement;
       const addBlockContainer = document.querySelector('.add-block-container');
-      
+
       if (addBlockContainer && !addBlockContainer.contains(target)) {
         showAddBlockDropdown = false;
       }
@@ -317,122 +328,154 @@
 
 <div class="min-h-screen bg-gray-50">
   {#if loading}
-    <div class="flex items-center justify-center min-h-screen">
+    <div class="flex min-h-screen items-center justify-center">
       <div class="text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <div
+          class="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500"
+        ></div>
         <p class="text-gray-600">Loading dashboard...</p>
       </div>
     </div>
   {:else if error}
-    <div class="flex items-center justify-center min-h-screen">
-      <div class="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">
-        <h2 class="text-xl font-semibold text-red-600 mb-4">Error Loading Dashboard</h2>
-        <p class="text-gray-600 mb-6">{error}</p>
-        <button class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600" on:click={refresh}>
+    <div class="flex min-h-screen items-center justify-center">
+      <div class="max-w-md rounded-lg bg-white p-8 text-center shadow-lg">
+        <h2 class="mb-4 text-xl font-semibold text-red-600">Error Loading Dashboard</h2>
+        <p class="mb-6 text-gray-600">{error}</p>
+        <button
+          class="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+          on:click={refresh}
+        >
           Try Again
         </button>
       </div>
     </div>
   {:else if dashboard}
-    <div class="bg-white border-b border-gray-200 sticky top-0 z-30">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center py-4">
-          <div class="flex-1">
-            <h1 class="text-2xl font-bold text-gray-900">{dashboard.name}</h1>
-            {#if dashboard.description}
-              <p class="text-gray-600 mt-1">{dashboard.description}</p>
-            {/if}
+    <div class="sticky top-0 z-30 border-b border-gray-200 bg-white">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between py-4">
+          <div class="flex flex-1 items-baseline gap-4">
+            <div>
+              <div class="flex gap-5">
+                <h2 class="text-2xl font-bold text-gray-900">{dashboard.name}</h2>
+                <div class="flex items-center gap-2">
+                  <button
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-md text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
+                    class:!bg-blue-100={queryManagerOpen}
+                    class:!text-blue-700={queryManagerOpen}
+                    on:click={() => dispatch('toggle-query-manager')}
+                    title="{queryManagerOpen
+                      ? 'Close'
+                      : 'Manage'} Queries ({queries.length} available)"
+                    aria-label="{queryManagerOpen ? 'Close' : 'Manage'} queries"
+                  >
+                    <span class="material-symbols-outlined">database</span>
+                  </button>
+
+                  <button
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700"
+                    class:!bg-purple-100={dashboardManagerOpen}
+                    class:!text-purple-700={dashboardManagerOpen}
+                    on:click={() => dispatch('toggle-dashboard-manager')}
+                    title="{dashboardManagerOpen ? 'Close' : 'Manage'} Dashboards"
+                    aria-label="{dashboardManagerOpen ? 'Close' : 'Manage'} dashboards"
+                  >
+                    <span class="material-symbols-outlined">dashboard</span>
+                  </button>
+                </div>
+              </div>
+              {#if dashboard.description}
+                <p class="mt-1 text-gray-600">{dashboard.description}</p>
+              {/if}
+            </div>
           </div>
-          
+
           {#if editable}
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
               {#if hasUnsavedChanges}
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                  <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 001.414 1.414l2.293-2.293 4.293 4.293a1 1 0 001.414-1.414l-5-5z" clip-rule="evenodd" />
-                  </svg>
+                <span
+                  class="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800"
+                >
+                  <span class="material-symbols-outlined mr-1 text-xs">warning</span>
                   Unsaved changes
                 </span>
               {/if}
-              <div class="relative">
-                <button 
-                  class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+
+              <div class="add-block-container relative">
+                <button
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-md text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
                   on:click={toggleAddBlockDropdown}
+                  title="Add new block"
                   aria-label="Add new block"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-2">
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                  </svg>
-                  Add Block
+                  <span class="material-symbols-outlined">add</span>
                 </button>
                 {#if showAddBlockDropdown}
-                  <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                  <div
+                    class="ring-opacity-5 absolute right-0 z-50 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black"
+                  >
                     <div class="py-1">
-                      <button 
-                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      <button
+                        class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         on:click={() => handleAddBlock('table')}
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-3">
-                          <path d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h18v2H3v-2zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"/>
-                        </svg>
+                        <span class="material-symbols-outlined mr-3 text-base">table</span>
                         Table Block
                       </button>
-                      <button 
-                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      <button
+                        class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         on:click={() => handleAddBlock('graph')}
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-3">
-                          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-                        </svg>
+                        <span class="material-symbols-outlined mr-3 text-base">bar_chart</span>
                         Graph Block
                       </button>
-                      <button 
-                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      <button
+                        class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         on:click={() => handleAddBlock('text')}
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-3">
-                          <path d="M5 4v3h5.5v12h3V7H19V4H5z"/>
-                        </svg>
+                        <span class="material-symbols-outlined mr-3 text-base">text_fields</span>
                         Text Block
                       </button>
                     </div>
                   </div>
                 {/if}
               </div>
-              <button 
-                class="inline-flex items-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+
+              <button
+                class="inline-flex h-10 w-10 items-center justify-center rounded-md text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                 class:animate-pulse={saving}
                 disabled={saving || !hasUnsavedChanges}
                 on:click={saveDashboard}
+                title={saving ? 'Saving...' : 'Save Dashboard'}
+                aria-label={saving ? 'Saving dashboard' : 'Save dashboard'}
               >
                 {#if saving}
-                  <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Saving...
+                  <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-current"></div>
                 {:else}
-                  Save Dashboard
+                  <span class="material-symbols-outlined">save</span>
                 {/if}
               </button>
-              <button class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md" on:click={refresh} aria-label="Refresh dashboard">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
-                </svg>
+
+              <button
+                class="inline-flex h-10 w-10 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-700"
+                on:click={refresh}
+                title="Refresh dashboard"
+                aria-label="Refresh dashboard"
+              >
+                <span class="material-symbols-outlined">refresh</span>
               </button>
-              <button 
-                class="inline-flex items-center px-3 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600"
-                class:bg-purple-600={editMode}
-                on:click={toggleEditMode} 
+
+              <button
+                class="inline-flex h-10 w-10 items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700"
+                class:!bg-purple-100={editMode}
+                class:!text-purple-700={editMode}
+                on:click={toggleEditMode}
+                title={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
                 aria-label={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
               >
                 {#if editMode}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-2">
-                    <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM19 20H5V9h14v11z"/>
-                  </svg>
-                  Move Mode
+                  <span class="material-symbols-outlined">open_with</span>
                 {:else}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-2">
-                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41L18.37 3.29a.996.996 0 0 0-1.41 0L15.13 5.12l3.75 3.75 1.83-1.83z"/>
-                  </svg>
-                  Edit Mode
+                  <span class="material-symbols-outlined">edit</span>
                 {/if}
               </button>
             </div>
@@ -442,8 +485,8 @@
     </div>
 
     <div class="flex-1 overflow-auto">
-      <DashboardCanvas 
-        {dashboard} 
+      <DashboardCanvas
+        {dashboard}
         {dashboardService}
         {queries}
         editable={editable && !editMode}
@@ -459,12 +502,10 @@
 </div>
 
 <!-- Block Editor Modal -->
-<BlockEditor 
+<BlockEditor
   block={editingBlock}
   isOpen={showBlockEditor}
-  queries={queries}
+  {queries}
   on:block-updated={handleBlockEditorSave}
   on:close={handleBlockEditorClose}
 />
-
-

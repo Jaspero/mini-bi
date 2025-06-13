@@ -74,14 +74,10 @@
       <h3 class="text-base font-semibold text-gray-900 m-0">{block.title}</h3>
       <div class="flex items-center gap-1">
         <button class="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" on:click={handleEdit} aria-label="Edit text">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41L18.37 3.29a.996.996 0 0 0-1.41 0L15.13 5.12l3.75 3.75 1.83-1.83z"/>
-          </svg>
+          <span class="material-symbols-outlined text-base">edit</span>
         </button>
         <button class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors" on:click={handleDelete} aria-label="Delete text">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-          </svg>
+          <span class="material-symbols-outlined text-base">delete</span>
         </button>
       </div>
     </div>

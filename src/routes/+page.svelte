@@ -99,35 +99,6 @@
 </svelte:head>
 
 <div class="w-screen h-screen flex flex-col font-sans">
-  <header class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-8 text-center shadow-lg">
-    <h1 class="text-4xl font-bold mb-2">Mini-BI Library Demo</h1>
-    <p class="text-xl opacity-90 mb-6">Interactive dashboard library with draggable and resizable blocks</p>
-    
-    <div class="flex items-center justify-center gap-8 mt-4">
-      <div class="flex items-center gap-2">
-        <span class="font-medium opacity-90">Current Dashboard:</span>
-        <span class="font-semibold bg-white/20 px-3 py-1 rounded">{getCurrentDashboardName()}</span>
-        <span class="text-sm opacity-70 italic">({globalQueries.length} queries available)</span>
-      </div>
-      
-      <div class="flex gap-4">
-        <button class="flex items-center gap-2 px-6 py-3 bg-white/20 border-2 border-white/30 rounded-md text-base font-medium cursor-pointer transition-all hover:bg-white/30 hover:border-white/50" on:click={toggleQueryManager}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 6H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM4 18V8h16v10H4zm2-8h4v2H6v-2zm6 0h8v2h-8v-2zm-6 4h4v2H6v-2zm6 0h8v2h-8v-2z"/>
-          </svg>
-          {showQueryManager ? 'Close Queries' : 'Manage Queries'}
-        </button>
-        
-        <button class="flex items-center gap-2 px-6 py-3 bg-white/20 border-2 border-white/30 rounded-md text-base font-medium cursor-pointer transition-all hover:bg-white/30 hover:border-white/50" on:click={toggleManager}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-          </svg>
-          {showManager ? 'Close Manager' : 'Manage Dashboards'}
-        </button>
-      </div>
-    </div>
-  </header>
-
   <main class="flex-1 min-h-0 bg-slate-50">
     {#if loading}
       <div class="flex flex-col items-center justify-center h-full text-gray-500">
@@ -157,11 +128,16 @@
         {dashboardService}
         queries={globalQueries}
         editable={true}
+        currentDashboardName={getCurrentDashboardName()}
+        queryManagerOpen={showQueryManager}
+        dashboardManagerOpen={showManager}
         on:dashboard-loaded={handleDashboardLoaded}
         on:dashboard-updated={handleDashboardUpdated}
         on:dashboard-saved={handleDashboardSaved}
         on:block-edit={handleBlockEdit}
         on:block-delete={handleBlockDelete}
+        on:toggle-query-manager={toggleQueryManager}
+        on:toggle-dashboard-manager={toggleManager}
       />
     {/if}
   </main>

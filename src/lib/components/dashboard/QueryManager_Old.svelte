@@ -168,9 +168,7 @@
               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               on:click={createNewQuery}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-2">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-              </svg>
+              <span class="material-symbols-outlined text-base mr-2">add</span>
               New Query
             </button>
           </div>
@@ -197,9 +195,7 @@
                     title="Execute Query"
                     aria-label="Execute Query"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
+                    <span class="material-symbols-outlined text-base">play_arrow</span>
                   </button>
                   <button 
                     class="btn-edit" 
@@ -207,9 +203,7 @@
                     title="Edit Query"
                     aria-label="Edit Query"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41L18.37 3.29a.996.996 0 0 0-1.41 0L15.13 5.12l3.75 3.75 1.83-1.83z"/>
-                    </svg>
+                    <span class="material-symbols-outlined text-base">edit</span>
                   </button>
                   <button 
                     class="btn-delete" 

@@ -173,9 +173,7 @@
           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           on:click={createNewQuery}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="mr-2">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
+          <span class="material-symbols-outlined text-base mr-2">add</span>
           New Query
         </button>
       </div>
@@ -202,13 +200,9 @@
                   disabled={isExecuting}
                 >
                   {#if isExecuting}
-                    <svg class="w-4 h-4 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
+                    <span class="material-symbols-outlined text-sm mr-1 animate-spin">refresh</span>
                   {:else}
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1m-6 4h.01M14 20h.01"></path>
-                    </svg>
+                    <span class="material-symbols-outlined text-sm mr-1">play_arrow</span>
                   {/if}
                   Execute
                 </button>
@@ -217,9 +211,7 @@
                   class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
                   on:click={() => editQuery(query)}
                 >
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                  </svg>
+                  <span class="material-symbols-outlined text-sm mr-1">edit</span>
                   Edit
                 </button>
                 
@@ -227,9 +219,7 @@
                   class="inline-flex items-center px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
                   on:click={() => deleteQuery(query)}
                 >
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                  </svg>
+                  <span class="material-symbols-outlined text-sm mr-1">delete</span>
                   Delete
                 </button>
               </div>
@@ -240,9 +230,7 @@
         {#if queries.length === 0}
           <div class="text-center py-12">
             <div class="text-gray-500 mb-4">
-              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+              <span class="material-symbols-outlined text-5xl text-gray-400 mx-auto mb-4">description</span>
             </div>
             <h3 class="text-lg font-medium text-gray-900 mb-2">No queries yet</h3>
             <p class="text-gray-600 mb-4">Create your first SQL query to get started</p>
@@ -266,9 +254,7 @@
             class="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
             on:click={resetForm}
           >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-            </svg>
+            <span class="material-symbols-outlined text-sm mr-2">arrow_back</span>
             Back to List
           </button>
         </div>
@@ -305,14 +291,9 @@
                 disabled={isExecuting || !editForm.sql.trim()}
               >
                 {#if isExecuting}
-                  <svg class="w-4 h-4 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                  </svg>
+                  <span class="material-symbols-outlined text-sm mr-1 animate-spin">refresh</span>
                 {:else}
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                  </svg>
+                  <span class="material-symbols-outlined text-sm mr-1">visibility</span>
                 {/if}
                 Preview
               </button>
