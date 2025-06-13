@@ -1,9 +1,10 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
-  import type { Block, ChartType } from '../../types/index.js';
+  import type { Block, ChartType, Query } from '../../types/index.js';
 
   export let block: Block | null = null;
   export let isOpen = false;
+  export let queries: Query[] = [];
 
   const dispatch = createEventDispatcher<{
     'block-updated': { block: Block };
@@ -15,14 +16,40 @@
   let editorElement: HTMLTextAreaElement;
   let ckeditorLoaded = false;
   let ckeditorError = false;
+  
+  // Reactive variables for data source binding
+  let dataSourceType: 'api' | 'static' | 'mock' | 'query' = 'mock';
+  let selectedQueryId: string = '';
 
   $: if (block && isOpen) {
     editedBlock = structuredClone(block);
+    
+    // Initialize dataSource if it doesn't exist
+    if (!editedBlock.dataSource) {
+      editedBlock.dataSource = {
+        type: 'mock'
+      };
+    }
+    
+    // Sync reactive variables with editedBlock
+    dataSourceType = editedBlock.dataSource.type;
+    selectedQueryId = editedBlock.dataSource.queryId || '';
+    
     ckeditorLoaded = false;
     ckeditorError = false;
     // Initialize CKEditor when opening text block
     if (editedBlock?.type === 'text') {
       setTimeout(() => initializeCKEditor(), 100);
+    }
+  }
+
+  // Sync changes back to editedBlock
+  $: if (editedBlock?.dataSource) {
+    editedBlock.dataSource.type = dataSourceType;
+    if (dataSourceType === 'query') {
+      editedBlock.dataSource.queryId = selectedQueryId;
+    } else {
+      delete editedBlock.dataSource.queryId;
     }
   }
 
@@ -194,6 +221,33 @@
           </div>
         </div>
 
+        {#if editedBlock.type === 'table' || editedBlock.type === 'graph'}
+          <div class="form-group">
+            <label for="data-source">Data Source</label>
+            <select id="data-source" bind:value={dataSourceType}>
+              <option value="mock">Mock Data</option>
+              <option value="static">Static Data</option>
+              <option value="query">SQL Query</option>
+              <option value="api">API Endpoint</option>
+            </select>
+          </div>
+
+          {#if dataSourceType === 'query'}
+            <div class="form-group">
+              <label for="query-select">Select Query</label>
+              <select id="query-select" bind:value={selectedQueryId}>
+                <option value="">-- Select a query --</option>
+                {#each queries.filter(q => q.isActive) as query}
+                  <option value={query.id}>{query.name}</option>
+                {/each}
+              </select>
+              {#if queries.filter(q => q.isActive).length === 0}
+                <p class="help-text">No active queries available. Create queries in the Query Manager.</p>
+              {/if}
+            </div>
+          {/if}
+        {/if}
+
         {#if editedBlock.type === 'graph'}
           <div class="form-group">
             <label for="chart-type">Chart Type</label>
@@ -346,6 +400,13 @@
   .ckeditor-source {
     min-height: 200px;
     resize: vertical;
+  }
+
+  .help-text {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #6b7280;
+    font-style: italic;
   }
 
   /* CKEditor 5 styling adjustments */

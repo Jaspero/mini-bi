@@ -6,7 +6,11 @@ import type {
   BlockData,
   BlockType,
   BlockConfig,
-  DashboardLayout
+  DashboardLayout,
+  QueryResult,
+  QueryColumn,
+  Query,
+  DataSourceConfig
 } from '../types/index.js';
 
 export class MockDashboardService implements IDashboardService {
@@ -30,6 +34,10 @@ export class MockDashboardService implements IDashboardService {
           title: 'Monthly Sales',
           position: { x: 0, y: 0 },
           size: { width: 8, height: 6 },
+          dataSource: {
+            type: 'query',
+            queryId: 'sales-query'
+          },
           config: {
             chartType: 'line',
             series: [
@@ -49,6 +57,9 @@ export class MockDashboardService implements IDashboardService {
           title: 'Top Products',
           position: { x: 8, y: 0 },
           size: { width: 8, height: 6 },
+          dataSource: {
+            type: 'mock'
+          },
           config: {
             columns: [
               { key: 'product', header: 'Product', type: 'string', sortable: true },
@@ -95,6 +106,9 @@ export class MockDashboardService implements IDashboardService {
           title: 'Sales by Category',
           position: { x: 6, y: 6 },
           size: { width: 6, height: 6 },
+          dataSource: {
+            type: 'mock'
+          },
           config: {
             chartType: 'pie',
             series: [{ name: 'Categories', dataKey: 'value' }],
@@ -104,6 +118,19 @@ export class MockDashboardService implements IDashboardService {
             colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'],
             animations: { enabled: true, duration: 800, easing: 'quadraticOut' }
           } as any
+        }
+      ],
+      queries: [
+        {
+          id: 'sales-query',
+          name: 'Monthly Sales Data',
+          description: 'Retrieves monthly sales and target data',
+          sql: 'SELECT month, sales, target FROM monthly_sales ORDER BY month',
+          parameters: [],
+          created: new Date('2024-01-15'),
+          lastModified: new Date('2024-06-01'),
+          lastExecuted: new Date('2024-06-01'),
+          isActive: true
         }
       ],
       variables: {
@@ -130,6 +157,10 @@ export class MockDashboardService implements IDashboardService {
           title: 'Campaign Performance',
           position: { x: 0, y: 0 },
           size: { width: 12, height: 6 },
+          dataSource: {
+            type: 'query',
+            queryId: 'campaign-query'
+          },
           config: {
             chartType: 'bar',
             series: [
@@ -178,9 +209,40 @@ export class MockDashboardService implements IDashboardService {
             }
           } as any
         }
+      ],
+      queries: [
+        {
+          id: 'campaign-query',
+          name: 'Campaign Performance Data',
+          description: 'Retrieves campaign performance metrics',
+          sql: 'SELECT campaign_name, impressions, clicks FROM campaign_stats ORDER BY campaign_name',
+          parameters: [],
+          created: new Date('2024-02-20'),
+          lastModified: new Date('2024-05-15'),
+          lastExecuted: new Date('2024-05-15'),
+          isActive: true
+        }
       ]
     }
   ];
+
+  // Mock query result storage
+  private queryResults = new Map<string, any[]>([
+    ['sales-query', [
+      { month: 'Jan', sales: 4000, target: 4500 },
+      { month: 'Feb', sales: 3000, target: 3500 },
+      { month: 'Mar', sales: 5000, target: 4800 },
+      { month: 'Apr', sales: 4500, target: 4200 },
+      { month: 'May', sales: 6000, target: 5500 },
+      { month: 'Jun', sales: 5500, target: 5800 }
+    ]],
+    ['campaign-query', [
+      { campaign_name: 'Summer Sale', impressions: 125000, clicks: 3200 },
+      { campaign_name: 'Back to School', impressions: 98000, clicks: 2800 },
+      { campaign_name: 'Holiday Promo', impressions: 156000, clicks: 4100 },
+      { campaign_name: 'New Year Deal', impressions: 87000, clicks: 2300 }
+    ]]
+  ]);
 
   async loadDashboards(): Promise<Dashboard[]> {
     // Simulate network delay
@@ -199,7 +261,8 @@ export class MockDashboardService implements IDashboardService {
       lastModified: new Date(),
       layout: request.layout,
       blocks: request.blocks || [],
-      variables: request.variables
+      queries: request.queries || [],
+      variables: request.variables || {}
     };
     
     this.dashboards.push(newDashboard);
@@ -241,6 +304,21 @@ export class MockDashboardService implements IDashboardService {
   async loadBlockData(blockId: string, blockType: BlockType, config: BlockConfig): Promise<BlockData> {
     await this.delay(200);
     
+    // Check if the block has a dataSource configuration
+    const dataSource = (config as any)?.dataSource;
+    
+    // If dataSource is query type, use query execution
+    if (dataSource?.type === 'query' && dataSource?.queryId) {
+      try {
+        const queryResult = await this.executeQuery(dataSource.queryId);
+        return this.convertQueryResultToBlockData(queryResult);
+      } catch (error) {
+        console.warn(`Failed to execute query ${dataSource.queryId}, falling back to mock data:`, error);
+        // Fall back to mock data if query fails
+      }
+    }
+    
+    // Default behavior: generate mock data based on block type
     switch (blockType) {
       case 'table':
         return this.generateTableData();
@@ -251,6 +329,129 @@ export class MockDashboardService implements IDashboardService {
       default:
         throw new Error(`Unsupported block type: ${blockType}`);
     }
+  }
+
+  async executeQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult> {
+    await this.delay(300);
+    
+    // Find the query in all dashboards
+    let query: Query | undefined;
+    for (const dashboard of this.dashboards) {
+      query = dashboard.queries?.find(q => q.id === queryId);
+      if (query) break;
+    }
+    
+    if (!query) {
+      throw new Error(`Query with id ${queryId} not found`);
+    }
+    
+    if (!query.isActive) {
+      throw new Error(`Query ${queryId} is not active`);
+    }
+    
+    // Get mock data for this query
+    const mockData = this.queryResults.get(queryId);
+    if (!mockData) {
+      throw new Error(`No mock data available for query ${queryId}`);
+    }
+    
+    // Convert to QueryResult format
+    const columns: QueryColumn[] = mockData.length > 0 
+      ? Object.keys(mockData[0]).map(key => ({
+          name: key,
+          type: typeof mockData[0][key] === 'number' ? 'number' : 'string',
+          nullable: false
+        }))
+      : [];
+    
+    const rows = mockData.map(row => 
+      columns.map(col => row[col.name])
+    );
+    
+    return {
+      columns,
+      rows,
+      rowCount: rows.length,
+      executionTime: Math.random() * 500 + 100 // Random execution time between 100-600ms
+    };
+  }
+
+  async validateQuery(sql: string): Promise<{ isValid: boolean; error?: string }> {
+    await this.delay(100);
+    
+    // Simple validation - check for basic SQL structure
+    const sqlLower = sql.toLowerCase().trim();
+    
+    if (!sqlLower.startsWith('select')) {
+      return { isValid: false, error: 'Query must start with SELECT' };
+    }
+    
+    if (!sqlLower.includes('from')) {
+      return { isValid: false, error: 'Query must include FROM clause' };
+    }
+    
+    // Check for dangerous operations
+    const dangerousKeywords = ['drop', 'delete', 'truncate', 'alter', 'create', 'insert', 'update'];
+    for (const keyword of dangerousKeywords) {
+      if (sqlLower.includes(keyword)) {
+        return { isValid: false, error: `Operation ${keyword.toUpperCase()} is not allowed` };
+      }
+    }
+    
+    return { isValid: true };
+  }
+
+  async getQueryPreview(sql: string, limit = 10): Promise<QueryResult> {
+    await this.delay(200);
+    
+    // Validate first
+    const validation = await this.validateQuery(sql);
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+    
+    // Return sample data for preview
+    const sampleData = [
+      { id: 1, name: 'Sample Item 1', value: 100, date: '2024-01-01' },
+      { id: 2, name: 'Sample Item 2', value: 200, date: '2024-01-02' },
+      { id: 3, name: 'Sample Item 3', value: 150, date: '2024-01-03' }
+    ].slice(0, limit);
+    
+    const columns: QueryColumn[] = [
+      { name: 'id', type: 'number', nullable: false },
+      { name: 'name', type: 'string', nullable: false },
+      { name: 'value', type: 'number', nullable: false },
+      { name: 'date', type: 'string', nullable: false }
+    ];
+    
+    const rows = sampleData.map(row => [row.id, row.name, row.value, row.date]);
+    
+    return {
+      columns,
+      rows,
+      rowCount: rows.length,
+      executionTime: Math.random() * 200 + 50
+    };
+  }
+
+  private convertQueryResultToBlockData(queryResult: QueryResult): BlockData {
+    // Convert rows and columns back to object format
+    const data = queryResult.rows.map(row => {
+      const obj: any = {};
+      queryResult.columns.forEach((column, index) => {
+        obj[column.name] = row[index];
+      });
+      return obj;
+    });
+    
+    return {
+      data,
+      metadata: {
+        totalCount: queryResult.rowCount,
+        lastUpdated: new Date(),
+        source: 'SQL Query'
+      }
+    };
   }
 
   private generateTableData(): BlockData {

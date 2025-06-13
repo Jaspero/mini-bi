@@ -50,7 +50,13 @@
     try {
       loading = true;
       error = '';
-      data = await dashboardService.loadBlockData(block.id, block.type, block.config);
+      // Pass the block configuration which includes dataSource
+      const blockConfig = {
+        ...block.config,
+        dataSource: block.dataSource
+      };
+      data = await dashboardService.loadBlockData(block.id, block.type, blockConfig);
+      console.log('TableBlock loaded data:', data, 'for block:', block.id, 'dataSource:', block.dataSource);
       loading = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load data';
@@ -153,7 +159,12 @@
 
 <div class="table-block">
   <div class="table-header">
-    <h3 class="table-title">{block.title}</h3>
+    <div class="table-title-section">
+      <h3 class="table-title">{block.title}</h3>
+      {#if block.dataSource?.type === 'query' && data?.metadata?.source}
+        <span class="data-source-indicator">📊 {data.metadata.source}</span>
+      {/if}
+    </div>
     <div class="table-controls">
       {#if tableConfig?.filtering?.enabled}
         <input 
@@ -295,10 +306,19 @@
   .table-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: 16px;
     border-bottom: 1px solid #e5e7eb;
     background: #f9fafb;
+    gap: 16px;
+  }
+
+  .table-title-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
   }
 
   .table-title {
@@ -308,10 +328,17 @@
     color: #1f2937;
   }
 
+  .data-source-indicator {
+    font-size: 12px;
+    color: #6b7280;
+    font-style: italic;
+  }
+
   .table-controls {
     display: flex;
     gap: 12px;
-    align-items: center;
+    align-items: flex-start;
+    flex-shrink: 0;
   }
 
   .search-input {

@@ -40,7 +40,13 @@
     try {
       loading = true;
       error = '';
-      data = await dashboardService.loadBlockData(block.id, block.type, block.config);
+      // Pass the block configuration which includes dataSource
+      const blockConfig = {
+        ...block.config,
+        dataSource: block.dataSource
+      };
+      data = await dashboardService.loadBlockData(block.id, block.type, blockConfig);
+      console.log('GraphBlock loaded data:', data, 'for block:', block.id, 'dataSource:', block.dataSource);
       loading = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load data';
@@ -244,7 +250,12 @@
 
 <div class="graph-block">
   <div class="graph-header">
-    <h3 class="graph-title">{block.title}</h3>
+    <div class="graph-title-section">
+      <h3 class="graph-title">{block.title}</h3>
+      {#if block.dataSource?.type === 'query' && data?.metadata?.source}
+        <span class="data-source-indicator">📊 {data.metadata.source}</span>
+      {/if}
+    </div>
     {#if showControls}
       <div class="block-controls">
         <button class="control-btn edit-btn" on:click={handleEdit} aria-label="Edit graph">
@@ -296,10 +307,16 @@
   .graph-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: 16px;
     border-bottom: 1px solid #e5e7eb;
     background: #f9fafb;
+  }
+
+  .graph-title-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .graph-title {
@@ -307,6 +324,12 @@
     font-size: 16px;
     font-weight: 600;
     color: #1f2937;
+  }
+
+  .data-source-indicator {
+    font-size: 12px;
+    color: #6b7280;
+    font-style: italic;
   }
 
   .refresh-btn {

@@ -23,6 +23,7 @@ export interface Dashboard {
   lastModified: Date;
   layout: DashboardLayout;
   blocks: Block[];
+  queries: Query[];
   variables?: Record<string, any>;
 }
 
@@ -145,12 +146,48 @@ export interface TextStyling {
 
 // Data source configuration
 export interface DataSourceConfig {
-  type: 'api' | 'static' | 'mock';
+  type: 'api' | 'static' | 'mock' | 'query';
   endpoint?: string;
   method?: 'GET' | 'POST';
   headers?: Record<string, string>;
   body?: any;
   staticData?: any[];
+  queryId?: string; // Reference to a query
+}
+
+// Query management
+export interface Query {
+  id: string;
+  name: string;
+  description?: string;
+  sql: string;
+  parameters?: QueryParameter[];
+  created: Date;
+  lastModified: Date;
+  lastExecuted?: Date;
+  isActive: boolean;
+}
+
+export interface QueryParameter {
+  name: string;
+  type: 'string' | 'number' | 'date' | 'boolean';
+  defaultValue?: any;
+  required: boolean;
+  description?: string;
+}
+
+export interface QueryResult {
+  columns: QueryColumn[];
+  rows: any[][];
+  rowCount: number;
+  executionTime: number;
+  error?: string;
+}
+
+export interface QueryColumn {
+  name: string;
+  type: string;
+  nullable: boolean;
 }
 
 // Request/Response types
@@ -159,6 +196,7 @@ export interface CreateDashboardRequest {
   description?: string;
   layout: DashboardLayout;
   blocks?: Block[];
+  queries?: Query[];
   variables?: Record<string, any>;
 }
 
@@ -167,6 +205,7 @@ export interface UpdateDashboardRequest {
   description?: string;
   layout?: DashboardLayout;
   blocks?: Block[];
+  queries?: Query[];
   variables?: Record<string, any>;
 }
 
@@ -189,6 +228,11 @@ export interface IDashboardService {
   
   // Block data operations
   loadBlockData(blockId: string, blockType: BlockType, config: BlockConfig): Promise<BlockData>;
+  
+  // Query operations
+  executeQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult>;
+  validateQuery(sql: string): Promise<{ isValid: boolean; error?: string }>;
+  getQueryPreview(sql: string, limit?: number): Promise<QueryResult>;
 }
 
 // Events
