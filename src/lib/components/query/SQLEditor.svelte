@@ -233,7 +233,6 @@
     
     console.log('SQLEditor component mounted');
   });
-  });
 
   onDestroy(() => {
     if (editor) {
@@ -309,26 +308,26 @@
   ];
 </script>
 
-<div class="sql-editor-container">
+<div class="flex h-[500px] border border-gray-300 rounded-md overflow-hidden relative resize-y min-h-[300px] max-h-[80vh]">
   <!-- Schema Panel -->
-  <div class="schema-panel" class:open={showSchema}>
-    <div class="schema-header">
-      <h3>Database Schema</h3>
-      <button class="close-schema-btn" on:click={() => showSchema = false} aria-label="Close schema panel">
+  <div class="w-0 overflow-hidden bg-gray-50 border-r border-gray-300 transition-[width] duration-300 ease-in-out flex-shrink-0" class:!w-[300px]={showSchema}>
+    <div class="flex justify-between items-center p-3 border-b border-gray-300 bg-white">
+      <h3 class="m-0 text-sm font-semibold text-gray-700">Database Schema</h3>
+      <button class="bg-transparent border-0 text-gray-500 hover:bg-gray-100 hover:text-gray-700 cursor-pointer p-1 rounded" on:click={() => showSchema = false} aria-label="Close schema panel">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
         </svg>
       </button>
     </div>
     
-    <div class="schema-content">
+    <div class="overflow-y-auto h-[calc(100%-49px)] p-2">
       <!-- SQL Templates Section -->
-      <div class="templates-section">
-        <h4>SQL Templates</h4>
-        <div class="templates-list">
+      <div class="mb-4">
+        <h4 class="m-0 mb-2 text-xs font-semibold text-gray-700 uppercase tracking-wide">SQL Templates</h4>
+        <div class="flex flex-col gap-1 mb-4">
           {#each sqlTemplates as template}
             <button 
-              class="template-item" 
+              class="flex items-center gap-1.5 px-2 py-1.5 bg-blue-600 hover:bg-blue-700 text-white border-0 rounded text-[11px] cursor-pointer transition-colors text-left" 
               on:click={() => insertTemplate(template.sql)}
               title="Click to insert template"
             >
@@ -342,39 +341,39 @@
       </div>
 
       <!-- Database Schema Section -->
-      <div class="schema-section">
-        <h4>Database Schema</h4>
+      <div class="mb-4">
+        <h4 class="m-0 mb-2 text-xs font-semibold text-gray-700 uppercase tracking-wide">Database Schema</h4>
         {#each mockSchema.tables as table}
-          <div class="table-item">
-            <div class="table-header" on:click={() => selectTable(table)} on:keydown={(e) => e.key === 'Enter' && selectTable(table)} role="button" tabindex="0">
+          <div class="mb-2">
+            <div class="flex items-center gap-2 p-2 bg-white border border-gray-300 rounded cursor-pointer hover:border-blue-600 hover:shadow-sm transition-all" on:click={() => selectTable(table)} on:keydown={(e) => e.key === 'Enter' && selectTable(table)} role="button" tabindex="0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M3 3h18v18H3V3zm2 2v14h14V5H5zm2 2h10v2H7V7zm0 4h10v2H7v-2zm0 4h10v2H7v-2z"/>
               </svg>
-              <span class="table-name">{table.name}</span>
-              <span class="table-actions">
-                <button class="insert-btn" on:click|stopPropagation={() => insertTableName(table.name)} title="Insert table name">
+              <span class="flex-1 font-medium text-gray-700 text-sm">{table.name}</span>
+              <span class="flex gap-1">
+                <button class="flex items-center justify-center bg-blue-600 hover:opacity-80 text-white border-0 rounded-sm w-5 h-5 text-[11px] cursor-pointer" on:click|stopPropagation={() => insertTableName(table.name)} title="Insert table name">
                   +
                 </button>
-                <button class="select-btn" on:click|stopPropagation={() => insertSelectAll(table.name)} title="SELECT * FROM table">
+                <button class="flex items-center justify-center bg-green-600 hover:opacity-80 text-white border-0 rounded-sm w-5 h-5 text-[11px] cursor-pointer" on:click|stopPropagation={() => insertSelectAll(table.name)} title="SELECT * FROM table">
                   ★
                 </button>
               </span>
             </div>
             
             {#if selectedTable === table}
-              <div class="columns-list">
+              <div class="mt-1 pl-6">
                 {#each table.columns as column}
-                  <div class="column-item" on:click={() => insertColumnName(table.name, column.name)} on:keydown={(e) => e.key === 'Enter' && insertColumnName(table.name, column.name)} role="button" tabindex="0">
-                    <div class="column-info">
-                      <span class="column-name">{column.name}</span>
-                      <span class="column-type">{column.type}</span>
+                  <div class="flex justify-between items-center p-1.5 bg-white border border-gray-100 rounded-sm mb-0.5 cursor-pointer hover:border-blue-600 hover:bg-blue-50 transition-all" on:click={() => insertColumnName(table.name, column.name)} on:keydown={(e) => e.key === 'Enter' && insertColumnName(table.name, column.name)} role="button" tabindex="0">
+                    <div class="flex flex-col gap-0.5">
+                      <span class="text-xs font-medium text-gray-700">{column.name}</span>
+                      <span class="text-[11px] text-gray-500 font-mono">{column.type}</span>
                     </div>
-                    <div class="column-flags">
+                    <div class="flex gap-1">
                       {#if column.primary}
-                        <span class="flag primary" title="Primary Key">PK</span>
+                        <span class="bg-yellow-100 text-yellow-700 text-[9px] px-1 py-0.5 rounded-sm font-semibold" title="Primary Key">PK</span>
                       {/if}
                       {#if !column.nullable}
-                        <span class="flag not-null" title="Not Null">NN</span>
+                        <span class="bg-purple-100 text-purple-700 text-[9px] px-1 py-0.5 rounded-sm font-semibold" title="Not Null">NN</span>
                       {/if}
                     </div>
                   </div>
@@ -388,347 +387,40 @@
   </div>
 
   <!-- Editor Area -->
-  <div class="editor-area">
-    <div class="editor-toolbar">
-      <button class="schema-toggle-btn" on:click={() => showSchema = !showSchema} title="Toggle Schema Panel">
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex justify-between items-center px-3 py-2 bg-gray-50 border-b border-gray-300 gap-2">
+      <button class="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white border-0 px-3 py-1.5 rounded text-xs cursor-pointer transition-colors" on:click={() => showSchema = !showSchema} title="Toggle Schema Panel">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z"/>
         </svg>
         Schema
       </button>
       
-      <button class="format-btn" on:click={formatSQL} title="Format SQL (Shift+Alt+F)">
+      <button class="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white border-0 px-3 py-1.5 rounded text-xs cursor-pointer transition-colors" on:click={formatSQL} title="Format SQL (Shift+Alt+F)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
         </svg>
         Format
       </button>
       
-      <div class="editor-info">
+      <div class="text-xs text-gray-500">
         SQL Editor with IntelliSense • Ctrl+Enter to execute • Ctrl+S to save
       </div>
     </div>
     
-    <div class="monaco-editor" bind:this={editorContainer}>
+    <div class="flex-1 overflow-hidden relative" bind:this={editorContainer}>
       {#if !isInitialized}
-        <div class="editor-loading">
-          <div class="loading-spinner"></div>
-          <p>Loading SQL Editor...</p>
+        <div class="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+          <div class="w-8 h-8 border-3 border-gray-100 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+          <p class="text-gray-500 text-sm m-0">Loading SQL Editor...</p>
         </div>
       {/if}
     </div>
   </div>
 </div>
 
+<!-- Global Monaco Editor Styles -->
 <style>
-  .sql-editor-container {
-    display: flex;
-    height: 500px;
-    border: 1px solid #e1e5e9;
-    border-radius: 6px;
-    overflow: hidden;
-    position: relative;
-    resize: vertical;
-    min-height: 300px;
-    max-height: 80vh;
-  }
-
-  .schema-panel {
-    width: 0;
-    overflow: hidden;
-    background: #f8f9fa;
-    border-right: 1px solid #e1e5e9;
-    transition: width 0.3s ease;
-    flex-shrink: 0;
-  }
-
-  .schema-panel.open {
-    width: 300px;
-  }
-
-  .schema-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    border-bottom: 1px solid #e1e5e9;
-    background: #fff;
-  }
-
-  .schema-header h3 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
-  }
-
-  .close-schema-btn {
-    background: none;
-    border: none;
-    color: #6b7280;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-  }
-
-  .close-schema-btn:hover {
-    background: #f3f4f6;
-    color: #374151;
-  }
-
-  .schema-content {
-    overflow-y: auto;
-    height: calc(100% - 49px);
-    padding: 8px;
-  }
-
-  .templates-section, .schema-section {
-    margin-bottom: 16px;
-  }
-
-  .templates-section h4, .schema-section h4 {
-    margin: 0 0 8px 0;
-    font-size: 12px;
-    font-weight: 600;
-    color: #374151;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .templates-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 16px;
-  }
-
-  .template-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 11px;
-    cursor: pointer;
-    transition: background 0.2s;
-    text-align: left;
-  }
-
-  .template-item:hover {
-    background: #2563eb;
-  }
-
-  .table-item {
-    margin-bottom: 8px;
-  }
-
-  .table-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px;
-    background: #fff;
-    border: 1px solid #e1e5e9;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .table-header:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .table-name {
-    flex: 1;
-    font-weight: 500;
-    color: #374151;
-    font-size: 13px;
-  }
-
-  .table-actions {
-    display: flex;
-    gap: 4px;
-  }
-
-  .insert-btn, .select-btn {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    width: 20px;
-    height: 20px;
-    font-size: 11px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .select-btn {
-    background: #10b981;
-  }
-
-  .insert-btn:hover, .select-btn:hover {
-    opacity: 0.8;
-  }
-
-  .columns-list {
-    margin-top: 4px;
-    padding-left: 24px;
-  }
-
-  .column-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 8px;
-    background: #fff;
-    border: 1px solid #f3f4f6;
-    border-radius: 3px;
-    margin-bottom: 2px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .column-item:hover {
-    border-color: #3b82f6;
-    background: #eff6ff;
-  }
-
-  .column-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .column-name {
-    font-size: 12px;
-    font-weight: 500;
-    color: #374151;
-  }
-
-  .column-type {
-    font-size: 11px;
-    color: #6b7280;
-    font-family: monospace;
-  }
-
-  .column-flags {
-    display: flex;
-    gap: 4px;
-  }
-
-  .flag {
-    font-size: 9px;
-    padding: 2px 4px;
-    border-radius: 2px;
-    font-weight: 600;
-  }
-
-  .flag.primary {
-    background: #fef3c7;
-    color: #d97706;
-  }
-
-  .flag.not-null {
-    background: #ddd6fe;
-    color: #7c3aed;
-  }
-
-  .editor-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .editor-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e1e5e9;
-    gap: 8px;
-  }
-
-  .schema-toggle-btn, .format-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .format-btn {
-    background: #10b981;
-  }
-
-  .schema-toggle-btn:hover {
-    background: #2563eb;
-  }
-
-  .format-btn:hover {
-    background: #059669;
-  }
-
-  .editor-info {
-    font-size: 12px;
-    color: #6b7280;
-  }
-
-  .monaco-editor {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .editor-loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #ffffff;
-    z-index: 10;
-  }
-
-  .loading-spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid #f3f4f6;
-    border-top: 3px solid #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 12px;
-  }
-
-  .editor-loading p {
-    color: #6b7280;
-    font-size: 14px;
-    margin: 0;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  /* Global Monaco Editor Styles */
   :global(.monaco-editor) {
     --vscode-editor-background: #ffffff;
     --vscode-editor-foreground: #24292e;

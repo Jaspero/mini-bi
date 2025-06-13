@@ -79,15 +79,15 @@
     
     isExecuting = true;
     try {
-      queryResult = await dashboardService.getQueryPreview(query.sql);
+      queryResult = await dashboardService.executeQuery(query.sql);
     } catch (error) {
       console.error('Query execution failed:', error);
       queryResult = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        data: [],
         columns: [],
-        rows: [],
-        rowCount: 0,
-        executionTime: 0,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        executionTime: 0
       };
     } finally {
       isExecuting = false;
@@ -97,21 +97,19 @@
   async function saveQuery() {
     if (!editForm.name.trim() || !editForm.sql.trim()) return;
 
-    const queryData = {
+    const queryData: Partial<Query> = {
       name: editForm.name,
-      description: editForm.description || '',
+      description: editForm.description,
       sql: editForm.sql,
-      isActive: editForm.isActive,
-      lastModified: new Date(),
-      lastExecuted: undefined
+      isActive: editForm.isActive
     };
 
     try {
       if (isCreating) {
-        const newQuery = await dashboardService.saveGlobalQuery(queryData);
+        const newQuery = await dashboardService.createQuery(queryData);
         queries = [...queries, newQuery];
       } else if (selectedQuery) {
-        const updatedQuery = await dashboardService.updateGlobalQuery(selectedQuery.id, queryData);
+        const updatedQuery = await dashboardService.updateQuery(selectedQuery.id, queryData);
         const index = queries.findIndex(q => q.id === selectedQuery!.id);
         queries[index] = updatedQuery;
         queries = queries;
@@ -127,7 +125,7 @@
   async function deleteQuery(query: Query) {
     if (confirm(`Are you sure you want to delete "${query.name}"?`)) {
       try {
-        await dashboardService.deleteGlobalQuery(query.id);
+        await dashboardService.deleteQuery(query.id);
         queries = queries.filter(q => q.id !== query.id);
         dispatch('queries-updated', { queries });
       } catch (error) {
@@ -143,15 +141,15 @@
     showPreview = true;
     
     try {
-      queryResult = await dashboardService.getQueryPreview(editForm.sql);
+      queryResult = await dashboardService.executeQuery(editForm.sql);
     } catch (error) {
       console.error('Query preview failed:', error);
       queryResult = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        data: [],
         columns: [],
-        rows: [],
-        rowCount: 0,
-        executionTime: 0,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        executionTime: 0
       };
     } finally {
       isExecuting = false;
@@ -345,29 +343,29 @@
           <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
             <h4 class="text-sm font-medium text-gray-900 mb-3">Query Preview</h4>
             
-            {#if !queryResult.error}
+            {#if queryResult.success}
               <div class="text-xs text-green-700 mb-2">
                 ✓ Query executed successfully in {queryResult.executionTime}ms
               </div>
               
-              {#if queryResult.rows && queryResult.rows.length > 0}
+              {#if queryResult.data && queryResult.data.length > 0}
                 <div class="bg-white border border-gray-300 rounded overflow-hidden">
                   <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                       <tr>
                         {#each queryResult.columns as column}
                           <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {column.name}
+                            {column}
                           </th>
                         {/each}
                       </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                      {#each queryResult.rows.slice(0, 5) as row}
+                      {#each queryResult.data.slice(0, 5) as row}
                         <tr>
-                          {#each row as cell}
+                          {#each queryResult.columns as column}
                             <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {cell || ''}
+                              {row[column] || ''}
                             </td>
                           {/each}
                         </tr>
@@ -376,9 +374,9 @@
                   </table>
                 </div>
                 
-                {#if queryResult.rows.length > 5}
+                {#if queryResult.data.length > 5}
                   <div class="text-xs text-gray-500 mt-2">
-                    Showing first 5 of {queryResult.rows.length} rows
+                    Showing first 5 of {queryResult.data.length} rows
                   </div>
                 {/if}
               {:else}

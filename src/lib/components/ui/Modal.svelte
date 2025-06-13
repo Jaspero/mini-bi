@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { browser } from '$app/environment';
 
   export let isOpen = false;
   export let title: string | null = null;
@@ -24,20 +25,24 @@
   };
 
   // Focus management and keyboard event handling
-  $: if (isOpen && modalElement) {
+  $: if (browser && isOpen && modalElement) {
     modalElement.focus();
   }
 
   // Prevent body scroll when modal is open
-  $: if (isOpen) {
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = '';
+  $: if (browser) {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
   }
 
   onDestroy(() => {
     // Cleanup: restore scroll when component is destroyed
-    document.body.style.overflow = '';
+    if (browser) {
+      document.body.style.overflow = '';
+    }
   });
 
   function handleClose() {
@@ -60,7 +65,7 @@
 {#if isOpen}
   <div
     bind:this={modalElement}
-    class="fixed inset-0 bg-transparent backdrop-blur-md flex items-center justify-center p-4 z-50"
+    class="fixed inset-0 bg-transparent backdrop-blur-xs flex items-center justify-center p-4 z-50"
     on:click={handleOverlayClick}
     on:keydown={handleKeyDown}
     role="dialog"

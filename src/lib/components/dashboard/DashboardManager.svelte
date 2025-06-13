@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import type { Dashboard, IDashboardService, CreateDashboardRequest } from '../../types/index.js';
   import { validateDashboard, generateDashboardId } from '../../utils/validation.js';
+  import Modal from '../ui/Modal.svelte';
 
   export let dashboardService: IDashboardService;
   export let currentDashboardId: string | null = null;
@@ -53,13 +54,6 @@
     showCreateForm = false;
     newDashboardName = '';
     newDashboardDescription = '';
-  }
-
-  function handleOverlayClick(event: Event) {
-    // Only close if clicking the overlay itself, not its contents
-    if (event.target === event.currentTarget) {
-      cancelCreate();
-    }
   }
 
   async function createDashboard() {
@@ -131,10 +125,14 @@
   }
 </script>
 
-<div class="dashboard-manager">
-  <div class="manager-header">
-    <h2>Dashboard Manager</h2>
-    <button class="create-btn" on:click={showCreateDashboard} disabled={showCreateForm}>
+<div class="max-w-screen-xl mx-auto p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="m-0 text-2xl font-semibold text-gray-800">Dashboard Manager</h2>
+    <button 
+      class="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white border-0 rounded-md text-sm font-medium cursor-pointer transition-colors" 
+      on:click={showCreateDashboard} 
+      disabled={showCreateForm}
+    >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
       </svg>
@@ -143,159 +141,184 @@
   </div>
 
   {#if error}
-    <div class="error-message">
-      <p>{error}</p>
-      <button on:click={() => error = ''}>×</button>
+    <div class="bg-red-50 border border-red-200 rounded-md text-red-600 px-4 py-3 mb-4 flex justify-between items-center">
+      <p class="m-0">{error}</p>
+      <button 
+        class="bg-transparent border-0 text-red-600 text-lg cursor-pointer p-0 w-6 h-6 hover:bg-red-100 rounded"
+        on:click={() => error = ''}
+      >
+        ×
+      </button>
     </div>
   {/if}
 
   <!-- Dashboard Creation Modal -->
-  {#if showCreateForm}
-    <div class="modal-overlay" on:click={handleOverlayClick} on:keydown={handleOverlayClick} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content" role="document">
-        <header class="modal-header">
-          <h2>Create New Dashboard</h2>
-          <button class="close-btn" on:click={cancelCreate} aria-label="Close">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
-            </svg>
-          </button>
-        </header>
+  <Modal 
+    isOpen={showCreateForm} 
+    on:close={cancelCreate}
+    title="Create New Dashboard"
+    size="medium"
+  >
+    <svelte:fragment slot="default">
+      {#if error}
+        <div class="bg-red-50 border border-red-200 rounded-md p-3 mb-4 text-red-800">
+          {error}
+        </div>
+      {/if}
 
-        <div class="modal-body">
-          {#if error}
-            <div class="error-message">{error}</div>
-          {/if}
+      <div class="space-y-4">
+        <div>
+          <label for="dashboard-name" class="block text-sm font-medium text-gray-700 mb-2">
+            Dashboard Name *
+          </label>
+          <input 
+            id="dashboard-name"
+            type="text" 
+            bind:value={newDashboardName} 
+            placeholder="Enter dashboard name"
+            maxlength="100"
+            disabled={creating}
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
 
-          <div class="form-content">
-            <div class="form-group">
-              <label for="dashboard-name">Dashboard Name *</label>
-              <input 
-                id="dashboard-name"
-                type="text" 
-                bind:value={newDashboardName} 
-                placeholder="Enter dashboard name"
-                maxlength="100"
-                disabled={creating}
-              />
-            </div>
+        <div>
+          <label for="dashboard-description" class="block text-sm font-medium text-gray-700 mb-2">
+            Description
+          </label>
+          <textarea 
+            id="dashboard-description"
+            bind:value={newDashboardDescription} 
+            placeholder="Optional description"
+            rows="3"
+            maxlength="500"
+            disabled={creating}
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
+          ></textarea>
+        </div>
 
-            <div class="form-group">
-              <label for="dashboard-description">Description</label>
-              <textarea 
-                id="dashboard-description"
-                bind:value={newDashboardDescription} 
-                placeholder="Optional description"
-                rows="3"
-                maxlength="500"
-                disabled={creating}
-              ></textarea>
-            </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label for="grid-size" class="block text-sm font-medium text-gray-700 mb-2">
+              Grid Size (px)
+            </label>
+            <input 
+              id="grid-size"
+              type="number" 
+              bind:value={gridSize} 
+              min="20" 
+              max="200" 
+              step="10"
+              disabled={creating}
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label for="grid-size">Grid Size (px)</label>
-                <input 
-                  id="grid-size"
-                  type="number" 
-                  bind:value={gridSize} 
-                  min="20" 
-                  max="200" 
-                  step="10"
-                  disabled={creating}
-                />
-              </div>
+          <div>
+            <label for="columns" class="block text-sm font-medium text-gray-700 mb-2">
+              Columns
+            </label>
+            <input 
+              id="columns"
+              type="number" 
+              bind:value={columns} 
+              min="6" 
+              max="50"
+              disabled={creating}
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
 
-              <div class="form-group">
-                <label for="columns">Columns</label>
-                <input 
-                  id="columns"
-                  type="number" 
-                  bind:value={columns} 
-                  min="6" 
-                  max="50"
-                  disabled={creating}
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="rows">Rows</label>
-                <input 
-                  id="rows"
-                  type="number" 
-                  bind:value={rows} 
-                  min="6" 
-                  max="30"
-                  disabled={creating}
-                />
-              </div>
-            </div>
+          <div>
+            <label for="rows" class="block text-sm font-medium text-gray-700 mb-2">
+              Rows
+            </label>
+            <input 
+              id="rows"
+              type="number" 
+              bind:value={rows} 
+              min="6" 
+              max="30"
+              disabled={creating}
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
         </div>
-
-        <div class="form-footer">
-          <button class="cancel-btn" on:click={cancelCreate} disabled={creating}>
-            Cancel
-          </button>
-          <button class="submit-btn" on:click={createDashboard} disabled={creating}>
-            {#if creating}
-              <div class="spinner"></div>
-              Creating...
-            {:else}
-              Create Dashboard
-            {/if}
-          </button>
-        </div>
       </div>
-    </div>
-  {/if}
+    </svelte:fragment>
 
-  <div class="dashboard-list">
+    <svelte:fragment slot="footer">
+      <div class="flex justify-end gap-3">
+        <button 
+          class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+          on:click={cancelCreate} 
+          disabled={creating}
+        >
+          Cancel
+        </button>
+        <button 
+          class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+          on:click={createDashboard} 
+          disabled={creating}
+        >
+          {#if creating}
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            Creating...
+          {:else}
+            Create Dashboard
+          {/if}
+        </button>
+      </div>
+    </svelte:fragment>
+  </Modal>
+
+  <div>
     {#if loading}
-      <div class="loading">
-        <div class="spinner"></div>
-        <p>Loading dashboards...</p>
+      <div class="flex flex-col items-center justify-center py-15 px-5 text-gray-500">
+        <div class="w-6 h-6 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+        <p class="m-0">Loading dashboards...</p>
       </div>
     {:else if dashboards.length === 0}
-      <div class="empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+      <div class="flex flex-col items-center justify-center py-15 px-5 text-gray-500 text-center">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" class="mb-4 opacity-50">
           <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
         </svg>
-        <h3>No Dashboards Found</h3>
-        <p>Create your first dashboard to get started</p>
+        <h3 class="m-0 mb-2 text-lg font-semibold">No Dashboards Found</h3>
+        <p class="m-0 text-sm">Create your first dashboard to get started</p>
       </div>
     {:else}
-      <div class="dashboard-grid">
+      <div class="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
         <div 
-          class="dashboard-card new-dashboard" 
+          class="bg-white border-2 border-dashed border-gray-300 hover:border-blue-600 hover:text-blue-600 rounded-lg p-5 cursor-pointer transition-all shadow-sm flex flex-col items-center justify-center text-center min-h-[140px] text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed" 
           class:disabled={showCreateForm}
           on:click={showCreateDashboard}
           on:keydown={(e) => e.key === 'Enter' && showCreateDashboard()}
           role="button"
           tabindex="0"
         >
-          <div class="card-icon">
+          <div class="mb-3 opacity-70">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
             </svg>
           </div>
-          <h4>Create New Dashboard</h4>
-          <p>Start building a new dashboard</p>
+          <h4 class="m-0 text-base font-semibold text-gray-800 mb-1">Create New Dashboard</h4>
+          <p class="m-0 text-sm">Start building a new dashboard</p>
         </div>
 
         {#each dashboards as dashboard}
           <div 
-            class="dashboard-card" 
-            class:active={currentDashboardId === dashboard.id}
+            class="bg-white border border-gray-200 hover:border-blue-600 rounded-lg p-5 cursor-pointer transition-all shadow-sm hover:shadow-lg" 
+            class:!border-blue-600={currentDashboardId === dashboard.id}
+            class:!bg-blue-50={currentDashboardId === dashboard.id}
             on:click={() => selectDashboard(dashboard.id)}
             on:keydown={(e) => e.key === 'Enter' && selectDashboard(dashboard.id)}
             role="button"
             tabindex="0"
           >
-            <div class="card-header">
-              <h4>{dashboard.name}</h4>
+            <div class="flex justify-between items-start mb-2">
+              <h4 class="m-0 text-base font-semibold text-gray-800 flex-1">{dashboard.name}</h4>
               <button 
-                class="delete-btn" 
+                class="bg-transparent border-0 text-gray-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer p-1 rounded transition-all ml-2" 
                 on:click={(e) => deleteDashboard(dashboard, e)}
                 disabled={deleting}
                 aria-label="Delete dashboard"
@@ -307,12 +330,12 @@
             </div>
             
             {#if dashboard.description}
-              <p class="card-description">{dashboard.description}</p>
+              <p class="m-0 mb-3 text-sm text-gray-500 leading-relaxed">{dashboard.description}</p>
             {/if}
             
-            <div class="card-meta">
-              <span class="block-count">{dashboard.blocks.length} blocks</span>
-              <span class="last-modified">Modified {formatDate(dashboard.lastModified)}</span>
+            <div class="flex justify-between items-center text-xs text-gray-400">
+              <span class="font-medium">{dashboard.blocks.length} blocks</span>
+              <span>Modified {formatDate(dashboard.lastModified)}</span>
             </div>
           </div>
         {/each}
@@ -321,406 +344,4 @@
   </div>
 </div>
 
-<style>
-  .dashboard-manager {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 24px;
-  }
 
-  .manager-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-  }
-
-  .manager-header h2 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 600;
-    color: #1f2937;
-  }
-
-  .create-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .create-btn:hover:not(:disabled) {
-    background: #2563eb;
-  }
-
-  .create-btn:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-  }
-
-  .error-message {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 6px;
-    color: #dc2626;
-    padding: 12px 16px;
-    margin-bottom: 16px;
-  }
-
-  .error-message button {
-    background: none;
-    border: none;
-    color: #dc2626;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 0;
-    width: 24px;
-    height: 24px;
-  }
-
-  /* Modal Styles */
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-  }
-
-  .modal-content {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e5e7eb;
-    background: #f9fafb;
-    flex-shrink: 0;
-  }
-
-  .modal-header h2 {
-    margin: 0;
-    color: #111827;
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-
-  .close-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #6b7280;
-    padding: 4px;
-    border-radius: 4px;
-    transition: all 0.2s;
-  }
-
-  .close-btn:hover {
-    color: #374151;
-    background: #e5e7eb;
-  }
-
-  .modal-body {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    padding: 20px 24px;
-  }
-
-  .form-content {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .form-footer {
-    padding: 20px 24px;
-    border-top: 1px solid #e5e7eb;
-    background: #f9fafb;
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-    flex-shrink: 0;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 16px;
-  }
-
-  .form-group label {
-    margin-bottom: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
-  }
-
-  .form-group input,
-  .form-group textarea {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-    transition: border-color 0.2s;
-  }
-
-  .form-group input:focus,
-  .form-group textarea:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-
-  .form-group textarea {
-    resize: vertical;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 16px;
-  }
-
-  .cancel-btn, .submit-btn {
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .cancel-btn {
-    background: #6b7280;
-    color: white;
-    border: none;
-  }
-
-  .cancel-btn:hover:not(:disabled) {
-    background: #4b5563;
-  }
-
-  .submit-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #3b82f6;
-    color: white;
-    border: none;
-  }
-
-  .submit-btn:hover:not(:disabled) {
-    background: #2563eb;
-  }
-
-  .cancel-btn:disabled, .submit-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    color: #6b7280;
-  }
-
-  .spinner {
-    width: 24px;
-    height: 24px;
-    border: 2px solid #e5e7eb;
-    border-top: 2px solid #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 12px;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    color: #6b7280;
-    text-align: center;
-  }
-
-  .empty-state svg {
-    margin-bottom: 16px;
-    opacity: 0.5;
-  }
-
-  .empty-state h3 {
-    margin: 0 0 8px 0;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  .empty-state p {
-    margin: 0;
-    font-size: 14px;
-  }
-
-  .dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-  }
-
-  .dashboard-card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 20px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .dashboard-card:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-  }
-
-  .dashboard-card.active {
-    border-color: #3b82f6;
-    background: #eff6ff;
-  }
-
-  .dashboard-card.new-dashboard {
-    border: 2px dashed #d1d5db;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    min-height: 140px;
-    color: #6b7280;
-  }
-
-  .dashboard-card.new-dashboard:hover:not(.disabled) {
-    border-color: #3b82f6;
-    color: #3b82f6;
-  }
-
-  .dashboard-card.new-dashboard.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .card-icon {
-    margin-bottom: 12px;
-    opacity: 0.7;
-  }
-
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
-  }
-
-  .card-header h4 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2937;
-    flex: 1;
-  }
-
-  .delete-btn {
-    background: none;
-    border: none;
-    color: #6b7280;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    transition: all 0.2s;
-    margin-left: 8px;
-  }
-
-  .delete-btn:hover:not(:disabled) {
-    background: #fee2e2;
-    color: #dc2626;
-  }
-
-  .delete-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .card-description {
-    margin: 0 0 12px 0;
-    font-size: 14px;
-    color: #6b7280;
-    line-height: 1.4;
-  }
-
-  .card-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-    color: #9ca3af;
-  }
-
-  .block-count {
-    font-weight: 500;
-  }
-
-  @media (max-width: 768px) {
-    .modal-content {
-      max-width: 95vw;
-      max-height: 90vh;
-    }
-    
-    .form-footer {
-      flex-direction: column;
-    }
-    
-    .cancel-btn, .submit-btn {
-      width: 100%;
-    }
-
-    .form-row {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>

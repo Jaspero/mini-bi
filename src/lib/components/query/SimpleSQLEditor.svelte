@@ -69,63 +69,15 @@
   }
 </script>
 
-<div class="simple-sql-editor">
-  <div class="editor-container" bind:this={editorContainer}>
+<div class="h-96 border border-gray-300 rounded overflow-hidden">
+  <div class="w-full h-full relative" bind:this={editorContainer}>
     {#if loading}
-      <div class="loading">
-        <div class="spinner"></div>
-        <p>Loading SQL Editor...</p>
+      <div class="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+        <div class="w-6 h-6 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-2.5"></div>
+        <p class="m-0 text-gray-600 text-sm">Loading SQL Editor...</p>
       </div>
     {/if}
   </div>
 </div>
 
-<style>
-  .simple-sql-editor {
-    height: 400px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    overflow: hidden;
-  }
 
-  .editor-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-  }
-
-  .loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    z-index: 10;
-  }
-
-  .spinner {
-    width: 24px;
-    height: 24px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 10px;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  .loading p {
-    margin: 0;
-    color: #666;
-    font-size: 14px;
-  }
-</style>
