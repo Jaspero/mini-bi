@@ -1,6 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { DashboardComponent, DashboardManager, GlobalQueryManager, MockDashboardService, type Dashboard, type Query } from '$lib';
+  import {
+    DashboardComponent,
+    DashboardManager,
+    GlobalQueryManager,
+    MockDashboardService,
+    type Dashboard,
+    type Query
+  } from '$lib';
   import Sidebar from '$lib/components/ui/Sidebar.svelte';
 
   let dashboardService = new MockDashboardService();
@@ -15,7 +22,7 @@
     // Load available dashboards and queries
     availableDashboards = await dashboardService.loadDashboards();
     globalQueries = await dashboardService.loadGlobalQueries();
-    
+
     // Select the first dashboard by default
     if (availableDashboards.length > 0) {
       selectedDashboardId = availableDashboards[0].id;
@@ -33,7 +40,7 @@
   }
 
   function handleDashboardDeleted(event: CustomEvent<{ dashboardId: string }>) {
-    availableDashboards = availableDashboards.filter(d => d.id !== event.detail.dashboardId);
+    availableDashboards = availableDashboards.filter((d) => d.id !== event.detail.dashboardId);
   }
 
   function handleDashboardLoaded(event: CustomEvent<{ dashboard: Dashboard }>) {
@@ -62,7 +69,7 @@
   }
 
   function handleQueryUpdated(event: CustomEvent<{ query: Query }>) {
-    const index = globalQueries.findIndex(q => q.id === event.detail.query.id);
+    const index = globalQueries.findIndex((q) => q.id === event.detail.query.id);
     if (index !== -1) {
       globalQueries[index] = event.detail.query;
       globalQueries = [...globalQueries];
@@ -70,7 +77,7 @@
   }
 
   function handleQueryDeleted(event: CustomEvent<{ queryId: string }>) {
-    globalQueries = globalQueries.filter(q => q.id !== event.detail.queryId);
+    globalQueries = globalQueries.filter((q) => q.id !== event.detail.queryId);
   }
 
   function toggleDashboardSidebar() {
@@ -97,7 +104,7 @@
 
   function getCurrentDashboardName(): string {
     if (!selectedDashboardId) return 'No Dashboard Selected';
-    const dashboard = availableDashboards.find(d => d.id === selectedDashboardId);
+    const dashboard = availableDashboards.find((d) => d.id === selectedDashboardId);
     return dashboard?.name || 'Unknown Dashboard';
   }
 </script>
@@ -107,11 +114,13 @@
   <meta name="description" content="Demo of the Mini-BI dashboard library" />
 </svelte:head>
 
-<div class="w-screen h-screen flex flex-col font-sans">
-  <main class="flex-1 min-h-0 bg-slate-50 relative">
+<div class="flex h-screen w-screen flex-col font-sans">
+  <main class="relative min-h-0 flex-1 bg-slate-50">
     {#if loading}
-      <div class="flex flex-col items-center justify-center h-full text-gray-500">
-        <div class="w-12 h-12 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+      <div class="flex h-full flex-col items-center justify-center text-gray-500">
+        <div
+          class="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500"
+        ></div>
         <p class="text-lg">Loading demo...</p>
       </div>
     {:else}
@@ -134,40 +143,36 @@
       />
 
       <!-- Dashboard Management Sidebar -->
-      <Sidebar 
-        isOpen={showDashboardSidebar} 
-        title="Dashboard Management" 
+      <Sidebar
+        isOpen={showDashboardSidebar}
+        title="Dashboard Management"
         width="w-96"
         position="right"
         on:close={closeDashboardSidebar}
       >
-        <div class="p-4">
-          <DashboardManager
-            {dashboardService}
-            currentDashboardId={selectedDashboardId}
-            on:dashboard-selected={handleDashboardSelected}
-            on:dashboard-created={handleDashboardCreated}
-            on:dashboard-deleted={handleDashboardDeleted}
-          />
-        </div>
+        <DashboardManager
+          {dashboardService}
+          currentDashboardId={selectedDashboardId}
+          on:dashboard-selected={handleDashboardSelected}
+          on:dashboard-created={handleDashboardCreated}
+          on:dashboard-deleted={handleDashboardDeleted}
+        />
       </Sidebar>
 
       <!-- Query Management Sidebar -->
-      <Sidebar 
-        isOpen={showQuerySidebar} 
-        title="Query Management" 
+      <Sidebar
+        isOpen={showQuerySidebar}
+        title="Query Management"
         width="w-[32rem]"
         position="right"
         on:close={closeQuerySidebar}
       >
-        <div class="p-4">
-          <GlobalQueryManager
-            {dashboardService}
-            on:query-created={handleQueryCreated}
-            on:query-updated={handleQueryUpdated}
-            on:query-deleted={handleQueryDeleted}
-          />
-        </div>
+        <GlobalQueryManager
+          {dashboardService}
+          on:query-created={handleQueryCreated}
+          on:query-updated={handleQueryUpdated}
+          on:query-deleted={handleQueryDeleted}
+        />
       </Sidebar>
     {/if}
   </main>
