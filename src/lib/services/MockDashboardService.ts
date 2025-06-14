@@ -25,7 +25,9 @@ export class MockDashboardService implements IDashboardService {
         gridSize: 80,
         columns: 20,
         rows: 15,
-        gap: 10
+        gap: 10,
+        canvasWidth: { type: 'fixed', value: 1600 },
+        canvasHeight: { type: 'fixed', value: 1000 }
       },
       blocks: [
         {
@@ -135,7 +137,9 @@ export class MockDashboardService implements IDashboardService {
         gridSize: 80,
         columns: 20,
         rows: 12,
-        gap: 10
+        gap: 10,
+        canvasWidth: { type: 'screen' },
+        canvasHeight: { type: 'fixed', value: 800 }
       },
       blocks: [
         {

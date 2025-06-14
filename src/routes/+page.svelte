@@ -1,14 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { DashboardComponent, DashboardManager, GlobalQueryManager, MockDashboardService, type Dashboard, type Query } from '$lib';
+  import Sidebar from '$lib/components/ui/Sidebar.svelte';
 
   let dashboardService = new MockDashboardService();
   let selectedDashboardId: string | null = null;
   let availableDashboards: Dashboard[] = [];
   let globalQueries: Query[] = [];
   let loading = true;
-  let showManager = false;
-  let showQueryManager = false;
+  let showDashboardSidebar = false;
+  let showQuerySidebar = false;
 
   onMount(async () => {
     // Load available dashboards and queries
@@ -24,7 +25,7 @@
 
   function handleDashboardSelected(event: CustomEvent<{ dashboardId: string | null }>) {
     selectedDashboardId = event.detail.dashboardId;
-    showManager = false;
+    showDashboardSidebar = false;
   }
 
   function handleDashboardCreated(event: CustomEvent<{ dashboard: Dashboard }>) {
@@ -72,18 +73,26 @@
     globalQueries = globalQueries.filter(q => q.id !== event.detail.queryId);
   }
 
-  function toggleManager() {
-    showManager = !showManager;
-    if (showManager) {
-      showQueryManager = false;
+  function toggleDashboardSidebar() {
+    showDashboardSidebar = !showDashboardSidebar;
+    if (showDashboardSidebar) {
+      showQuerySidebar = false;
     }
   }
 
-  function toggleQueryManager() {
-    showQueryManager = !showQueryManager;
-    if (showQueryManager) {
-      showManager = false;
+  function toggleQuerySidebar() {
+    showQuerySidebar = !showQuerySidebar;
+    if (showQuerySidebar) {
+      showDashboardSidebar = false;
     }
+  }
+
+  function closeDashboardSidebar() {
+    showDashboardSidebar = false;
+  }
+
+  function closeQuerySidebar() {
+    showQuerySidebar = false;
   }
 
   function getCurrentDashboardName(): string {
@@ -99,46 +108,67 @@
 </svelte:head>
 
 <div class="w-screen h-screen flex flex-col font-sans">
-  <main class="flex-1 min-h-0 bg-slate-50">
+  <main class="flex-1 min-h-0 bg-slate-50 relative">
     {#if loading}
       <div class="flex flex-col items-center justify-center h-full text-gray-500">
         <div class="w-12 h-12 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
         <p class="text-lg">Loading demo...</p>
       </div>
-    {:else if showManager}
-      <DashboardManager
-        {dashboardService}
-        currentDashboardId={selectedDashboardId}
-        on:dashboard-selected={handleDashboardSelected}
-        on:dashboard-created={handleDashboardCreated}
-        on:dashboard-deleted={handleDashboardDeleted}
-      />
-    {:else if showQueryManager}
-      <GlobalQueryManager
-        {dashboardService}
-        isOpen={showQueryManager}
-        on:close={toggleQueryManager}
-        on:query-created={handleQueryCreated}
-        on:query-updated={handleQueryUpdated}
-        on:query-deleted={handleQueryDeleted}
-      />
     {:else}
+      <!-- Main Dashboard Content -->
       <DashboardComponent
         dashboardId={selectedDashboardId}
         {dashboardService}
         queries={globalQueries}
         editable={true}
         currentDashboardName={getCurrentDashboardName()}
-        queryManagerOpen={showQueryManager}
-        dashboardManagerOpen={showManager}
+        queryManagerOpen={showQuerySidebar}
+        dashboardManagerOpen={showDashboardSidebar}
         on:dashboard-loaded={handleDashboardLoaded}
         on:dashboard-updated={handleDashboardUpdated}
         on:dashboard-saved={handleDashboardSaved}
         on:block-edit={handleBlockEdit}
         on:block-delete={handleBlockDelete}
-        on:toggle-query-manager={toggleQueryManager}
-        on:toggle-dashboard-manager={toggleManager}
+        on:toggle-query-manager={toggleQuerySidebar}
+        on:toggle-dashboard-manager={toggleDashboardSidebar}
       />
+
+      <!-- Dashboard Management Sidebar -->
+      <Sidebar 
+        isOpen={showDashboardSidebar} 
+        title="Dashboard Management" 
+        width="w-96"
+        position="right"
+        on:close={closeDashboardSidebar}
+      >
+        <div class="p-4">
+          <DashboardManager
+            {dashboardService}
+            currentDashboardId={selectedDashboardId}
+            on:dashboard-selected={handleDashboardSelected}
+            on:dashboard-created={handleDashboardCreated}
+            on:dashboard-deleted={handleDashboardDeleted}
+          />
+        </div>
+      </Sidebar>
+
+      <!-- Query Management Sidebar -->
+      <Sidebar 
+        isOpen={showQuerySidebar} 
+        title="Query Management" 
+        width="w-[32rem]"
+        position="right"
+        on:close={closeQuerySidebar}
+      >
+        <div class="p-4">
+          <GlobalQueryManager
+            {dashboardService}
+            on:query-created={handleQueryCreated}
+            on:query-updated={handleQueryUpdated}
+            on:query-deleted={handleQueryDeleted}
+          />
+        </div>
+      </Sidebar>
     {/if}
   </main>
 </div>

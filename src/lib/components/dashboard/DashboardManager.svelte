@@ -2,7 +2,6 @@
   import { createEventDispatcher } from 'svelte';
   import type { Dashboard, IDashboardService, CreateDashboardRequest } from '../../types/index.js';
   import { validateDashboard, generateDashboardId } from '../../utils/validation.js';
-  import Modal from '../ui/Modal.svelte';
 
   export let dashboardService: IDashboardService;
   export let currentDashboardId: string | null = null;
@@ -145,304 +144,217 @@
   }
 </script>
 
-<div class="max-w-screen-xl mx-auto p-6">
-  <div class="flex justify-between items-center mb-6">
-    <h2 class="m-0 text-2xl font-semibold text-gray-800">Dashboard Manager</h2>
+<!-- Error Display -->
+{#if error}
+  <div class="bg-red-50 border border-red-200 rounded-md text-red-600 px-3 py-2 mb-4 text-sm">
+    <p class="m-0">{error}</p>
+  </div>
+{/if}
+
+
+
+<!-- Create Dashboard Form -->
+{#if showCreateForm}
+  <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+    <h3 class="text-sm font-semibold text-gray-900 mb-4">Create New Dashboard</h3>
+    
+    <div class="space-y-4">
+      <div>
+        <label for="sidebar-dashboard-name" class="block text-xs font-medium text-gray-700 mb-1">
+          Dashboard Name *
+        </label>
+        <input 
+          id="sidebar-dashboard-name"
+          type="text" 
+          bind:value={newDashboardName} 
+          placeholder="Enter dashboard name"
+          maxlength="100"
+          disabled={creating}
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        />
+      </div>
+
+      <div>
+        <label for="sidebar-dashboard-description" class="block text-xs font-medium text-gray-700 mb-1">
+          Description
+        </label>
+        <textarea 
+          id="sidebar-dashboard-description"
+          bind:value={newDashboardDescription} 
+          placeholder="Optional description"
+          rows="2"
+          maxlength="500"
+          disabled={creating}
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
+        ></textarea>
+      </div>
+
+      <!-- Canvas Size Configuration -->
+      <div class="border-t border-gray-300 pt-3">
+        <h4 class="text-xs font-medium text-gray-900 mb-3">Canvas Size</h4>
+        
+        <div class="space-y-3">
+          <!-- Canvas Width -->
+          <div>
+            <span class="block text-xs font-medium text-gray-700 mb-1">Width</span>
+            <div class="space-y-1">
+              <label class="flex items-center text-xs">
+                <input 
+                  type="radio" 
+                  value="screen" 
+                  bind:group={canvasWidthType}
+                  disabled={creating}
+                  class="mr-2 text-xs"
+                />
+                Screen Width
+              </label>
+              <label class="flex items-center text-xs">
+                <input 
+                  type="radio" 
+                  value="fixed" 
+                  bind:group={canvasWidthType}
+                  disabled={creating}
+                  class="mr-2"
+                />
+                Fixed:
+                <input 
+                  type="number" 
+                  bind:value={canvasWidthValue}
+                  min="800"
+                  max="4000"
+                  step="100"
+                  disabled={creating || canvasWidthType !== 'fixed'}
+                  class="ml-2 w-16 px-1 py-0.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
+                />
+                <span class="ml-1 text-xs text-gray-500">px</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Canvas Height -->
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Height</label>
+            <div class="space-y-1">
+              <label class="flex items-center text-xs">
+                <input 
+                  type="radio" 
+                  value="screen" 
+                  bind:group={canvasHeightType}
+                  disabled={creating}
+                  class="mr-2"
+                />
+                Screen Height
+              </label>
+              <label class="flex items-center text-xs">
+                <input 
+                  type="radio" 
+                  value="fixed" 
+                  bind:group={canvasHeightType}
+                  disabled={creating}
+                  class="mr-2"
+                />
+                Fixed:
+                <input 
+                  type="number" 
+                  bind:value={canvasHeightValue}
+                  min="600"
+                  max="3000"
+                  step="100"
+                  disabled={creating || canvasHeightType !== 'fixed'}
+                  class="ml-2 w-16 px-1 py-0.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
+                />
+                <span class="ml-1 text-xs text-gray-500">px</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="flex gap-2 mt-4">
+      <button 
+        class="flex-1 px-3 py-2 text-xs text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+        on:click={cancelCreate} 
+        disabled={creating}
+      >
+        Cancel
+      </button>
+      <button 
+        class="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs" 
+        on:click={createDashboard} 
+        disabled={creating}
+      >
+        {#if creating}
+          <div class="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+          Creating...
+        {:else}
+          Create
+        {/if}
+      </button>
+    </div>
+  </div>
+{/if}
+
+<!-- Dashboard List -->
+<div class="space-y-3">
+  <div class="flex justify-between items-center mb-4 flex-shrink-0">
+    <h3 class="text-lg font-medium text-gray-900">Dashboards ({dashboards.length})</h3>
     <button 
-      class="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white border-0 rounded-md text-sm font-medium cursor-pointer transition-colors" 
+      class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed" 
       on:click={showCreateDashboard} 
-      disabled={showCreateForm}
+      disabled={showCreateForm || creating}
     >
-      <span class="material-symbols-outlined text-base">add</span>
+      <span class="material-symbols-outlined text-base mr-2">add</span>
       New Dashboard
     </button>
   </div>
-
-  {#if error}
-    <div class="bg-red-50 border border-red-200 rounded-md text-red-600 px-4 py-3 mb-4 flex justify-between items-center">
-      <p class="m-0">{error}</p>
-      <button 
-        class="bg-transparent border-0 text-red-600 text-lg cursor-pointer p-0 w-6 h-6 hover:bg-red-100 rounded"
-        on:click={() => error = ''}
-      >
-        ×
-      </button>
+  
+  {#if loading}
+    <div class="flex flex-col items-center justify-center py-8 text-gray-500">
+      <div class="w-6 h-6 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-2"></div>
+      <p class="text-xs">Loading dashboards...</p>
     </div>
-  {/if}
-
-  <!-- Dashboard Creation Modal -->
-  <Modal 
-    isOpen={showCreateForm} 
-    on:close={cancelCreate}
-    title="Create New Dashboard"
-    size="medium"
-  >
-    <svelte:fragment slot="default">
-      {#if error}
-        <div class="bg-red-50 border border-red-200 rounded-md p-3 mb-4 text-red-800">
-          {error}
-        </div>
-      {/if}
-
-      <div class="space-y-4">
-        <div>
-          <label for="dashboard-name" class="block text-sm font-medium text-gray-700 mb-2">
-            Dashboard Name *
-          </label>
-          <input 
-            id="dashboard-name"
-            type="text" 
-            bind:value={newDashboardName} 
-            placeholder="Enter dashboard name"
-            maxlength="100"
-            disabled={creating}
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <div>
-          <label for="dashboard-description" class="block text-sm font-medium text-gray-700 mb-2">
-            Description
-          </label>
-          <textarea 
-            id="dashboard-description"
-            bind:value={newDashboardDescription} 
-            placeholder="Optional description"
-            rows="3"
-            maxlength="500"
-            disabled={creating}
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
-          ></textarea>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label for="grid-size" class="block text-sm font-medium text-gray-700 mb-2">
-              Grid Size (px)
-            </label>
-            <input 
-              id="grid-size"
-              type="number" 
-              bind:value={gridSize} 
-              min="20" 
-              max="200" 
-              step="10"
-              disabled={creating}
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label for="columns" class="block text-sm font-medium text-gray-700 mb-2">
-              Columns
-            </label>
-            <input 
-              id="columns"
-              type="number" 
-              bind:value={columns} 
-              min="6" 
-              max="50"
-              disabled={creating}
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label for="rows" class="block text-sm font-medium text-gray-700 mb-2">
-              Rows
-            </label>
-            <input 
-              id="rows"
-              type="number" 
-              bind:value={rows} 
-              min="6" 
-              max="30"
-              disabled={creating}
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        <!-- Canvas Size Configuration -->
-        <div class="border-t border-gray-200 pt-4 mt-4">
-          <h4 class="text-sm font-medium text-gray-900 mb-4">Canvas Size</h4>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Canvas Width -->
-            <div>
-              <fieldset>
-                <legend class="block text-sm font-medium text-gray-700 mb-2">Canvas Width</legend>
-                <div class="space-y-2">
-                  <div class="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="width-screen" 
-                      value="screen" 
-                      bind:group={canvasWidthType}
-                      disabled={creating}
-                      class="mr-2"
-                    />
-                    <label for="width-screen" class="text-sm text-gray-700">Screen Width</label>
-                  </div>
-                  <div class="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="width-fixed" 
-                      value="fixed" 
-                      bind:group={canvasWidthType}
-                      disabled={creating}
-                      class="mr-2"
-                    />
-                    <label for="width-fixed" class="text-sm text-gray-700">Fixed Width:</label>
-                    <input 
-                      type="number" 
-                      bind:value={canvasWidthValue}
-                      min="800"
-                      max="4000"
-                      step="100"
-                      disabled={creating || canvasWidthType !== 'fixed'}
-                      class="ml-2 w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                    />
-                    <span class="ml-1 text-sm text-gray-500">px</span>
-                  </div>
-                </div>
-              </fieldset>
-            </div>
-
-            <!-- Canvas Height -->
-            <div>
-              <fieldset>
-                <legend class="block text-sm font-medium text-gray-700 mb-2">Canvas Height</legend>
-                <div class="space-y-2">
-                  <div class="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="height-screen" 
-                      value="screen" 
-                      bind:group={canvasHeightType}
-                      disabled={creating}
-                      class="mr-2"
-                    />
-                    <label for="height-screen" class="text-sm text-gray-700">Screen Height</label>
-                  </div>
-                  <div class="flex items-center">
-                    <input 
-                      type="radio" 
-                      id="height-fixed" 
-                      value="fixed" 
-                      bind:group={canvasHeightType}
-                      disabled={creating}
-                      class="mr-2"
-                    />
-                    <label for="height-fixed" class="text-sm text-gray-700">Fixed Height:</label>
-                    <input 
-                      type="number" 
-                      bind:value={canvasHeightValue}
-                      min="600"
-                      max="3000"
-                      step="100"
-                      disabled={creating || canvasHeightType !== 'fixed'}
-                      class="ml-2 w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                    />
-                    <span class="ml-1 text-sm text-gray-500">px</span>
-                  </div>
-                </div>
-              </fieldset>
-            </div>
-          </div>
-        </div>
-      </div>
-    </svelte:fragment>
-
-    <svelte:fragment slot="footer">
-      <div class="flex justify-end gap-3">
-        <button 
-          class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-          on:click={cancelCreate} 
-          disabled={creating}
-        >
-          Cancel
-        </button>
-        <button 
-          class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-          on:click={createDashboard} 
-          disabled={creating}
-        >
-          {#if creating}
-            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            Creating...
-          {:else}
-            Create Dashboard
-          {/if}
-        </button>
-      </div>
-    </svelte:fragment>
-  </Modal>
-
-  <div>
-    {#if loading}
-      <div class="flex flex-col items-center justify-center py-15 px-5 text-gray-500">
-        <div class="w-6 h-6 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
-        <p class="m-0">Loading dashboards...</p>
-      </div>
-    {:else if dashboards.length === 0}
-      <div class="flex flex-col items-center justify-center py-15 px-5 text-gray-500 text-center">
-        <span class="material-symbols-outlined text-5xl mb-4 opacity-50">dashboard</span>
-        <h3 class="m-0 mb-2 text-lg font-semibold">No Dashboards Found</h3>
-        <p class="m-0 text-sm">Create your first dashboard to get started</p>
-      </div>
-    {:else}
-      <div class="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
-        <div 
-          class="bg-white border-2 border-dashed border-gray-300 hover:border-blue-600 hover:text-blue-600 rounded-lg p-5 cursor-pointer transition-all shadow-sm flex flex-col items-center justify-center text-center min-h-[140px] text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed" 
-          class:disabled={showCreateForm}
-          on:click={showCreateDashboard}
-          on:keydown={(e) => e.key === 'Enter' && showCreateDashboard()}
-          role="button"
-          tabindex="0"
-        >
-          <div class="mb-3 opacity-70">
-            <span class="material-symbols-outlined text-3xl opacity-70">add</span>
-          </div>
-          <h4 class="m-0 text-base font-semibold text-gray-800 mb-1">Create New Dashboard</h4>
-          <p class="m-0 text-sm">Start building a new dashboard</p>
-        </div>
-
-        {#each dashboards as dashboard}
-          <div 
-            class="bg-white border border-gray-200 hover:border-blue-600 rounded-lg p-5 cursor-pointer transition-all shadow-sm hover:shadow-lg" 
-            class:!border-blue-600={currentDashboardId === dashboard.id}
-            class:!bg-blue-50={currentDashboardId === dashboard.id}
-            on:click={() => selectDashboard(dashboard.id)}
-            on:keydown={(e) => e.key === 'Enter' && selectDashboard(dashboard.id)}
-            role="button"
-            tabindex="0"
+  {:else if dashboards.length === 0}
+    <div class="text-center py-8 text-gray-500">
+      <span class="material-symbols-outlined text-4xl mb-3 opacity-50 block">dashboard</span>
+      <p class="text-xs mb-2 font-medium">No Dashboards Found</p>
+      <p class="text-xs">Create your first dashboard to get started</p>
+    </div>
+  {:else}
+    {#each dashboards as dashboard}
+      <div 
+        class="bg-white border border-gray-200 hover:border-blue-300 rounded-lg p-3 cursor-pointer transition-all shadow-sm hover:shadow-md" 
+        class:border-blue-500={currentDashboardId === dashboard.id}
+        class:bg-blue-50={currentDashboardId === dashboard.id}
+        on:click={() => selectDashboard(dashboard.id)}
+        on:keydown={(e) => e.key === 'Enter' && selectDashboard(dashboard.id)}
+        role="button"
+        tabindex="0"
+      >
+        <div class="flex justify-between items-start mb-2">
+          <h4 class="text-sm font-medium text-gray-900 truncate flex-1 mr-2">{dashboard.name}</h4>
+          <button 
+            class="text-gray-400 hover:text-red-600 p-1 rounded transition-colors" 
+            on:click={(e) => deleteDashboard(dashboard, e)}
+            disabled={deleting}
+            aria-label="Delete dashboard"
           >
-            <div class="flex justify-between items-start mb-2">
-              <h4 class="m-0 text-base font-semibold text-gray-800 flex-1">{dashboard.name}</h4>
-              <button 
-                class="bg-transparent border-0 text-gray-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer p-1 rounded transition-all ml-2" 
-                on:click={(e) => deleteDashboard(dashboard, e)}
-                disabled={deleting}
-                aria-label="Delete dashboard"
-              >
-                <span class="material-symbols-outlined text-base">delete</span>
-              </button>
-            </div>
-            
-            {#if dashboard.description}
-              <p class="m-0 mb-3 text-sm text-gray-500 leading-relaxed">{dashboard.description}</p>
-            {/if}
-            
-            <div class="flex justify-between items-center text-xs text-gray-400">
-              <span class="font-medium">{dashboard.blocks.length} blocks</span>
-              <span>Modified {formatDate(dashboard.lastModified)}</span>
-            </div>
-          </div>
-        {/each}
+            <span class="material-symbols-outlined text-sm">delete</span>
+          </button>
+        </div>
+        
+        {#if dashboard.description}
+          <p class="text-xs text-gray-500 mb-2 line-clamp-2">{dashboard.description}</p>
+        {/if}
+        
+        <div class="flex justify-between text-xs text-gray-400">
+          <span>{dashboard.blocks.length} blocks</span>
+          <span>{formatDate(dashboard.lastModified)}</span>
+        </div>
       </div>
-    {/if}
-  </div>
+    {/each}
+  {/if}
 </div>
 
 

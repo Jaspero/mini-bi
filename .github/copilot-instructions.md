@@ -1,0 +1,1 @@
+1. Always assume that the app is alredy running on localhost:5173
