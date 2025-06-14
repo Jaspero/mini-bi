@@ -66,9 +66,6 @@
     ]
   };
 
-  let showSchema = false;
-  let selectedTable: any = null;
-
   // Update editor when value prop changes
   $: if (editor && value !== editor.getValue()) {
     editor.setValue(value);
@@ -251,26 +248,6 @@
     }
   }
 
-  function selectTable(table: any) {
-    selectedTable = selectedTable === table ? null : table;
-  }
-
-  function insertTableName(tableName: string) {
-    insertText(tableName);
-  }
-
-  function insertColumnName(tableName: string, columnName: string) {
-    insertText(`${tableName}.${columnName}`);
-  }
-
-  function insertSelectAll(tableName: string) {
-    const selectQuery = `SELECT * FROM ${tableName}`;
-    if (editor) {
-      editor.setValue(selectQuery);
-      editor.focus();
-    }
-  }
-
   function formatSQL() {
     if (editor && monaco) {
       editor.getAction('editor.action.formatDocument')?.run();
@@ -282,6 +259,22 @@
       editor.setValue(template);
       editor.focus();
     }
+  }
+
+  function openSchemaSidebar() {
+    dispatch('open-schema', { 
+      mockSchema, 
+      sqlTemplates,
+      insertText,
+      insertTemplate,
+      insertSelectAll: (tableName: string) => {
+        const selectQuery = `SELECT * FROM ${tableName}`;
+        if (editor) {
+          editor.setValue(selectQuery);
+          editor.focus();
+        }
+      }
+    });
   }
 
   const sqlTemplates = [
@@ -309,81 +302,10 @@
 </script>
 
 <div class="flex h-[500px] border border-gray-300 rounded-md overflow-hidden relative resize-y min-h-[300px] max-h-[80vh]">
-  <!-- Schema Panel -->
-  <div class="w-0 overflow-hidden bg-gray-50 border-r border-gray-300 transition-[width] duration-300 ease-in-out flex-shrink-0" class:!w-[300px]={showSchema}>
-    <div class="flex justify-between items-center p-3 border-b border-gray-300 bg-white">
-      <h3 class="m-0 text-sm font-semibold text-gray-700">Database Schema</h3>
-      <button class="bg-transparent border-0 text-gray-500 hover:bg-gray-100 hover:text-gray-700 cursor-pointer p-1 rounded" on:click={() => showSchema = false} aria-label="Close schema panel">
-        <span class="material-symbols-outlined text-base">close</span>
-      </button>
-    </div>
-    
-    <div class="overflow-y-auto h-[calc(100%-49px)] p-2">
-      <!-- SQL Templates Section -->
-      <div class="mb-4">
-        <h4 class="m-0 mb-2 text-xs font-semibold text-gray-700 uppercase tracking-wide">SQL Templates</h4>
-        <div class="flex flex-col gap-1 mb-4">
-          {#each sqlTemplates as template}
-            <button 
-              class="flex items-center gap-1.5 px-2 py-1.5 bg-blue-600 hover:bg-blue-700 text-white border-0 rounded text-[11px] cursor-pointer transition-colors text-left" 
-              on:click={() => insertTemplate(template.sql)}
-              title="Click to insert template"
-            >
-              <span class="material-symbols-outlined text-sm">description</span>
-              {template.name}
-            </button>
-          {/each}
-        </div>
-      </div>
-
-      <!-- Database Schema Section -->
-      <div class="mb-4">
-        <h4 class="m-0 mb-2 text-xs font-semibold text-gray-700 uppercase tracking-wide">Database Schema</h4>
-        {#each mockSchema.tables as table}
-          <div class="mb-2">
-            <div class="flex items-center gap-2 p-2 bg-white border border-gray-300 rounded cursor-pointer hover:border-blue-600 hover:shadow-sm transition-all" on:click={() => selectTable(table)} on:keydown={(e) => e.key === 'Enter' && selectTable(table)} role="button" tabindex="0">
-              <span class="material-symbols-outlined text-base">table</span>
-              <span class="flex-1 font-medium text-gray-700 text-sm">{table.name}</span>
-              <span class="flex gap-1">
-                <button class="flex items-center justify-center bg-blue-600 hover:opacity-80 text-white border-0 rounded-sm w-5 h-5 text-[11px] cursor-pointer" on:click|stopPropagation={() => insertTableName(table.name)} title="Insert table name">
-                  +
-                </button>
-                <button class="flex items-center justify-center bg-green-600 hover:opacity-80 text-white border-0 rounded-sm w-5 h-5 text-[11px] cursor-pointer" on:click|stopPropagation={() => insertSelectAll(table.name)} title="SELECT * FROM table">
-                  ★
-                </button>
-              </span>
-            </div>
-            
-            {#if selectedTable === table}
-              <div class="mt-1 pl-6">
-                {#each table.columns as column}
-                  <div class="flex justify-between items-center p-1.5 bg-white border border-gray-100 rounded-sm mb-0.5 cursor-pointer hover:border-blue-600 hover:bg-blue-50 transition-all" on:click={() => insertColumnName(table.name, column.name)} on:keydown={(e) => e.key === 'Enter' && insertColumnName(table.name, column.name)} role="button" tabindex="0">
-                    <div class="flex flex-col gap-0.5">
-                      <span class="text-xs font-medium text-gray-700">{column.name}</span>
-                      <span class="text-[11px] text-gray-500 font-mono">{column.type}</span>
-                    </div>
-                    <div class="flex gap-1">
-                      {#if column.primary}
-                        <span class="bg-yellow-100 text-yellow-700 text-[9px] px-1 py-0.5 rounded-sm font-semibold" title="Primary Key">PK</span>
-                      {/if}
-                      {#if !column.nullable}
-                        <span class="bg-purple-100 text-purple-700 text-[9px] px-1 py-0.5 rounded-sm font-semibold" title="Not Null">NN</span>
-                      {/if}
-                    </div>
-                  </div>
-                {/each}
-              </div>
-            {/if}
-          </div>
-        {/each}
-      </div>
-    </div>
-  </div>
-
   <!-- Editor Area -->
   <div class="flex-1 flex flex-col overflow-hidden">
     <div class="flex justify-between items-center px-3 py-2 bg-gray-50 border-b border-gray-300 gap-2">
-      <button class="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white border-0 px-3 py-1.5 rounded text-xs cursor-pointer transition-colors" on:click={() => showSchema = !showSchema} title="Toggle Schema Panel">
+      <button class="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white border-0 px-3 py-1.5 rounded text-xs cursor-pointer transition-colors" on:click={openSchemaSidebar} title="Open Schema Sidebar">
         <span class="material-symbols-outlined text-sm">schema</span>
         Schema
       </button>

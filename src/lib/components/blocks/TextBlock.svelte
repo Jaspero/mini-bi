@@ -62,26 +62,35 @@
 
   function handleDelete(event: MouseEvent) {
     event.stopPropagation();
-    if (confirm(`Are you sure you want to delete the "${block.title}" text block?`)) {
-      onBlockDelete(block.id);
-    }
+    onBlockDelete(block.id);
+  }
+
+  function handleRefresh(event: MouseEvent) {
+    event.stopPropagation();
+    // For text blocks, refreshing means re-processing the template
+    updateContent();
   }
 </script>
 
 <div class="w-full h-full flex flex-col bg-white rounded-lg shadow-sm overflow-hidden" bind:this={element}>
-  {#if showControls}
-    <div class="flex justify-between items-center px-4 py-3 border-b border-gray-200 bg-gray-50">
+  <div class="flex justify-between items-start py-3 px-4 border-b border-gray-200 bg-gray-50">
+    <div class="flex flex-col gap-1 min-w-0 flex-1">
       <h3 class="text-base font-semibold text-gray-900 m-0">{block.title}</h3>
-      <div class="flex items-center gap-1">
+    </div>
+    <div class="flex items-center gap-1">
+      {#if showControls}
         <button class="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" on:click={handleEdit} aria-label="Edit text">
           <span class="material-symbols-outlined text-base">edit</span>
+        </button>
+        <button class="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors" on:click={handleRefresh} aria-label="Refresh text content">
+          <span class="material-symbols-outlined text-base">refresh</span>
         </button>
         <button class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors" on:click={handleDelete} aria-label="Delete text">
           <span class="material-symbols-outlined text-base">delete</span>
         </button>
-      </div>
+      {/if}
     </div>
-  {/if}
+  </div>
   <div class="flex-1 flex flex-col leading-relaxed text-content" style={getStyleString()}>
     {@html processedContent}
   </div>

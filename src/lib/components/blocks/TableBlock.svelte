@@ -151,42 +151,35 @@
 
   function handleDelete(event: MouseEvent) {
     event.stopPropagation();
-    if (confirm(`Are you sure you want to delete the "${block.title}" table?`)) {
-      onBlockDelete(block.id);
-    }
+    onBlockDelete(block.id);
   }
 </script>
 
 <div class="w-full h-full flex flex-col bg-white rounded-lg shadow-sm overflow-hidden">
-  <div class="flex justify-between items-start p-4 border-b border-gray-200 bg-gray-50 gap-4">
+  <div class="flex justify-between items-start py-3 px-4 border-b border-gray-200 bg-gray-50 gap-4">
     <div class="flex flex-col gap-1 min-w-0 flex-1">
       <h3 class="text-base font-semibold text-gray-900 m-0">{block.title}</h3>
-      {#if block.dataSource?.type === 'query' && data?.metadata?.source}
-        <span class="text-sm text-gray-600">📊 {data.metadata.source}</span>
-      {/if}
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1">
       {#if tableConfig?.filtering?.enabled}
         <input 
           type="text" 
           placeholder="Search..." 
-          class="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          class="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mr-1"
           on:input={handleSearch}
           value={searchTerm}
         />
       {/if}
       {#if showControls}
-        <div class="flex items-center gap-1">
-          <button class="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" on:click={handleEdit} aria-label="Edit table">
-            <span class="material-symbols-outlined text-base">edit</span>
-          </button>
-          <button class="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50" on:click={refresh} disabled={loading} aria-label="Refresh table data">
-            <span class="material-symbols-outlined text-base">refresh</span>
-          </button>
-          <button class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors" on:click={handleDelete} aria-label="Delete table">
-            <span class="material-symbols-outlined text-base">delete</span>
-          </button>
-        </div>
+        <button class="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" on:click={handleEdit} aria-label="Edit table">
+          <span class="material-symbols-outlined text-base">edit</span>
+        </button>
+        <button class="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50" on:click={refresh} disabled={loading} aria-label="Refresh table data">
+          <span class="material-symbols-outlined text-base">refresh</span>
+        </button>
+        <button class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors" on:click={handleDelete} aria-label="Delete table">
+          <span class="material-symbols-outlined text-base">delete</span>
+        </button>
       {/if}
     </div>
   </div>

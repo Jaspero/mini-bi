@@ -2,6 +2,7 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import type { Query, IDashboardService } from '../../types/index.js';
   import SQLEditor from './SQLEditor_Reliable.svelte';
+  import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 
   export let dashboardService: IDashboardService;
 
@@ -9,6 +10,7 @@
     'query-created': { query: Query };
     'query-updated': { query: Query };
     'query-deleted': { queryId: string };
+    'open-schema': any;
   }>();
 
   let queries: Query[] = [];
@@ -16,6 +18,10 @@
   let loading = false;
   let error = '';
   let showQueryEditor = false;
+
+  // Confirmation modal state
+  let showConfirmModal = false;
+  let queryToDelete: Query | null = null;
 
   // Form state
   let name = '';
@@ -108,26 +114,38 @@
   }
 
   async function deleteQuery(query: Query) {
-    if (!confirm(`Are you sure you want to delete "${query.name}"?`)) {
-      return;
-    }
+    queryToDelete = query;
+    showConfirmModal = true;
+  }
+
+  async function confirmDeleteQuery() {
+    if (!queryToDelete) return;
 
     try {
       loading = true;
       error = '';
-      await dashboardService.deleteGlobalQuery(query.id);
-      dispatch('query-deleted', { queryId: query.id });
+      await dashboardService.deleteGlobalQuery(queryToDelete.id);
+      dispatch('query-deleted', { queryId: queryToDelete.id });
       await loadQueries();
       
-      if (selectedQuery?.id === query.id) {
+      if (selectedQuery?.id === queryToDelete.id) {
         resetForm();
       }
+      queryToDelete = null;
+      showConfirmModal = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to delete query';
       console.error('Error deleting query:', err);
+      queryToDelete = null;
+      showConfirmModal = false;
     } finally {
       loading = false;
     }
+  }
+
+  function cancelDeleteQuery() {
+    queryToDelete = null;
+    showConfirmModal = false;
   }
 
   async function testQuery() {
@@ -224,6 +242,7 @@
                 on:change={(e) => sql = e.detail.value}
                 on:execute={() => testQuery()}
                 on:save={() => saveQuery()}
+                on:open-schema={(e) => dispatch('open-schema', e.detail)}
               />
             </div>
           </div>
@@ -292,7 +311,7 @@
                 <h4 class="text-sm font-medium text-gray-900 truncate flex-1 mr-2">{query.name}</h4>
                 <button 
                   class="text-gray-400 hover:text-red-600 p-1 rounded transition-colors" 
-                  on:click={(e) => { e.stopPropagation(); deleteQuery(query); }}
+                  on:click={(e) => { e.stopPropagation(); e.preventDefault(); deleteQuery(query); }}
                   disabled={loading}
                   aria-label="Delete query"
                 >
@@ -334,4 +353,13 @@
   {/if}
 </div>
 
-
+<!-- Confirmation Modal -->
+<ConfirmationModal
+  isOpen={showConfirmModal}
+  title="Delete Query"
+  message={queryToDelete ? `Are you sure you want to delete "${queryToDelete.name}"?` : ''}
+  confirmText="Delete"
+  cancelText="Cancel"
+  on:confirm={confirmDeleteQuery}
+  on:cancel={cancelDeleteQuery}
+/>

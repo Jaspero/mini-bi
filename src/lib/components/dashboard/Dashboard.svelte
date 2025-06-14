@@ -9,14 +9,15 @@
   } from '../../types/index.js';
   import DashboardCanvas from './DashboardCanvas.svelte';
   import BlockEditor from './BlockEditor.svelte';
+  import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 
   export let dashboardId: string | null = null;
   export let dashboardService: IDashboardService;
   export let queries: Query[] = [];
   export let editable = true;
-  export let currentDashboardName: string = '';
   export let queryManagerOpen: boolean = false;
   export let dashboardManagerOpen: boolean = false;
+  export let availableDashboardsCount: number = 0;
 
   const dispatch = createEventDispatcher<{
     'dashboard-loaded': { dashboard: Dashboard };
@@ -37,6 +38,18 @@
   let showBlockEditor = false;
   let editMode = true; // true = edit mode (controls visible, no drag/resize), false = move mode (drag/resize enabled, no controls)
   let showAddBlockDropdown = false;
+
+  // Block deletion confirmation modal state
+  let showBlockDeleteModal = false;
+  let blockToDelete: Block | null = null;
+
+  // Reactive statement to reload dashboard when dashboardId changes
+  $: if (dashboardId) {
+    loadDashboard();
+  } else if (dashboardId === null) {
+    dashboard = null;
+    loading = false;
+  }
 
   onMount(async () => {
     if (dashboardId) {
@@ -162,6 +175,28 @@
       dispatch('dashboard-updated', { dashboard });
       dispatch('block-delete', { blockId: event.detail.blockId });
     }
+  }
+
+  function requestBlockDeletion(event: CustomEvent<{ block: Block }>) {
+    blockToDelete = event.detail.block;
+    showBlockDeleteModal = true;
+  }
+
+  function confirmBlockDeletion() {
+    if (!blockToDelete) return;
+    
+    // Call the existing delete handler with the block ID
+    handleBlockDelete(new CustomEvent('block-delete', { 
+      detail: { blockId: blockToDelete.id } 
+    }));
+    
+    blockToDelete = null;
+    showBlockDeleteModal = false;
+  }
+
+  function cancelBlockDeletion() {
+    blockToDelete = null;
+    showBlockDeleteModal = false;
   }
 
   function handleBlockEditorSave(event: CustomEvent<{ block: Block }>) {
@@ -361,6 +396,18 @@
                 <h2 class="text-2xl font-bold text-gray-900">{dashboard.name}</h2>
                 <div class="flex items-center gap-2">
                   <button
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700"
+                    class:!bg-purple-100={dashboardManagerOpen}
+                    class:!text-purple-700={dashboardManagerOpen}
+                    on:click={() => dispatch('toggle-dashboard-manager')}
+                    title="{dashboardManagerOpen
+                      ? 'Close'
+                      : 'Manage'} Dashboards ({availableDashboardsCount} available)"
+                    aria-label="{dashboardManagerOpen ? 'Close' : 'Manage'} dashboards"
+                  >
+                    <span class="material-symbols-outlined">dashboard</span>
+                  </button>
+                  <button
                     class="inline-flex h-8 w-8 items-center justify-center rounded-md text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
                     class:!bg-blue-100={queryManagerOpen}
                     class:!text-blue-700={queryManagerOpen}
@@ -371,17 +418,6 @@
                     aria-label="{queryManagerOpen ? 'Close' : 'Manage'} queries"
                   >
                     <span class="material-symbols-outlined">database</span>
-                  </button>
-
-                  <button
-                    class="inline-flex h-8 w-8 items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700"
-                    class:!bg-purple-100={dashboardManagerOpen}
-                    class:!text-purple-700={dashboardManagerOpen}
-                    on:click={() => dispatch('toggle-dashboard-manager')}
-                    title="{dashboardManagerOpen ? 'Close' : 'Manage'} Dashboards"
-                    aria-label="{dashboardManagerOpen ? 'Close' : 'Manage'} dashboards"
-                  >
-                    <span class="material-symbols-outlined">dashboard</span>
                   </button>
                 </div>
               </div>
@@ -497,6 +533,7 @@
         on:block-resized={handleBlockResized}
         on:block-edit={handleBlockEdit}
         on:block-delete={handleBlockDelete}
+        on:block-delete-request={requestBlockDeletion}
       />
     </div>
   {/if}
@@ -508,4 +545,15 @@
   {queries}
   on:block-updated={handleBlockEditorSave}
   on:close={handleBlockEditorClose}
+/>
+
+<!-- Block Deletion Confirmation Modal -->
+<ConfirmationModal
+  isOpen={showBlockDeleteModal}
+  title="Delete Block"
+  message={blockToDelete ? `Are you sure you want to delete the "${blockToDelete.title}" ${blockToDelete.type}? This action cannot be undone.` : ''}
+  confirmText="Delete"
+  cancelText="Cancel"
+  on:confirm={confirmBlockDeletion}
+  on:cancel={cancelBlockDeletion}
 />

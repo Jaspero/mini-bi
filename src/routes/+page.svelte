@@ -5,6 +5,7 @@
     DashboardManager,
     GlobalQueryManager,
     MockDashboardService,
+    SchemaSidebar,
     type Dashboard,
     type Query
   } from '$lib';
@@ -17,6 +18,8 @@
   let loading = true;
   let showDashboardSidebar = false;
   let showQuerySidebar = false;
+  let showSchemaSidebar = false;
+  let schemaData: any = null;
 
   onMount(async () => {
     // Load available dashboards and queries
@@ -84,6 +87,7 @@
     showDashboardSidebar = !showDashboardSidebar;
     if (showDashboardSidebar) {
       showQuerySidebar = false;
+      // Keep schema sidebar open if it was already open
     }
   }
 
@@ -91,6 +95,7 @@
     showQuerySidebar = !showQuerySidebar;
     if (showQuerySidebar) {
       showDashboardSidebar = false;
+      // Keep schema sidebar open if it was already open
     }
   }
 
@@ -102,10 +107,47 @@
     showQuerySidebar = false;
   }
 
-  function getCurrentDashboardName(): string {
-    if (!selectedDashboardId) return 'No Dashboard Selected';
-    const dashboard = availableDashboards.find((d) => d.id === selectedDashboardId);
-    return dashboard?.name || 'Unknown Dashboard';
+  function closeSchemaSidebar() {
+    showSchemaSidebar = false;
+  }
+
+  function handleOpenSchema(event: CustomEvent) {
+    schemaData = event.detail;
+    showSchemaSidebar = true;
+    // Don't close other sidebars - keep them open alongside the schema sidebar
+  }
+
+  function handleSchemaInsertText(event: CustomEvent<{ text: string }>) {
+    if (schemaData && schemaData.insertText) {
+      schemaData.insertText(event.detail.text);
+    }
+  }
+
+  function handleSchemaInsertTemplate(event: CustomEvent<{ template: string }>) {
+    if (schemaData && schemaData.insertTemplate) {
+      schemaData.insertTemplate(event.detail.template);
+    }
+  }
+
+  function handleSchemaSetEditorValue(event: CustomEvent<{ value: string }>) {
+    if (schemaData && schemaData.insertSelectAll) {
+      // This is for SELECT * FROM operations
+      schemaData.insertSelectAll(event.detail.value.replace('SELECT * FROM ', ''));
+    }
+  }
+
+  // Handle global keyboard shortcuts
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      // Close schema sidebar first if it's open, then other sidebars
+      if (showSchemaSidebar) {
+        closeSchemaSidebar();
+      } else if (showQuerySidebar) {
+        closeQuerySidebar();
+      } else if (showDashboardSidebar) {
+        closeDashboardSidebar();
+      }
+    }
   }
 </script>
 
@@ -113,6 +155,8 @@
   <title>Mini-BI Library Demo</title>
   <meta name="description" content="Demo of the Mini-BI dashboard library" />
 </svelte:head>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <div class="flex h-screen w-screen flex-col font-sans">
   <main class="relative min-h-0 flex-1 bg-slate-50">
@@ -130,9 +174,9 @@
         {dashboardService}
         queries={globalQueries}
         editable={true}
-        currentDashboardName={getCurrentDashboardName()}
         queryManagerOpen={showQuerySidebar}
         dashboardManagerOpen={showDashboardSidebar}
+        availableDashboardsCount={availableDashboards.length}
         on:dashboard-loaded={handleDashboardLoaded}
         on:dashboard-updated={handleDashboardUpdated}
         on:dashboard-saved={handleDashboardSaved}
@@ -172,8 +216,61 @@
           on:query-created={handleQueryCreated}
           on:query-updated={handleQueryUpdated}
           on:query-deleted={handleQueryDeleted}
+          on:open-schema={handleOpenSchema}
         />
       </Sidebar>
+
+      <!-- Schema Sidebar Backdrop (only when query sidebar is closed) -->
+      {#if showSchemaSidebar && !showQuerySidebar && !showDashboardSidebar}
+        <div 
+          class="fixed inset-0 bg-black/30 z-30 transition-opacity"
+          on:click={closeSchemaSidebar}
+          on:keydown={(e) => e.key === 'Escape' && closeSchemaSidebar()}
+          role="button"
+          tabindex="-1"
+        ></div>
+      {/if}
+
+      <!-- Schema Sidebar - positioned to the left of query sidebar when both are open -->
+      {#if showSchemaSidebar}
+        <div 
+          class="fixed top-0 h-full w-96 bg-white shadow-2xl flex flex-col transition-all duration-300"
+          class:z-40={!showQuerySidebar && !showDashboardSidebar}
+          class:z-45={showQuerySidebar || showDashboardSidebar}
+          style="right: {showQuerySidebar ? '32rem' : '0'}"
+        >
+          <!-- Header -->
+          <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-900">Database Schema</h2>
+            <button 
+              class="p-1 hover:bg-gray-200 rounded-md transition-colors text-gray-400 hover:text-gray-600" 
+              on:click={closeSchemaSidebar}
+              aria-label="Close schema sidebar"
+            >
+              <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 overflow-y-auto p-4 h-full">
+            {#if schemaData}
+              <SchemaSidebar
+                mockSchema={schemaData.mockSchema}
+                sqlTemplates={schemaData.sqlTemplates}
+                on:insert-text={handleSchemaInsertText}
+                on:insert-template={handleSchemaInsertTemplate}
+                on:set-editor-value={handleSchemaSetEditorValue}
+              />
+            {/if}
+          </div>
+        </div>
+      {/if}
     {/if}
   </main>
 </div>
+
+<style>
+  :global(.z-45) {
+    z-index: 45;
+  }
+</style>

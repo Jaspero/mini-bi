@@ -16,6 +16,7 @@
     'dashboard-updated': { dashboard: Dashboard };
     'block-edit': { block: Block };
     'block-delete': { blockId: string };
+    'block-delete-request': { block: Block };
   }>();
 
   let canvasElement: HTMLDivElement;
@@ -276,6 +277,10 @@
   function handleBlockDelete(blockId: string) {
     dispatch('block-delete', { blockId });
   }
+
+  function handleBlockDeleteRequest(block: Block) {
+    dispatch('block-delete-request', { block });
+  }
 </script>
 
 <div class="w-full h-full overflow-auto bg-slate-50 relative" bind:this={canvasElement}>
@@ -307,7 +312,7 @@
               showControls={editMode}
               onBlockUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock)}
               onBlockEdit={(editBlock) => handleBlockEdit(editBlock)}
-              onBlockDelete={(blockId) => handleBlockDelete(blockId)}
+              onBlockDelete={() => handleBlockDeleteRequest(block)}
             />
           {:else if block.type === 'graph'}
             <GraphBlock 
@@ -316,7 +321,7 @@
               showControls={editMode}
               onBlockUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock)}
               onBlockEdit={(editBlock) => handleBlockEdit(editBlock)}
-              onBlockDelete={(blockId) => handleBlockDelete(blockId)}
+              onBlockDelete={() => handleBlockDeleteRequest(block)}
             />
           {:else if block.type === 'text'}
             <TextBlock 
@@ -325,7 +330,7 @@
               showControls={editMode}
               onBlockUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock)}
               onBlockEdit={(editBlock) => handleBlockEdit(editBlock)}
-              onBlockDelete={(blockId) => handleBlockDelete(blockId)}
+              onBlockDelete={() => handleBlockDeleteRequest(block)}
             />
           {/if}
         </div>

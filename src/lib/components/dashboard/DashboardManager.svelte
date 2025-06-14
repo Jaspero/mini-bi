@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import type { Dashboard, IDashboardService, CreateDashboardRequest } from '../../types/index.js';
   import { validateDashboard, generateDashboardId } from '../../utils/validation.js';
+  import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 
   export let dashboardService: IDashboardService;
   export let currentDashboardId: string | null = null;
@@ -14,6 +15,10 @@
   let creating = false;
   let deleting = false;
   let error = '';
+
+  // Confirmation modal state
+  let showConfirmModal = false;
+  let dashboardToDelete: Dashboard | null = null;
 
   // Create form fields
   let newDashboardName = '';
@@ -117,26 +122,40 @@
 
   async function deleteDashboard(dashboard: Dashboard, event: Event) {
     event.stopPropagation();
-    
-    if (!confirm(`Are you sure you want to delete "${dashboard.name}"? This action cannot be undone.`)) {
-      return;
-    }
+    dashboardToDelete = dashboard;
+    showConfirmModal = true;
+  }
+
+  async function confirmDeleteDashboard() {
+    if (!dashboardToDelete) return;
+
+    const dashboardId = dashboardToDelete.id;
+    const dashboardName = dashboardToDelete.name;
 
     try {
       deleting = true;
-      await dashboardService.deleteDashboard(dashboard.id);
-      dashboards = dashboards.filter(d => d.id !== dashboard.id);
+      await dashboardService.deleteDashboard(dashboardId);
+      dashboards = dashboards.filter(d => d.id !== dashboardId);
       
-      if (currentDashboardId === dashboard.id) {
+      if (currentDashboardId === dashboardId) {
         dispatch('dashboard-selected', { dashboardId: null });
       }
       
-      dispatch('dashboard-deleted', { dashboardId: dashboard.id });
+      dispatch('dashboard-deleted', { dashboardId });
       deleting = false;
+      dashboardToDelete = null;
+      showConfirmModal = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to delete dashboard';
       deleting = false;
+      dashboardToDelete = null;
+      showConfirmModal = false;
     }
+  }
+
+  function cancelDeleteDashboard() {
+    dashboardToDelete = null;
+    showConfirmModal = false;
   }
 
   function formatDate(date: Date): string {
@@ -382,7 +401,7 @@
                   <h4 class="text-sm font-medium text-gray-900 truncate flex-1 mr-2">{dashboard.name}</h4>
                   <button 
                     class="text-gray-400 hover:text-red-600 p-1 rounded transition-colors" 
-                    on:click={(e) => deleteDashboard(dashboard, e)}
+                    on:click={(e) => { e.stopPropagation(); e.preventDefault(); deleteDashboard(dashboard, e); }}
                     disabled={deleting}
                     aria-label="Delete dashboard"
                   >
@@ -406,5 +425,16 @@
     </div>
   {/if}
 </div>
+
+<!-- Confirmation Modal -->
+<ConfirmationModal
+  isOpen={showConfirmModal}
+  title="Delete Dashboard"
+  message={dashboardToDelete ? `Are you sure you want to delete "${dashboardToDelete.name}"? This action cannot be undone.` : ''}
+  confirmText="Delete"
+  cancelText="Cancel"
+  on:confirm={confirmDeleteDashboard}
+  on:cancel={cancelDeleteDashboard}
+/>
 
 

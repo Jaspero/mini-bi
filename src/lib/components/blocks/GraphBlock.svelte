@@ -242,31 +242,26 @@
 
   function handleDelete(event: MouseEvent) {
     event.stopPropagation();
-    if (confirm(`Are you sure you want to delete the "${block.title}" graph?`)) {
-      onBlockDelete(block.id);
-    }
+    onBlockDelete(block.id);
   }
 </script>
 
 <div class="w-full h-full flex flex-col bg-white rounded-lg shadow-sm overflow-hidden">
-  <div class="flex justify-between items-start p-4 border-b border-gray-200 bg-gray-50">
-    <div class="flex flex-col gap-1">
-      <h3 class="m-0 text-base font-semibold text-gray-800">{block.title}</h3>
-      {#if block.dataSource?.type === 'query' && data?.metadata?.source}
-        <span class="text-xs text-gray-500 italic">📊 {data.metadata.source}</span>
-      {/if}
+  <div class="flex justify-between items-start py-3 px-4 border-b border-gray-200 bg-gray-50">
+    <div class="flex flex-col gap-1 min-w-0 flex-1">
+      <h3 class="text-base font-semibold text-gray-900 m-0">{block.title}</h3>
     </div>
-    {#if showControls}
-      <div class="flex items-center gap-1">
+    <div class="flex items-center gap-1">
+      {#if showControls}
         <button 
-          class="bg-transparent border-0 cursor-pointer p-1.5 rounded text-gray-500 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center" 
+          class="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" 
           on:click={handleEdit} 
           aria-label="Edit graph"
         >
           <span class="material-symbols-outlined text-base">edit</span>
         </button>
         <button 
-          class="bg-transparent border-0 cursor-pointer p-1.5 rounded text-gray-500 hover:bg-gray-200 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all" 
+          class="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50" 
           on:click={refresh} 
           disabled={loading} 
           aria-label="Refresh chart data"
@@ -274,14 +269,14 @@
           <span class="material-symbols-outlined text-base">refresh</span>
         </button>
         <button 
-          class="bg-transparent border-0 cursor-pointer p-1.5 rounded text-gray-500 hover:bg-red-50 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center" 
+          class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors" 
           on:click={handleDelete} 
           aria-label="Delete graph"
         >
           <span class="material-symbols-outlined text-base">delete</span>
         </button>
-      </div>
-    {/if}
+      {/if}
+    </div>
   </div>
 
   {#if loading}
