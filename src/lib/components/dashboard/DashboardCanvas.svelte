@@ -36,7 +36,7 @@
   $: {
     if (dashboard.layout.canvasWidth) {
       if (dashboard.layout.canvasWidth.type === 'screen') {
-        canvasWidth = window.innerWidth - 40; // Account for margins
+        canvasWidth = (typeof window !== 'undefined' ? window.innerWidth : 1600) - (window.innerWidth < 640 ? 20 : 40); // Smaller margins on mobile
       } else {
         canvasWidth = dashboard.layout.canvasWidth.value || 1600;
       }
@@ -46,7 +46,7 @@
 
     if (dashboard.layout.canvasHeight) {
       if (dashboard.layout.canvasHeight.type === 'screen') {
-        canvasHeight = window.innerHeight - 120; // Account for margins and header
+        canvasHeight = (typeof window !== 'undefined' ? window.innerHeight : 1000) - (window.innerWidth < 640 ? 100 : 120); // Smaller header on mobile
       } else {
         canvasHeight = dashboard.layout.canvasHeight.value || 1000;
       }
@@ -71,13 +71,13 @@
 
   function updateCanvasSize() {
     if (canvasElement) {
-      const containerWidth = canvasElement.parentElement?.clientWidth || window.innerWidth;
-      const containerHeight = canvasElement.parentElement?.clientHeight || window.innerHeight;
+      const containerWidth = canvasElement.parentElement?.clientWidth || (typeof window !== 'undefined' ? window.innerWidth : 1600);
+      const containerHeight = canvasElement.parentElement?.clientHeight || (typeof window !== 'undefined' ? window.innerHeight : 1000);
       
       // Update canvas dimensions based on configuration
       if (dashboard.layout.canvasWidth) {
         if (dashboard.layout.canvasWidth.type === 'screen') {
-          canvasWidth = containerWidth - 40; // Account for margins
+          canvasWidth = containerWidth - (typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 40); // Smaller margins on mobile
         } else {
           canvasWidth = dashboard.layout.canvasWidth.value || 1600;
         }
@@ -85,7 +85,7 @@
 
       if (dashboard.layout.canvasHeight) {
         if (dashboard.layout.canvasHeight.type === 'screen') {
-          canvasHeight = containerHeight - 120; // Account for margins and header
+          canvasHeight = containerHeight - (typeof window !== 'undefined' && window.innerWidth < 640 ? 100 : 120); // Smaller header on mobile
         } else {
           canvasHeight = dashboard.layout.canvasHeight.value || 1000;
         }
@@ -109,6 +109,150 @@
       document.removeEventListener('mouseup', handleMouseUp);
     };
   });
+
+  // Touch event handlers for mobile support
+  function handleBlockTouchStart(event: TouchEvent, block: Block) {
+    if (!editable || editMode) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const touch = event.touches[0];
+    const canvasRect = canvasElement.getBoundingClientRect();
+    
+    draggedBlock = block;
+    dragOffset = {
+      x: touch.clientX - canvasRect.left - (block.position.x * gridSize),
+      y: touch.clientY - canvasRect.top - (block.position.y * gridSize)
+    };
+
+    isDragging = true;
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
+  }
+
+  function handleResizeTouchStart(event: TouchEvent, block: Block, mode: string) {
+    if (!editable || editMode) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    resizingBlock = block;
+    resizeMode = mode;
+    isResizing = true;
+    
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
+  }
+
+  function handleTouchMove(event: TouchEvent) {
+    event.preventDefault();
+    
+    const touch = event.touches[0];
+    
+    if (isDragging && draggedBlock) {
+      const canvasRect = canvasElement.getBoundingClientRect();
+      const x = touch.clientX - canvasRect.left - dragOffset.x;
+      const y = touch.clientY - canvasRect.top - dragOffset.y;
+
+      // Snap to grid
+      const gridX = Math.round(x / gridSize);
+      const gridY = Math.round(y / gridSize);
+
+      // Ensure block stays within bounds
+      const maxX = dashboard.layout.columns - draggedBlock.size.width;
+      const maxY = dashboard.layout.rows - draggedBlock.size.height;
+
+      const newPosition: Position = {
+        x: Math.max(0, Math.min(maxX, gridX)),
+        y: Math.max(0, Math.min(maxY, gridY))
+      };
+
+      updateBlockPosition(draggedBlock.id, newPosition);
+    }
+
+    if (isResizing && resizingBlock) {
+      const canvasRect = canvasElement.getBoundingClientRect();
+      const x = touch.clientX - canvasRect.left;
+      const y = touch.clientY - canvasRect.top;
+
+      const blockRect = {
+        left: resizingBlock.position.x * gridSize,
+        top: resizingBlock.position.y * gridSize,
+        right: (resizingBlock.position.x + resizingBlock.size.width) * gridSize,
+        bottom: (resizingBlock.position.y + resizingBlock.size.height) * gridSize
+      };
+
+      let newSize = { ...resizingBlock.size };
+
+      switch (resizeMode) {
+        case 'se': // southeast
+          newSize.width = Math.max(2, Math.round((x - blockRect.left) / gridSize));
+          newSize.height = Math.max(2, Math.round((y - blockRect.top) / gridSize));
+          break;
+        case 'sw': // southwest
+          newSize.width = Math.max(2, Math.round((blockRect.right - x) / gridSize));
+          newSize.height = Math.max(2, Math.round((y - blockRect.top) / gridSize));
+          break;
+        case 'ne': // northeast
+          newSize.width = Math.max(2, Math.round((x - blockRect.left) / gridSize));
+          newSize.height = Math.max(2, Math.round((blockRect.bottom - y) / gridSize));
+          break;
+        case 'nw': // northwest
+          newSize.width = Math.max(2, Math.round((blockRect.right - x) / gridSize));
+          newSize.height = Math.max(2, Math.round((blockRect.bottom - y) / gridSize));
+          break;
+        case 'e': // east
+          newSize.width = Math.max(2, Math.round((x - blockRect.left) / gridSize));
+          break;
+        case 'w': // west
+          newSize.width = Math.max(2, Math.round((blockRect.right - x) / gridSize));
+          break;
+        case 'n': // north
+          newSize.height = Math.max(2, Math.round((blockRect.bottom - y) / gridSize));
+          break;
+        case 's': // south
+          newSize.height = Math.max(2, Math.round((y - blockRect.top) / gridSize));
+          break;
+      }
+
+      // Ensure the block doesn't exceed canvas bounds
+      const maxWidth = dashboard.layout.columns - resizingBlock.position.x;
+      const maxHeight = dashboard.layout.rows - resizingBlock.position.y;
+      newSize.width = Math.min(newSize.width, maxWidth);
+      newSize.height = Math.min(newSize.height, maxHeight);
+
+      updateBlockSize(resizingBlock.id, newSize);
+    }
+  }
+
+  function handleTouchEnd(event: TouchEvent) {
+    event.preventDefault();
+    
+    if (isDragging && draggedBlock) {
+      dispatch('block-moved', {
+        blockId: draggedBlock.id,
+        position: draggedBlock.position
+      });
+    }
+
+    if (isResizing && resizingBlock) {
+      dispatch('block-resized', {
+        blockId: resizingBlock.id,
+        size: resizingBlock.size
+      });
+    }
+
+    // Clean up
+    isDragging = false;
+    isResizing = false;
+    draggedBlock = null;
+    resizingBlock = null;
+    resizeMode = '';
+
+    window.removeEventListener('touchmove', handleTouchMove);
+    window.removeEventListener('touchend', handleTouchEnd);
+  }
 
   function getBlockStyle(block: Block): string {
     const x = block.position.x * gridSize;
@@ -213,17 +357,19 @@
         case 'w': // west
           newSize.width = Math.max(2, Math.round((blockRect.right - x) / gridSize));
           break;
-        case 's': // south
-          newSize.height = Math.max(2, Math.round((y - blockRect.top) / gridSize));
-          break;
         case 'n': // north
           newSize.height = Math.max(2, Math.round((blockRect.bottom - y) / gridSize));
           break;
+        case 's': // south
+          newSize.height = Math.max(2, Math.round((y - blockRect.top) / gridSize));
+          break;
       }
 
-      // Ensure block doesn't exceed canvas bounds
-      newSize.width = Math.min(newSize.width, dashboard.layout.columns - resizingBlock.position.x);
-      newSize.height = Math.min(newSize.height, dashboard.layout.rows - resizingBlock.position.y);
+      // Ensure the block doesn't exceed canvas bounds
+      const maxWidth = dashboard.layout.columns - resizingBlock.position.x;
+      const maxHeight = dashboard.layout.rows - resizingBlock.position.y;
+      newSize.width = Math.min(newSize.width, maxWidth);
+      newSize.height = Math.min(newSize.height, maxHeight);
 
       updateBlockSize(resizingBlock.id, newSize);
     }
@@ -285,7 +431,7 @@
 
 <div class="w-full h-full overflow-auto bg-slate-50 relative" bind:this={canvasElement}>
   <div 
-    class="relative m-5 min-w-full min-h-full"
+    class="relative m-2 sm:m-5 min-w-full min-h-full"
     style="width: {canvasWidth}px; height: {canvasHeight}px;"
   >
     <!-- Grid background -->
@@ -297,9 +443,10 @@
     <!-- Blocks -->
     {#each dashboard.blocks as block (block.id)}
       <div 
-        class="select-none cursor-move transition-shadow duration-200 ease-in-out hover:shadow-xl group {draggedBlock === block ? 'shadow-2xl [transform:rotate(2deg)]' : ''} {resizingBlock === block ? 'shadow-lg shadow-blue-400' : ''} {editMode ? 'cursor-default' : ''}"
+        class="select-none cursor-move transition-shadow duration-200 ease-in-out hover:shadow-xl group touch-manipulation {draggedBlock === block ? 'shadow-2xl [transform:rotate(2deg)]' : ''} {resizingBlock === block ? 'shadow-lg shadow-blue-400' : ''} {editMode ? 'cursor-default' : ''}"
         style={getBlockStyle(block)}
         on:mousedown={(e) => handleBlockMouseDown(e, block)}
+        on:touchstart={(e) => handleBlockTouchStart(e, block)}
         role="button"
         tabindex="0"
       >
@@ -338,31 +485,35 @@
         <!-- Resize handles (only show when not in edit mode and editable) -->
         {#if editable && !editMode}
           <div class="absolute top-0 left-0 right-0 bottom-0 pointer-events-none">
-            <!-- Corner handles -->
+            <!-- Corner handles - larger touch targets on mobile -->
             <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 -left-1 w-2 h-2 cursor-nw-resize" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 -left-1 w-3 h-3 sm:w-2 sm:h-2 cursor-nw-resize touch-manipulation" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'nw')}
+              on:touchstart={(e) => handleResizeTouchStart(e, block, 'nw')}
               role="button"
               tabindex="0"
               aria-label="Resize northwest"
             ></div>
             <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 -right-1 w-2 h-2 cursor-ne-resize" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 -right-1 w-3 h-3 sm:w-2 sm:h-2 cursor-ne-resize touch-manipulation" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'ne')}
+              on:touchstart={(e) => handleResizeTouchStart(e, block, 'ne')}
               role="button"
               tabindex="0"
               aria-label="Resize northeast"
             ></div>
             <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 -left-1 w-2 h-2 cursor-sw-resize" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 -left-1 w-3 h-3 sm:w-2 sm:h-2 cursor-sw-resize touch-manipulation" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'sw')}
+              on:touchstart={(e) => handleResizeTouchStart(e, block, 'sw')}
               role="button"
               tabindex="0"
               aria-label="Resize southwest"
             ></div>
             <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 -right-1 w-2 h-2 cursor-se-resize" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 -right-1 w-3 h-3 sm:w-2 sm:h-2 cursor-se-resize touch-manipulation" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'se')}
+              on:touchstart={(e) => handleResizeTouchStart(e, block, 'se')}
               role="button"
               tabindex="0"
               aria-label="Resize southeast"
@@ -370,29 +521,33 @@
             
             <!-- Edge handles -->
             <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 left-1/2 -translate-x-1/2 w-2 h-2 cursor-n-resize" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 left-1/2 -translate-x-1/2 w-3 h-3 sm:w-2 sm:h-2 cursor-n-resize touch-manipulation" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'n')}
+              on:touchstart={(e) => handleResizeTouchStart(e, block, 'n')}
               role="button"
               tabindex="0"
               aria-label="Resize north"
             ></div>
             <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 cursor-s-resize" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 sm:w-2 sm:h-2 cursor-s-resize touch-manipulation" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 's')}
+              on:touchstart={(e) => handleResizeTouchStart(e, block, 's')}
               role="button"
               tabindex="0"
               aria-label="Resize south"
             ></div>
             <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -right-1 top-1/2 -translate-y-1/2 w-2 h-2 cursor-e-resize" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -right-1 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-2 sm:h-2 cursor-e-resize touch-manipulation" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'e')}
+              on:touchstart={(e) => handleResizeTouchStart(e, block, 'e')}
               role="button"
               tabindex="0"
               aria-label="Resize east"
             ></div>
             <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -left-1 top-1/2 -translate-y-1/2 w-2 h-2 cursor-w-resize" 
+              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -left-1 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-2 sm:h-2 cursor-w-resize touch-manipulation" 
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'w')}
+              on:touchstart={(e) => handleResizeTouchStart(e, block, 'w')}
               role="button"
               tabindex="0"
               aria-label="Resize west"

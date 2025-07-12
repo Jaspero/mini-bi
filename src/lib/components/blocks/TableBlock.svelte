@@ -156,29 +156,29 @@
 </script>
 
 <div class="w-full h-full flex flex-col bg-white rounded-lg shadow-sm overflow-hidden">
-  <div class="flex justify-between items-start py-3 px-4 border-b border-gray-200 bg-gray-50 gap-4">
+  <div class="flex justify-between items-start py-2 sm:py-3 px-2 sm:px-4 border-b border-gray-200 bg-gray-50 gap-2 sm:gap-4">
     <div class="flex flex-col gap-1 min-w-0 flex-1">
-      <h3 class="text-base font-semibold text-gray-900 m-0">{block.title}</h3>
+      <h3 class="text-sm sm:text-base font-semibold text-gray-900 m-0 truncate">{block.title}</h3>
     </div>
-    <div class="flex items-center gap-1">
+    <div class="flex items-center gap-1 flex-shrink-0">
       {#if tableConfig?.filtering?.enabled}
         <input 
           type="text" 
           placeholder="Search..." 
-          class="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mr-1"
+          class="px-2 sm:px-3 py-1.5 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mr-1 w-20 sm:w-auto"
           on:input={handleSearch}
           value={searchTerm}
         />
       {/if}
       {#if showControls}
-        <button class="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" on:click={handleEdit} aria-label="Edit table">
-          <span class="material-symbols-outlined text-base">edit</span>
+        <button class="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors touch-manipulation" on:click={handleEdit} aria-label="Edit table">
+          <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
         </button>
-        <button class="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50" on:click={refresh} disabled={loading} aria-label="Refresh table data">
-          <span class="material-symbols-outlined text-base">refresh</span>
+        <button class="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50 touch-manipulation" on:click={refresh} disabled={loading} aria-label="Refresh table data">
+          <span class="material-symbols-outlined text-sm sm:text-base">refresh</span>
         </button>
-        <button class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors" on:click={handleDelete} aria-label="Delete table">
-          <span class="material-symbols-outlined text-base">delete</span>
+        <button class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors touch-manipulation" on:click={handleDelete} aria-label="Delete table">
+          <span class="material-symbols-outlined text-sm sm:text-base">delete</span>
         </button>
       {/if}
     </div>
@@ -201,14 +201,14 @@
           <tr>
             {#each tableConfig.columns as column}
               <th 
-                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 {column.sortable && tableConfig.sorting?.enabled ? 'cursor-pointer hover:bg-gray-100 select-none' : ''} {sortColumn === column.key ? 'bg-gray-100' : ''}"
+                class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 {column.sortable && tableConfig.sorting?.enabled ? 'cursor-pointer hover:bg-gray-100 select-none touch-manipulation' : ''} {sortColumn === column.key ? 'bg-gray-100' : ''}"
                 style={column.width ? `width: ${column.width}px` : ''}
                 on:click={() => column.sortable && handleSort(column.key)}
               >
                 <div class="flex items-center justify-between">
-                  <span>{column.header}</span>
+                  <span class="truncate">{column.header}</span>
                   {#if column.sortable && tableConfig.sorting?.enabled}
-                    <span class="ml-2 text-gray-400">
+                    <span class="ml-1 sm:ml-2 text-gray-400 flex-shrink-0">
                       {#if sortColumn === column.key}
                         {sortDirection === 'asc' ? '↑' : '↓'}
                       {:else}
@@ -225,8 +225,10 @@
           {#each paginatedData as row, rowIndex}
             <tr class="hover:bg-gray-50 {rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
               {#each tableConfig.columns as column}
-                <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
-                  {formatCellValue(row[column.key], column)}
+                <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900 whitespace-nowrap">
+                  <div class="truncate max-w-[100px] sm:max-w-none">
+                    {formatCellValue(row[column.key], column)}
+                  </div>
                 </td>
               {/each}
             </tr>
@@ -236,17 +238,18 @@
     </div>
 
     {#if tableConfig.pagination?.enabled && totalPages > 1}
-      <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
-        <div class="text-sm text-gray-700">
+      <div class="flex flex-col sm:flex-row items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-t border-gray-200 bg-white gap-2 sm:gap-0">
+        <div class="text-xs sm:text-sm text-gray-700 text-center sm:text-left">
           Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, filteredData.length)} of {filteredData.length} entries
         </div>
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-1 sm:space-x-2">
           <button 
-            class="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
+            class="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation" 
             disabled={currentPage === 1}
             on:click={() => goToPage(currentPage - 1)}
           >
-            Previous
+            <span class="sm:hidden">‹</span>
+            <span class="hidden sm:inline">Previous</span>
           </button>
           
           {#each Array.from({length: Math.min(5, totalPages)}, (_, i) => {
@@ -255,7 +258,7 @@
             return start + i;
           }).filter(page => page <= totalPages) as page}
             <button 
-              class="px-3 py-1 text-sm border rounded-md transition-colors {page === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 hover:bg-gray-50'}"
+              class="px-2 sm:px-3 py-1 text-xs sm:text-sm border rounded-md transition-colors touch-manipulation {page === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 hover:bg-gray-50'}"
               on:click={() => goToPage(page)}
             >
               {page}
@@ -263,11 +266,12 @@
           {/each}
           
           <button 
-            class="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
+            class="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation" 
             disabled={currentPage === totalPages}
             on:click={() => goToPage(currentPage + 1)}
           >
-            Next
+            <span class="sm:hidden">›</span>
+            <span class="hidden sm:inline">Next</span>
           </button>
         </div>
       </div>

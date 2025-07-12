@@ -22,11 +22,9 @@
   let schemaData: any = null;
 
   onMount(async () => {
-    // Load available dashboards and queries
     availableDashboards = await dashboardService.loadDashboards();
     globalQueries = await dashboardService.loadGlobalQueries();
 
-    // Select the first dashboard by default
     if (availableDashboards.length > 0) {
       selectedDashboardId = availableDashboards[0].id;
     }
@@ -175,7 +173,7 @@
   <Sidebar
     isOpen={showDashboardSidebar}
     title="Dashboard Management"
-    width="w-96"
+    width="w-96 sm:w-96"
     position="right"
     on:close={closeDashboardSidebar}
   >
@@ -191,7 +189,7 @@
   <Sidebar
     isOpen={showQuerySidebar}
     title="Query Management"
-    width="w-[32rem]"
+    width="w-full sm:w-[32rem]"
     position="right"
     on:close={closeQuerySidebar}
   >
@@ -216,10 +214,10 @@
 
   {#if showSchemaSidebar}
     <div
-      class="fixed top-0 flex h-full w-96 flex-col bg-white shadow-2xl transition-all duration-300"
+      class="fixed top-0 flex h-full w-full sm:w-96 flex-col bg-white shadow-2xl transition-all duration-300"
       class:z-40={!showQuerySidebar && !showDashboardSidebar}
       class:z-45={showQuerySidebar || showDashboardSidebar}
-      style="right: {showQuerySidebar ? '32rem' : '0'}"
+      style="right: {showQuerySidebar ? (typeof window !== 'undefined' && window.innerWidth < 640 ? '0' : '32rem') : '0'}"
     >
       <div class="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
         <h2 class="text-lg font-semibold text-gray-900">Database Schema</h2>

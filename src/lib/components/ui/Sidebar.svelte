@@ -44,7 +44,7 @@
 
   <!-- Sidebar -->
   <div 
-    class="fixed top-0 {position === 'right' ? 'right-0' : 'left-0'} h-full {width} bg-white shadow-2xl z-50 flex flex-col"
+    class="fixed top-0 {position === 'right' ? 'right-0' : 'left-0'} h-full {width} bg-white shadow-2xl z-50 flex flex-col max-w-full"
     in:fly={{ x: position === 'right' ? 400 : -400, duration: 300 }}
     out:fly={{ x: position === 'right' ? 400 : -400, duration: 300 }}
   >
