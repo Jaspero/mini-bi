@@ -1,29 +1,33 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import * as echarts from 'echarts';
-  import type { Block, GraphBlockConfig, BlockData, IDashboardService } from '../../types/index.js';
+  import type { Block, GraphBlockConfig, BlockData, IDashboardService } from '../../types/index.ts';
 
-  export let block: Block;
-  export let dashboardService: IDashboardService;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  export let onBlockUpdate: (block: Block) => void = () => {};
-  export let onBlockEdit: (block: Block) => void = () => {};
-  export let onBlockDelete: (blockId: string) => void = () => {};
-  export let showControls = false;
-
-  let graphConfig: GraphBlockConfig;
-  let chartContainer: HTMLDivElement;
-  let chart: echarts.ECharts | null = null;
-  let loading = true;
-  let error = '';
-  let data: BlockData | null = null;
-
-  $: {
-    graphConfig = block.config as GraphBlockConfig;
-    if (chart && data) {
-      updateChart();
-    }
+  interface Props {
+    block: Block;
+    dashboardService: IDashboardService;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onBlockUpdate?: (block: Block) => void;
+    onBlockEdit?: (block: Block) => void;
+    onBlockDelete?: (blockId: string) => void;
+    showControls?: boolean;
   }
+
+  let {
+    block,
+    dashboardService,
+    onBlockUpdate = () => {},
+    onBlockEdit = () => {},
+    onBlockDelete = () => {},
+    showControls = false
+  }: Props = $props();
+
+  let graphConfig: GraphBlockConfig = $state();
+  let chartContainer: HTMLDivElement = $state();
+  let chart: echarts.ECharts | null = $state(null);
+  let loading = $state(true);
+  let error = $state('');
+  let data: BlockData | null = $state(null);
 
   onMount(async () => {
     await loadData();
@@ -33,6 +37,13 @@
   onDestroy(() => {
     if (chart) {
       chart.dispose();
+    }
+  });
+
+  $effect(() => {
+    graphConfig = block.config as GraphBlockConfig;
+    if (chart && data) {
+      updateChart();
     }
   });
 
@@ -277,14 +288,14 @@
       {#if showControls}
         <button
           class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
-          on:click={handleEdit}
+          onclick={handleEdit}
           aria-label="Edit graph"
         >
           <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
         </button>
         <button
           class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
-          on:click={refresh}
+          onclick={refresh}
           disabled={loading}
           aria-label="Refresh chart data"
         >
@@ -292,7 +303,7 @@
         </button>
         <button
           class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
-          on:click={handleDelete}
+          onclick={handleDelete}
           aria-label="Delete graph"
         >
           <span class="material-symbols-outlined text-sm sm:text-base">delete</span>
@@ -313,7 +324,7 @@
       <p class="m-0">Error: {error}</p>
       <button
         class="mt-3 cursor-pointer rounded border-0 bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
-        on:click={refresh}
+        onclick={refresh}
       >
         Retry
       </button>

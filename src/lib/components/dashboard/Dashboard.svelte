@@ -1,50 +1,53 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher, onDestroy } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import type {
     Dashboard,
     Block,
     IDashboardService,
     BlockConfig,
     Query
-  } from '../../types/index.js';
+  } from '../../types/index.ts';
   import DashboardCanvas from './DashboardCanvas.svelte';
   import BlockEditor from './BlockEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 
-  export let dashboardId: string | null = null;
-  export let dashboardService: IDashboardService;
-  export let queries: Query[] = [];
-  export let editable = true;
-  export let queryManagerOpen: boolean = false;
-  export let dashboardManagerOpen: boolean = false;
-  export let availableDashboardsCount: number = 0;
+  interface Props {
+    dashboardId?: string | null;
+    dashboardService: IDashboardService;
+    queries?: Query[];
+    editable?: boolean;
+    queryManagerOpen?: boolean;
+    dashboardManagerOpen?: boolean;
+    availableDashboardsCount?: number;
+    toggleQueryManager?: () => void;
+    toggleDashboardManager?: () => void;
+  }
 
-  const dispatch = createEventDispatcher<{
-    'toggle-query-manager': void;
-    'toggle-dashboard-manager': void;
-  }>();
+  let {
+    dashboardId = null,
+  dashboardService,
+    queries = [],
+    editable = true,
+    queryManagerOpen = false,
+    dashboardManagerOpen = false,
+    availableDashboardsCount = 0,
+    toggleQueryManager = () => {},
+    toggleDashboardManager = () => {}
+  }: Props = $props();
 
-  let dashboard: Dashboard | null = null;
-  let loading = true;
-  let error = '';
-  let saving = false;
-  let hasUnsavedChanges = false;
-  let editingBlock: Block | null = null;
-  let showBlockEditor = false;
-  let editMode = true; // true = edit mode (controls visible, no drag/resize), false = move mode (drag/resize enabled, no controls)
-  let showAddBlockDropdown = false;
+  let dashboard: Dashboard | null = $state(null);
+  let loading = $state(true);
+  let error = $state('');
+  let saving = $state(false);
+  let hasUnsavedChanges = $state(false);
+  let editingBlock: Block | null = $state(null);
+  let showBlockEditor = $state(false);
+  let editMode = $state(true); // true = edit mode (controls visible, no drag/resize), false = move mode (drag/resize enabled, no controls)
+  let showAddBlockDropdown = $state(false);
 
   // Block deletion confirmation modal state
-  let showBlockDeleteModal = false;
-  let blockToDelete: Block | null = null;
-
-  // Reactive statement to reload dashboard when dashboardId changes
-  $: if (dashboardId) {
-    loadDashboard();
-  } else if (dashboardId === null) {
-    dashboard = null;
-    loading = false;
-  }
+  let showBlockDeleteModal = $state(false);
+  let blockToDelete: Block | null = $state(null);
 
   onMount(async () => {
     if (dashboardId) {
@@ -61,6 +64,15 @@
 
   onDestroy(() => {
     window.removeEventListener('click', handleClickOutside);
+  });
+
+  $effect(() => {
+    if (dashboardId) {
+      loadDashboard();
+    } else if (dashboardId === null) {
+      dashboard = null;
+      loading = false;
+    }
   });
 
   async function loadDashboard() {
@@ -139,28 +151,28 @@
     }
   }
 
-  function handleDashboardUpdated(event: CustomEvent<{ dashboard: Dashboard }>) {
-    dashboard = event.detail.dashboard;
+  function handleDashboardUpdated(event: { dashboard: Dashboard }) {
+    dashboard = event.dashboard;
     hasUnsavedChanges = true;
   }
 
-  function handleBlockMoved(event: CustomEvent<{ blockId: string; position: any }>) {
+  function handleBlockMoved(event: { blockId: string; position: any }) {
     hasUnsavedChanges = true;
   }
 
-  function handleBlockResized(event: CustomEvent<{ blockId: string; size: any }>) {
+  function handleBlockResized(event: { blockId: string; size: any }) {
     hasUnsavedChanges = true;
   }
 
-  function handleBlockEdit(event: CustomEvent<{ block: Block }>) {
-    editingBlock = event.detail.block;
+  function handleBlockEdit(event: { block: Block }) {
+    editingBlock = event.block;
     showBlockEditor = true;
   }
 
-  function handleBlockDelete(event: CustomEvent<{ blockId: string }>) {
+  function handleBlockDelete(event: { blockId: string }) {
     // Remove the block from the dashboard
     if (dashboard) {
-      dashboard.blocks = dashboard.blocks.filter((block) => block.id !== event.detail.blockId);
+      dashboard.blocks = dashboard.blocks.filter((block) => block.id !== event.blockId);
       hasUnsavedChanges = true;
     }
   }
@@ -190,9 +202,7 @@
 
   function blockUpdated(block: Block) {
     if (dashboard) {
-      dashboard.blocks = dashboard.blocks.map((b) =>
-        b.id === block.id ? block : b
-      );
+      dashboard.blocks = dashboard.blocks.map((b) => (b.id === block.id ? block : b));
       hasUnsavedChanges = true;
     }
   }
@@ -367,7 +377,7 @@
         <p class="mb-6 text-gray-600">{error}</p>
         <button
           class="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-          on:click={refresh}
+          onclick={refresh}
         >
           Try Again
         </button>
@@ -388,7 +398,7 @@
                     class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700"
                     class:!bg-purple-100={dashboardManagerOpen}
                     class:!text-purple-700={dashboardManagerOpen}
-                    on:click={() => dispatch('toggle-dashboard-manager')}
+                    onclick={() => toggleDashboardManager()}
                     title="{dashboardManagerOpen
                       ? 'Close'
                       : 'Manage'} Dashboards ({availableDashboardsCount} available)"
@@ -400,7 +410,7 @@
                     class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
                     class:!bg-blue-100={queryManagerOpen}
                     class:!text-blue-700={queryManagerOpen}
-                    on:click={() => dispatch('toggle-query-manager')}
+                    onclick={() => toggleQueryManager()}
                     title="{queryManagerOpen
                       ? 'Close'
                       : 'Manage'} Queries ({queries.length} available)"
@@ -433,7 +443,7 @@
               <div class="add-block-container relative">
                 <button
                   class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 sm:h-10 sm:w-10"
-                  on:click={toggleAddBlockDropdown}
+                  onclick={toggleAddBlockDropdown}
                   title="Add new block"
                   aria-label="Add new block"
                 >
@@ -446,21 +456,21 @@
                     <div class="py-1">
                       <button
                         class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        on:click={() => handleAddBlock('table')}
+                        onclick={() => handleAddBlock('table')}
                       >
                         <span class="material-symbols-outlined mr-3 text-base">table</span>
                         Table Block
                       </button>
                       <button
                         class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        on:click={() => handleAddBlock('graph')}
+                        onclick={() => handleAddBlock('graph')}
                       >
                         <span class="material-symbols-outlined mr-3 text-base">bar_chart</span>
                         Graph Block
                       </button>
                       <button
                         class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        on:click={() => handleAddBlock('text')}
+                        onclick={() => handleAddBlock('text')}
                       >
                         <span class="material-symbols-outlined mr-3 text-base">text_fields</span>
                         Text Block
@@ -474,7 +484,7 @@
                 class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10"
                 class:animate-pulse={saving}
                 disabled={saving || !hasUnsavedChanges}
-                on:click={saveDashboard}
+                onclick={saveDashboard}
                 title={saving ? 'Saving...' : 'Save Dashboard'}
                 aria-label={saving ? 'Saving dashboard' : 'Save dashboard'}
               >
@@ -489,7 +499,7 @@
 
               <button
                 class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-700 sm:h-10 sm:w-10"
-                on:click={refresh}
+                onclick={refresh}
                 title="Refresh dashboard"
                 aria-label="Refresh dashboard"
               >
@@ -500,7 +510,7 @@
                 class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700 sm:h-10 sm:w-10"
                 class:!bg-purple-100={editMode}
                 class:!text-purple-700={editMode}
-                on:click={toggleEditMode}
+                onclick={toggleEditMode}
                 title={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
                 aria-label={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
               >
@@ -522,12 +532,12 @@
         {dashboardService}
         editable={editable && !editMode}
         editMode={editable && editMode}
-        on:dashboard-updated={handleDashboardUpdated}
-        on:block-moved={handleBlockMoved}
-        on:block-resized={handleBlockResized}
-        on:block-edit={handleBlockEdit}
-        on:block-delete={handleBlockDelete}
-        on:block-delete-request={requestBlockDeletion}
+        onDashboardUpdated={handleDashboardUpdated}
+        onBlockMoved={handleBlockMoved}
+        onBlockResized={handleBlockResized}
+        onBlockEdit={handleBlockEdit}
+        onBlockDelete={handleBlockDelete}
+        onBlockDeleteRequest={requestBlockDeletion}
       />
     </div>
   {/if}
@@ -550,6 +560,6 @@
     : ''}
   confirmText="Delete"
   cancelText="Cancel"
-  on:confirm={confirmBlockDeletion}
-  on:cancel={cancelBlockDeletion}
+  onConfirm={confirmBlockDeletion}
+  onCancel={cancelBlockDeletion}
 />

@@ -1,44 +1,40 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Block, TableBlockConfig, BlockData, IDashboardService } from '../../types/index.js';
+  import type { Block, TableBlockConfig, BlockData, IDashboardService } from '../../types/index.ts';
 
-  export let block: Block;
-  export let dashboardService: IDashboardService;
-  export let onBlockUpdate: (block: Block) => void = () => {};
-  export let onBlockEdit: (block: Block) => void = () => {};
-  export let onBlockDelete: (blockId: string) => void = () => {};
-  export let showControls = false;
-
-  let tableConfig: TableBlockConfig;
-  let loading = true;
-  let error = '';
-  let data: BlockData | null = null;
-  let filteredData: any[] = [];
-  let sortColumn = '';
-  let sortDirection: 'asc' | 'desc' = 'asc';
-  let currentPage = 1;
-  let pageSize = 10;
-  let searchTerm = '';
-
-  $: {
-    tableConfig = block.config as TableBlockConfig;
-    if (tableConfig?.pagination) {
-      pageSize = tableConfig.pagination.pageSize;
-    }
-    if (tableConfig?.sorting?.defaultSort) {
-      sortColumn = tableConfig.sorting.defaultSort.column;
-      sortDirection = tableConfig.sorting.defaultSort.direction;
-    }
+  interface Props {
+    block: Block;
+    dashboardService: IDashboardService;
+    onBlockUpdate?: (block: Block) => void;
+    onBlockEdit?: (block: Block) => void;
+    onBlockDelete?: (blockId: string) => void;
+    showControls?: boolean;
   }
 
-  $: {
-    if (data) {
-      updateFilteredData();
-    }
-  }
+  let {
+    block,
+    dashboardService,
+    onBlockUpdate = () => {},
+    onBlockEdit = () => {},
+    onBlockDelete = () => {},
+    showControls = false
+  }: Props = $props();
 
-  $: totalPages = Math.ceil(filteredData.length / pageSize);
-  $: paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  let tableConfig: TableBlockConfig = $state();
+  let loading = $state(true);
+  let error = $state('');
+  let data: BlockData | null = $state(null);
+  let filteredData: any[] = $state([]);
+  let sortColumn = $state('');
+  let sortDirection: 'asc' | 'desc' = $state('asc');
+  let currentPage = $state(1);
+  let pageSize = $state(10);
+  let searchTerm = $state('');
+
+  let totalPages = $derived(Math.ceil(filteredData.length / pageSize));
+  let paginatedData = $derived(
+    filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  );
 
   onMount(async () => {
     await loadData();
@@ -158,6 +154,23 @@
     event.stopPropagation();
     onBlockDelete(block.id);
   }
+
+  $effect(() => {
+    tableConfig = block.config as TableBlockConfig;
+    if (tableConfig?.pagination) {
+      pageSize = tableConfig.pagination.pageSize;
+    }
+    if (tableConfig?.sorting?.defaultSort) {
+      sortColumn = tableConfig.sorting.defaultSort.column;
+      sortDirection = tableConfig.sorting.defaultSort.direction;
+    }
+  });
+
+  $effect(() => {
+    if (data) {
+      updateFilteredData();
+    }
+  });
 </script>
 
 <div class="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-sm">
@@ -173,21 +186,21 @@
           type="text"
           placeholder="Search..."
           class="mr-1 w-20 rounded-md border border-gray-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:w-auto sm:px-3 sm:text-sm"
-          on:input={handleSearch}
+          oninput={handleSearch}
           value={searchTerm}
         />
       {/if}
       {#if showControls}
         <button
           class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
-          on:click={handleEdit}
+          onclick={handleEdit}
           aria-label="Edit table"
         >
           <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
         </button>
         <button
           class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
-          on:click={refresh}
+          onclick={refresh}
           disabled={loading}
           aria-label="Refresh table data"
         >
@@ -195,7 +208,7 @@
         </button>
         <button
           class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
-          on:click={handleDelete}
+          onclick={handleDelete}
           aria-label="Delete table"
         >
           <span class="material-symbols-outlined text-sm sm:text-base">delete</span>
@@ -216,7 +229,7 @@
       <p class="mb-4 text-base">Error: {error}</p>
       <button
         class="rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
-        on:click={refresh}>Retry</button
+        onclick={refresh}>Retry</button
       >
     </div>
   {:else if data && tableConfig}
@@ -231,7 +244,7 @@
                   ? 'cursor-pointer touch-manipulation select-none hover:bg-gray-100'
                   : ''} {sortColumn === column.key ? 'bg-gray-100' : ''}"
                 style={column.width ? `width: ${column.width}px` : ''}
-                on:click={() => column.sortable && handleSort(column.key)}
+                onclick={() => column.sortable && handleSort(column.key)}
               >
                 <div class="flex items-center justify-between">
                   <span class="truncate">{column.header}</span>
@@ -281,7 +294,7 @@
           <button
             class="touch-manipulation rounded-md border border-gray-300 px-2 py-1 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
             disabled={currentPage === 1}
-            on:click={() => goToPage(currentPage - 1)}
+            onclick={() => goToPage(currentPage - 1)}
           >
             <span class="sm:hidden">‹</span>
             <span class="hidden sm:inline">Previous</span>
@@ -297,7 +310,7 @@
               currentPage
                 ? 'border-blue-600 bg-blue-600 text-white'
                 : 'border-gray-300 hover:bg-gray-50'}"
-              on:click={() => goToPage(page)}
+              onclick={() => goToPage(page)}
             >
               {page}
             </button>
@@ -306,7 +319,7 @@
           <button
             class="touch-manipulation rounded-md border border-gray-300 px-2 py-1 text-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
             disabled={currentPage === totalPages}
-            on:click={() => goToPage(currentPage + 1)}
+            onclick={() => goToPage(currentPage + 1)}
           >
             <span class="sm:hidden">›</span>
             <span class="hidden sm:inline">Next</span>

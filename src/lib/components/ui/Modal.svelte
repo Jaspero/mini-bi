@@ -1,21 +1,34 @@
 <script lang="ts">
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { browser } from '$app/environment';
+  import type { Snippet } from 'svelte';
 
-  export let isOpen = false;
-  export let title: string | null = null;
-  export let size: 'small' | 'medium' | 'large' | 'xlarge' | 'full' = 'medium';
-  export let showCloseButton = true;
-  export let closeOnOverlayClick = true;
-  export let closeOnEscape = true;
+  let {
+    isOpen = false,
+    title = null,
+    size = 'medium',
+    showCloseButton = true,
+    closeOnOverlayClick = true,
+    closeOnEscape = true,
+    header,
+    children,
+    footer,
+    close = () => {}
+  }: {
+    isOpen?: boolean;
+    title?: string | null;
+    size?: 'small' | 'medium' | 'large' | 'xlarge' | 'full';
+    showCloseButton?: boolean;
+    closeOnOverlayClick?: boolean;
+    closeOnEscape?: boolean;
+    header?: Snippet;
+    children?: Snippet;
+    footer?: Snippet;
+    close?: () => void;
+  } = $props();
 
-  const dispatch = createEventDispatcher<{
-    close: {};
-  }>();
+  let modalElement = $state() as HTMLDivElement;
 
-  let modalElement: HTMLDivElement;
-
-  // Size variants
   const sizeClasses = {
     small: 'max-w-md',
     medium: 'max-w-2xl',
@@ -24,29 +37,30 @@
     full: 'max-w-[95vw]'
   };
 
-  // Focus management and keyboard event handling
-  $: if (browser && isOpen && modalElement) {
-    modalElement.focus();
-  }
-
-  // Prevent body scroll when modal is open
-  $: if (browser) {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+  $effect(() => {
+    if (browser && isOpen && modalElement) {
+      modalElement.focus();
     }
-  }
+  });
+
+  $effect(() => {
+    if (browser) {
+      if (isOpen) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    }
+  });
 
   onDestroy(() => {
-    // Cleanup: restore scroll when component is destroyed
     if (browser) {
       document.body.style.overflow = '';
     }
   });
 
   function handleClose() {
-    dispatch('close', {});
+    close();
   }
 
   function handleOverlayClick(event: MouseEvent) {
@@ -66,8 +80,8 @@
   <div
     bind:this={modalElement}
     class="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4 backdrop-blur-xs"
-    on:click={handleOverlayClick}
-    on:keydown={handleKeyDown}
+    onclick={handleOverlayClick}
+    onkeydown={handleKeyDown}
     role="dialog"
     aria-modal="true"
     tabindex="-1"
@@ -78,38 +92,35 @@
       ]} flex max-h-[90vh] flex-col overflow-hidden"
       role="document"
     >
-      <!-- Header slot or default header -->
-      <slot name="header">
-        {#if title || showCloseButton}
-          <div
-            class="flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 p-6"
-          >
-            {#if title}
-              <h2 class="text-xl font-semibold text-gray-900">{title}</h2>
-            {:else}
-              <div></div>
-            {/if}
+      {#if header}
+        {@render header()}
+      {:else if title || showCloseButton}
+        <div
+          class="flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 p-6"
+        >
+          {#if title}
+            <h2 class="text-xl font-semibold text-gray-900">{title}</h2>
+          {:else}
+            <div></div>
+          {/if}
 
-            {#if showCloseButton}
-              <button
-                class="p-1 text-gray-400 transition-colors hover:text-gray-600"
-                on:click={handleClose}
-                aria-label="Close"
-              >
-                <span class="material-symbols-outlined text-2xl">close</span>
-              </button>
-            {/if}
-          </div>
-        {/if}
-      </slot>
+          {#if showCloseButton}
+            <button
+              class="p-1 text-gray-400 transition-colors hover:text-gray-600"
+              onclick={handleClose}
+              aria-label="Close"
+            >
+              <span class="material-symbols-outlined text-2xl">close</span>
+            </button>
+          {/if}
+        </div>
+      {/if}
 
-      <!-- Content slot -->
       <div class="flex-1 overflow-y-auto">
-        <slot></slot>
+        {@render children?.()}
       </div>
 
-      <!-- Footer slot -->
-      <slot name="footer"></slot>
+      {@render footer?.()}
     </div>
   </div>
 {/if}

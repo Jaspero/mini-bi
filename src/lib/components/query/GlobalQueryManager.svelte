@@ -1,32 +1,39 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import type { Query, IDashboardService } from '../../types/index.js';
   import SQLEditor from './SQLEditor_Reliable.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 
-  export let dashboardService: IDashboardService;
+  interface Props {
+    dashboardService: IDashboardService;
+    onQueryCreated?: (query: Query) => void;
+    onQueryUpdated?: (query: Query) => void;
+    onQueryDeleted?: (queryId: string) => void;
+    onOpenSchema?: () => void;
+  }
 
-  const dispatch = createEventDispatcher<{
-    'query-created': { query: Query };
-    'query-updated': { query: Query };
-    'query-deleted': { queryId: string };
-    'open-schema': any;
-  }>();
+  let { 
+    dashboardService,
+    onQueryCreated = () => {},
+    onQueryUpdated = () => {},
+    onQueryDeleted = () => {},
+    onOpenSchema = () => {}
+  }: Props = $props();
 
-  let queries: Query[] = [];
-  let selectedQuery: Query | null = null;
-  let loading = false;
-  let error = '';
-  let showQueryEditor = false;
+  let queries: Query[] = $state([]);
+  let selectedQuery: Query | null = $state(null);
+  let loading = $state(false);
+  let error = $state('');
+  let showQueryEditor = $state(false);
 
   // Confirmation modal state
-  let showConfirmModal = false;
-  let queryToDelete: Query | null = null;
+  let showConfirmModal = $state(false);
+  let queryToDelete: Query | null = $state(null);
 
   // Form state
-  let name = '';
-  let description = '';
-  let sql = '';
+  let name = $state('');
+  let description = $state('');
+  let sql = $state('');
 
   onMount(async () => {
     await loadQueries();
@@ -88,7 +95,7 @@
           lastModified: new Date()
         });
 
-        dispatch('query-updated', { query: updatedQuery });
+        onQueryUpdated(updatedQuery);
       } else {
         // Create new query
         const newQuery = await dashboardService.saveGlobalQuery({
@@ -100,7 +107,7 @@
           lastModified: new Date()
         });
 
-        dispatch('query-created', { query: newQuery });
+        onQueryCreated(newQuery);
       }
 
       await loadQueries();
@@ -125,7 +132,7 @@
       loading = true;
       error = '';
       await dashboardService.deleteGlobalQuery(queryToDelete.id);
-      dispatch('query-deleted', { queryId: queryToDelete.id });
+      onQueryDeleted(queryToDelete.id);
       await loadQueries();
 
       if (selectedQuery?.id === queryToDelete.id) {
@@ -195,10 +202,7 @@
         <h3 class="text-lg font-semibold text-gray-900">
           {selectedQuery ? 'Edit Query' : 'New Query'}
         </h3>
-        <button
-          class="p-2 text-gray-500 transition-colors hover:text-gray-700"
-          on:click={resetForm}
-        >
+        <button class="p-2 text-gray-500 transition-colors hover:text-gray-700" onclick={resetForm}>
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
@@ -246,7 +250,7 @@
                 on:change={(e) => (sql = e.detail.value)}
                 on:execute={() => testQuery()}
                 on:save={() => saveQuery()}
-                on:open-schema={(e) => dispatch('open-schema', e.detail)}
+                on:open-schema={(e) => onOpenSchema()}
               />
             </div>
           </div>
@@ -261,7 +265,7 @@
         <button
           type="button"
           class="rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-          on:click={resetForm}
+          onclick={resetForm}
           disabled={loading}
         >
           Cancel
@@ -269,7 +273,7 @@
         <button
           type="button"
           class="rounded-md border border-blue-300 bg-blue-50 px-4 py-2 text-blue-700 hover:bg-blue-100 disabled:opacity-50"
-          on:click={testQuery}
+          onclick={testQuery}
           disabled={loading || !sql.trim()}
         >
           Test Query
@@ -277,7 +281,7 @@
         <button
           type="submit"
           class="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
-          on:click={saveQuery}
+          onclick={saveQuery}
           disabled={loading || !name.trim() || !sql.trim()}
         >
           {selectedQuery ? 'Update' : 'Create'} Query
@@ -291,7 +295,7 @@
         <h3 class="text-lg font-medium text-gray-900">Queries ({queries.length})</h3>
         <button
           class="inline-flex items-center rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-          on:click={startNewQuery}
+          onclick={startNewQuery}
           disabled={loading}
         >
           <span class="material-symbols-outlined mr-2 text-base">add</span>
@@ -306,8 +310,8 @@
               class="cursor-pointer rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
               class:border-blue-500={selectedQuery?.id === query.id}
               class:bg-blue-50={selectedQuery?.id === query.id}
-              on:click={() => editQuery(query)}
-              on:keydown={(e) => e.key === 'Enter' && editQuery(query)}
+              onclick={() => editQuery(query)}
+              onkeydown={(e) => e.key === 'Enter' && editQuery(query)}
               role="button"
               tabindex="0"
             >
@@ -315,7 +319,7 @@
                 <h4 class="mr-2 flex-1 truncate text-sm font-medium text-gray-900">{query.name}</h4>
                 <button
                   class="rounded p-1 text-gray-400 transition-colors hover:text-red-600"
-                  on:click={(e) => {
+                  onclick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
                     deleteQuery(query);
@@ -351,7 +355,7 @@
               <p class="mb-4 text-gray-500">Create your first global query to get started</p>
               <button
                 class="inline-flex items-center rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-                on:click={startNewQuery}
+                onclick={startNewQuery}
               >
                 Create your first query
               </button>
@@ -363,13 +367,12 @@
   {/if}
 </div>
 
-<!-- Confirmation Modal -->
 <ConfirmationModal
   isOpen={showConfirmModal}
   title="Delete Query"
   message={queryToDelete ? `Are you sure you want to delete "${queryToDelete.name}"?` : ''}
   confirmText="Delete"
   cancelText="Cancel"
-  on:confirm={confirmDeleteQuery}
-  on:cancel={cancelDeleteQuery}
+  onConfirm={confirmDeleteQuery}
+  onCancel={cancelDeleteQuery}
 />

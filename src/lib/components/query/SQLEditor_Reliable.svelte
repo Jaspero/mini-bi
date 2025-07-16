@@ -1,18 +1,29 @@
 <script lang="ts">
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
 
-  export let value = '';
-  export let disabled = false;
+  let { 
+    value = $bindable(''), 
+    disabled = false,
+    onChange = () => {},
+    onExecute = () => {},
+    onSave = () => {},
+    onOpenSchema = () => {}
+  }: {
+    value?: string;
+    disabled?: boolean;
+    onChange?: (value: string) => void;
+    onExecute?: () => void;
+    onSave?: () => void;
+    onOpenSchema?: () => void;
+  } = $props();
 
-  const dispatch = createEventDispatcher();
-
-  let editorContainer: HTMLElement;
-  let textareaElement: HTMLTextAreaElement;
+  let editorContainer: HTMLElement = $state();
+  let textareaElement: HTMLTextAreaElement = $state();
   let editor: any = null;
   let monaco: any = null;
-  let useMonaco = false;
+  let useMonaco = $state(false);
   let monacoInitialized = false;
-  let initializationAttempts = 0;
+  let initializationAttempts = $state(0);
 
   // Mock database schema for demonstration
   const mockSchema = {
@@ -67,7 +78,7 @@
       const end = textareaElement.selectionEnd;
       const newValue = value.substring(0, start) + text + value.substring(end);
       value = newValue;
-      dispatch('change', { value });
+      onChange(value);
 
       // Set cursor position after inserted text
       setTimeout(() => {
@@ -120,12 +131,12 @@
       editor.onDidChangeModelContent(() => {
         const newValue = editor.getValue();
         value = newValue;
-        dispatch('change', { value: newValue });
+        onChange(newValue);
       });
 
       // Add keyboard shortcuts
       editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-        dispatch('execute', { value: editor.getValue() });
+        onExecute();
       });
 
       useMonaco = true;
@@ -183,18 +194,18 @@
   function handleTextareaInput(event: Event) {
     const target = event.target as HTMLTextAreaElement;
     value = target.value;
-    dispatch('change', { value });
+    onChange(value);
   }
 
   // Handle keyboard shortcuts in textarea
   function handleKeydown(event: KeyboardEvent) {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault();
-      dispatch('execute', { value });
+      onExecute();
     }
     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
       event.preventDefault();
-      dispatch('save', { value });
+      onSave();
     }
   }
 
@@ -215,7 +226,7 @@
 
   function insertTemplate(template: string) {
     value = template;
-    dispatch('change', { value });
+    onChange(value);
 
     if (useMonaco && editor) {
       editor.setValue(template);
@@ -226,24 +237,20 @@
   }
 
   function openSchemaSidebar() {
-    dispatch('open-schema', {
-      mockSchema,
-      sqlTemplates,
-      insertText,
-      insertTemplate,
-      insertSelectAll: (tableName: string) => {
-        const selectQuery = `SELECT * FROM ${tableName}`;
-        value = selectQuery;
-        dispatch('change', { value });
+    onOpenSchema();
+  }
 
-        if (useMonaco && editor) {
-          editor.setValue(selectQuery);
-          editor.focus();
-        } else if (textareaElement) {
-          textareaElement.focus();
-        }
-      }
-    });
+  function insertSelectAll(tableName: string) {
+    const selectQuery = `SELECT * FROM ${tableName}`;
+    value = selectQuery;
+    onChange(value);
+
+    if (useMonaco && editor) {
+      editor.setValue(selectQuery);
+      editor.focus();
+    } else if (textareaElement) {
+      textareaElement.focus();
+    }
   }
 
   function formatSQL() {
@@ -267,11 +274,11 @@
     <div class="flex items-center justify-between gap-2 border-b border-gray-300 bg-gray-50 p-2">
       <button
         class="cursor-pointer rounded border-none bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600"
-        on:click={openSchemaSidebar}>Schema</button
+        onclick={openSchemaSidebar}>Schema</button
       >
       <button
         class="cursor-pointer rounded border-none bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-400"
-        on:click={formatSQL}
+        onclick={formatSQL}
         disabled={!useMonaco}>Format</button
       >
       <span class="text-xs text-gray-500">
@@ -280,7 +287,7 @@
       {#if !useMonaco && initializationAttempts < 3}
         <button
           class="cursor-pointer rounded border-none bg-yellow-500 px-3 py-1.5 text-xs text-white hover:bg-yellow-600"
-          on:click={retryMonaco}>Try Monaco</button
+          onclick={retryMonaco}>Try Monaco</button
         >
       {/if}
     </div>
@@ -290,8 +297,8 @@
       <textarea
         bind:this={textareaElement}
         bind:value
-        on:input={handleTextareaInput}
-        on:keydown={handleKeydown}
+        oninput={handleTextareaInput}
+        onkeydown={handleKeydown}
         {disabled}
         class="absolute inset-0 resize-none border-none bg-white p-3 font-mono text-sm leading-relaxed text-gray-700 transition-opacity duration-300 outline-none focus:outline-none"
         class:opacity-0={useMonaco}

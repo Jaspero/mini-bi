@@ -3,30 +3,34 @@
   import type { Query, QueryResult, IDashboardService } from '../../types/index.js';
   import Modal from '../ui/Modal.svelte';
 
-  export let queries: Query[] = [];
-  export let dashboardService: IDashboardService;
-  export let isOpen = false;
+  interface Props {
+    queries?: Query[];
+    dashboardService: IDashboardService;
+    isOpen?: boolean;
+  }
+
+  let { queries = $bindable([]), dashboardService, isOpen = false }: Props = $props();
 
   const dispatch = createEventDispatcher<{
     'queries-updated': { queries: Query[] };
     close: {};
   }>();
 
-  let selectedQuery: Query | null = null;
-  let isEditing = false;
-  let isCreating = false;
-  let queryResult: QueryResult | null = null;
-  let isExecuting = false;
-  let showPreview = false;
+  let selectedQuery: Query | null = $state(null);
+  let isEditing = $state(false);
+  let isCreating = $state(false);
+  let queryResult: QueryResult | null = $state(null);
+  let isExecuting = $state(false);
+  let showPreview = $state(false);
 
   // Form state for editing/creating queries
-  let editForm = {
+  let editForm = $state({
     id: '',
     name: '',
     description: '',
     sql: '',
     isActive: true
-  };
+  });
 
   function handleClose() {
     resetForm();
@@ -163,7 +167,7 @@
   }
 </script>
 
-<Modal {isOpen} title="Query Manager" size="xlarge" on:close={handleClose}>
+<Modal {isOpen} title="Query Manager" size="xlarge" close={handleClose}>
   <div class="p-6">
     {#if !isEditing && !isCreating}
       <!-- Query List View -->
@@ -171,7 +175,7 @@
         <h3 class="text-lg font-semibold text-gray-900">SQL Queries</h3>
         <button
           class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-          on:click={createNewQuery}
+          onclick={createNewQuery}
         >
           <span class="material-symbols-outlined mr-2 text-base">add</span>
           New Query
@@ -199,7 +203,7 @@
               <div class="ml-4 flex gap-2">
                 <button
                   class="inline-flex items-center rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
-                  on:click={() => executeQuery(query)}
+                  onclick={() => executeQuery(query)}
                   disabled={isExecuting}
                 >
                   {#if isExecuting}
@@ -212,7 +216,7 @@
 
                 <button
                   class="inline-flex items-center rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-                  on:click={() => editQuery(query)}
+                  onclick={() => editQuery(query)}
                 >
                   <span class="material-symbols-outlined mr-1 text-sm">edit</span>
                   Edit
@@ -220,7 +224,7 @@
 
                 <button
                   class="inline-flex items-center rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
-                  on:click={() => deleteQuery(query)}
+                  onclick={() => deleteQuery(query)}
                 >
                   <span class="material-symbols-outlined mr-1 text-sm">delete</span>
                   Delete
@@ -241,7 +245,7 @@
             <p class="mb-4 text-gray-600">Create your first SQL query to get started</p>
             <button
               class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-              on:click={createNewQuery}
+              onclick={createNewQuery}
             >
               Create your first query
             </button>
@@ -257,7 +261,7 @@
           </h3>
           <button
             class="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm text-gray-700 hover:bg-gray-200"
-            on:click={resetForm}
+            onclick={resetForm}
           >
             <span class="material-symbols-outlined mr-2 text-sm">arrow_back</span>
             Back to List
@@ -298,7 +302,7 @@
               >
               <button
                 class="inline-flex items-center rounded border border-blue-300 bg-blue-50 px-3 py-1 text-sm text-blue-700 hover:bg-blue-100 disabled:opacity-50"
-                on:click={previewQuery}
+                onclick={previewQuery}
                 disabled={isExecuting || !editForm.sql.trim()}
               >
                 {#if isExecuting}
@@ -387,28 +391,30 @@
     {/if}
   </div>
 
-  <div slot="footer" class="flex justify-end gap-3 border-t border-gray-200 bg-gray-50 p-6">
-    {#if isEditing || isCreating}
-      <button
-        class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-        on:click={resetForm}
-      >
-        Cancel
-      </button>
-      <button
-        class="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
-        on:click={saveQuery}
-        disabled={!editForm.name.trim() || !editForm.sql.trim()}
-      >
-        {isCreating ? 'Create Query' : 'Save Changes'}
-      </button>
-    {:else}
-      <button
-        class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-        on:click={handleClose}
-      >
-        Close
-      </button>
-    {/if}
-  </div>
+  {#snippet footer()}
+    <div class="flex justify-end gap-3 border-t border-gray-200 bg-gray-50 p-6">
+      {#if isEditing || isCreating}
+        <button
+          class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+          onclick={resetForm}
+        >
+          Cancel
+        </button>
+        <button
+          class="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+          onclick={saveQuery}
+          disabled={!editForm.name.trim() || !editForm.sql.trim()}
+        >
+          {isCreating ? 'Create Query' : 'Save Changes'}
+        </button>
+      {:else}
+        <button
+          class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+          onclick={handleClose}
+        >
+          Close
+        </button>
+      {/if}
+    </div>
+  {/snippet}
 </Modal>

@@ -1,37 +1,52 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import type { Dashboard, IDashboardService, CreateDashboardRequest } from '../../types/index.js';
-  import { validateDashboard, generateDashboardId } from '../../utils/validation.js';
+  import { onMount } from 'svelte';
+  import type { Dashboard, IDashboardService, CreateDashboardRequest } from '../../types/index.ts';
+  import { validateDashboard } from '../../utils/validation.ts';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 
-  export let dashboardService: IDashboardService;
-  export let currentDashboardId: string | null = null;
+  interface Props {
+    dashboardService: IDashboardService;
+    currentDashboardId?: string | null;
+    onDashboardSelected?: (dashboard: Dashboard) => void;
+    onDashboardCreated?: (dashboard: Dashboard) => void;
+    onDashboardDeleted?: (dashboardId: string) => void;
+    onClose?: () => void;
+  }
 
-  const dispatch = createEventDispatcher();
+  let { 
+    dashboardService, 
+    currentDashboardId = null,
+    onDashboardSelected = () => {},
+    onDashboardCreated = () => {},
+    onDashboardDeleted = () => {},
+    onClose = () => {}
+  }: Props = $props();
 
-  let dashboards: Dashboard[] = [];
-  let loading = true;
-  let showCreateForm = false;
-  let creating = false;
-  let deleting = false;
-  let error = '';
+  let dashboards: Dashboard[] = $state([]);
+  let loading = $state(true);
+  let showCreateForm = $state(false);
+  let creating = $state(false);
+  let deleting = $state(false);
+  let error = $state('');
 
   // Confirmation modal state
-  let showConfirmModal = false;
-  let dashboardToDelete: Dashboard | null = null;
+  let showConfirmModal = $state(false);
+  let dashboardToDelete: Dashboard | null = $state(null);
 
   // Create form fields
-  let newDashboardName = '';
-  let newDashboardDescription = '';
-  let gridSize = 80;
-  let columns = 20;
+  let newDashboardName = $state('');
+  let newDashboardDescription = $state('');
+  let gridSize = $state(80);
+  let columns = $state(20);
   let rows = 15;
-  let canvasWidthType = 'fixed';
-  let canvasWidthValue = 1600;
-  let canvasHeightType = 'fixed';
-  let canvasHeightValue = 1000;
+  let canvasWidthType = $state('fixed');
+  let canvasWidthValue = $state(1600);
+  let canvasHeightType = $state('fixed');
+  let canvasHeightValue = $state(1000);
 
-  $: loadDashboards();
+  onMount(() => {
+    loadDashboards();
+  });
 
   async function loadDashboards() {
     try {
@@ -46,7 +61,14 @@
   }
 
   function selectDashboard(dashboardId: string | null) {
-    dispatch('dashboard-selected', { dashboardId });
+    if (dashboardId) {
+      const dashboard = dashboards.find(d => d.id === dashboardId);
+      if (dashboard) {
+        onDashboardSelected(dashboard);
+      }
+    } else {
+      onDashboardSelected(null);
+    }
   }
 
   function showCreateDashboard() {
@@ -88,11 +110,11 @@
         gap: 10,
         canvasWidth: {
           type: canvasWidthType as 'fixed' | 'screen',
-          value: canvasWidthType === 'fixed' ? canvasWidthValue : null
+          value: canvasWidthType === 'fixed' ? canvasWidthValue : undefined
         },
         canvasHeight: {
           type: canvasHeightType as 'fixed' | 'screen',
-          value: canvasHeightType === 'fixed' ? canvasHeightValue : null
+          value: canvasHeightType === 'fixed' ? canvasHeightValue : undefined
         }
       },
       blocks: [],
@@ -111,8 +133,8 @@
       const newDashboard = await dashboardService.createDashboard(request);
       dashboards = [...dashboards, newDashboard];
       showCreateForm = false;
-      dispatch('dashboard-created', { dashboard: newDashboard });
-      dispatch('dashboard-selected', { dashboardId: newDashboard.id });
+      onDashboardCreated(newDashboard);
+      onDashboardSelected(newDashboard);
       creating = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to create dashboard';
@@ -138,10 +160,10 @@
       dashboards = dashboards.filter((d) => d.id !== dashboardId);
 
       if (currentDashboardId === dashboardId) {
-        dispatch('dashboard-selected', { dashboardId: null });
+        selectDashboard(null);
       }
 
-      dispatch('dashboard-deleted', { dashboardId });
+      onDashboardDeleted(dashboardId);
       deleting = false;
       dashboardToDelete = null;
       showConfirmModal = false;
@@ -177,7 +199,7 @@
         <h3 class="text-lg font-semibold text-gray-900">New Dashboard</h3>
         <button
           class="p-2 text-gray-500 transition-colors hover:text-gray-700"
-          on:click={hideCreateForm}
+          onclick={hideCreateForm}
         >
           <span class="material-symbols-outlined">close</span>
         </button>
@@ -347,7 +369,7 @@
         <button
           type="button"
           class="rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-          on:click={hideCreateForm}
+          onclick={hideCreateForm}
           disabled={creating}
         >
           Cancel
@@ -355,7 +377,7 @@
         <button
           type="button"
           class="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
-          on:click={createDashboard}
+          onclick={createDashboard}
           disabled={creating || !newDashboardName.trim()}
         >
           {creating ? 'Creating...' : 'Create Dashboard'}
@@ -369,7 +391,7 @@
         <h3 class="text-lg font-medium text-gray-900">Dashboards ({dashboards.length})</h3>
         <button
           class="inline-flex items-center rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-          on:click={showCreateDashboard}
+          onclick={showCreateDashboard}
           disabled={showCreateForm || creating}
         >
           <span class="material-symbols-outlined mr-2 text-base">add</span>
@@ -399,8 +421,8 @@
                 class="cursor-pointer rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
                 class:border-blue-500={currentDashboardId === dashboard.id}
                 class:bg-blue-50={currentDashboardId === dashboard.id}
-                on:click={() => selectDashboard(dashboard.id)}
-                on:keydown={(e) => e.key === 'Enter' && selectDashboard(dashboard.id)}
+                onclick={() => selectDashboard(dashboard.id)}
+                onkeydown={(e) => e.key === 'Enter' && selectDashboard(dashboard.id)}
                 role="button"
                 tabindex="0"
               >
@@ -410,7 +432,7 @@
                   </h4>
                   <button
                     class="rounded p-1 text-gray-400 transition-colors hover:text-red-600"
-                    on:click={(e) => {
+                    onclick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
                       deleteDashboard(dashboard, e);

@@ -1,23 +1,29 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Block, TextBlockConfig } from '../../types/index.js';
-  import { processTemplate, sanitizeHtml, type TemplateContext } from '../../utils/template.js';
+  import type { Block, TextBlockConfig } from '../../types/index.ts';
+  import { processTemplate, sanitizeHtml, type TemplateContext } from '../../utils/template.ts';
 
-  export let block: Block;
-  export let dashboardVariables: Record<string, any> = {};
-  export let onBlockUpdate: (block: Block) => void = () => {};
-  export let onBlockEdit: (block: Block) => void = () => {};
-  export let onBlockDelete: (blockId: string) => void = () => {};
-  export let showControls = false;
-
-  let textConfig: TextBlockConfig;
-  let processedContent = '';
-  let element: HTMLDivElement;
-
-  $: {
-    textConfig = block.config as TextBlockConfig;
-    updateContent();
+  interface Props {
+    block: Block;
+    dashboardVariables?: Record<string, any>;
+    onBlockUpdate?: (block: Block) => void;
+    onBlockEdit?: (block: Block) => void;
+    onBlockDelete?: (blockId: string) => void;
+    showControls?: boolean;
   }
+
+  let {
+    block,
+    dashboardVariables = {},
+    onBlockUpdate = () => {},
+    onBlockEdit = () => {},
+    onBlockDelete = () => {},
+    showControls = false
+  }: Props = $props();
+
+  let textConfig: TextBlockConfig = $state();
+  let processedContent = $state('');
+  let element: HTMLDivElement = $state();
 
   function updateContent() {
     if (textConfig) {
@@ -55,6 +61,11 @@
     updateContent();
   });
 
+  $effect(() => {
+    textConfig = block.config as TextBlockConfig;
+    updateContent();
+  });
+
   function handleEdit(event: MouseEvent) {
     event.stopPropagation();
     onBlockEdit(block);
@@ -86,21 +97,21 @@
       {#if showControls}
         <button
           class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
-          on:click={handleEdit}
+          onclick={handleEdit}
           aria-label="Edit text"
         >
           <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
         </button>
         <button
           class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600"
-          on:click={handleRefresh}
+          onclick={handleRefresh}
           aria-label="Refresh text content"
         >
           <span class="material-symbols-outlined text-sm sm:text-base">refresh</span>
         </button>
         <button
           class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
-          on:click={handleDelete}
+          onclick={handleDelete}
           aria-label="Delete text"
         >
           <span class="material-symbols-outlined text-sm sm:text-base">delete</span>

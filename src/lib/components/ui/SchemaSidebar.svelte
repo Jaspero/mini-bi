@@ -1,36 +1,37 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  let { 
+    mockSchema, 
+    sqlTemplates = [],
+    onInsertText = () => {},
+    onSetEditorValue = () => {}
+  }: {
+    mockSchema: any;
+    sqlTemplates?: any[];
+    onInsertText?: (text: string) => void;
+    onSetEditorValue?: (value: string) => void;
+  } = $props();
 
-  export let mockSchema: any;
-  export let sqlTemplates: any[] = [];
-
-  const dispatch = createEventDispatcher<{
-    'insert-text': { text: string };
-    'insert-template': { template: string };
-    'set-editor-value': { value: string };
-  }>();
-
-  let selectedTable: any = null;
+  let selectedTable: any = $state(null);
 
   function selectTable(table: any) {
     selectedTable = selectedTable === table ? null : table;
   }
 
   function insertTableName(tableName: string) {
-    dispatch('insert-text', { text: tableName });
+    onInsertText(tableName);
   }
 
   function insertColumnName(tableName: string, columnName: string) {
-    dispatch('insert-text', { text: `${tableName}.${columnName}` });
+    onInsertText(`${tableName}.${columnName}`);
   }
 
   function insertSelectAll(tableName: string) {
     const selectQuery = `SELECT * FROM ${tableName}`;
-    dispatch('set-editor-value', { value: selectQuery });
+    onSetEditorValue(selectQuery);
   }
 
   function insertTemplate(template: string) {
-    dispatch('set-editor-value', { value: template });
+    onSetEditorValue(template);
   }
 </script>
 
@@ -42,7 +43,7 @@
       {#each sqlTemplates as template}
         <button
           class="flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-blue-600 px-3 py-2.5 text-left text-sm text-white transition-colors hover:bg-blue-700"
-          on:click={() => insertTemplate(template.sql)}
+          onclick={() => insertTemplate(template.sql)}
           title="Click to insert template"
         >
           <span class="material-symbols-outlined text-lg">description</span>
@@ -63,8 +64,8 @@
           <!-- Table Header -->
           <div
             class="flex cursor-pointer items-center gap-3 border-b border-gray-200 bg-gray-50 p-3 transition-colors hover:bg-gray-100"
-            on:click={() => selectTable(table)}
-            on:keydown={(e) => e.key === 'Enter' && selectTable(table)}
+            onclick={() => selectTable(table)}
+            onkeydown={(e) => e.key === 'Enter' && selectTable(table)}
             role="button"
             tabindex="0"
           >
@@ -76,14 +77,20 @@
             <div class="flex gap-1">
               <button
                 class="flex h-7 w-7 cursor-pointer items-center justify-center rounded border-0 bg-blue-600 text-xs text-white transition-colors hover:bg-blue-700"
-                on:click|stopPropagation={() => insertTableName(table.name)}
+                onclick={(event) => {
+                  event.stopPropagation();
+                  insertTableName(table.name);
+                }}
                 title="Insert table name"
               >
                 <span class="material-symbols-outlined text-sm">add</span>
               </button>
               <button
                 class="flex h-7 w-7 cursor-pointer items-center justify-center rounded border-0 bg-green-600 text-xs text-white transition-colors hover:bg-green-700"
-                on:click|stopPropagation={() => insertSelectAll(table.name)}
+                onclick={(event) => {
+                  event.stopPropagation();
+                  insertSelectAll(table.name);
+                }}
                 title="SELECT * FROM table"
               >
                 <span class="material-symbols-outlined text-sm">play_arrow</span>
@@ -103,8 +110,8 @@
               {#each table.columns as column}
                 <div
                   class="flex cursor-pointer items-center justify-between p-3 transition-colors hover:bg-blue-50"
-                  on:click={() => insertColumnName(table.name, column.name)}
-                  on:keydown={(e) => e.key === 'Enter' && insertColumnName(table.name, column.name)}
+                  onclick={() => insertColumnName(table.name, column.name)}
+                  onkeydown={(e) => e.key === 'Enter' && insertColumnName(table.name, column.name)}
                   role="button"
                   tabindex="0"
                   title="Click to insert {table.name}.{column.name}"

@@ -1,15 +1,19 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 
-  export let value = '';
-  export let disabled = false;
+  interface Props {
+    value?: string;
+    disabled?: boolean;
+  }
+
+  let { value = $bindable(''), disabled = false }: Props = $props();
 
   const dispatch = createEventDispatcher();
 
-  let editorContainer: HTMLElement;
-  let editor: any = null;
+  let editorContainer: HTMLElement = $state();
+  let editor: any = $state(null);
   let monaco: any = null;
-  let isInitialized = false;
+  let isInitialized = $state(false);
 
   // Mock database schema for demonstration
   const mockSchema = {
@@ -65,21 +69,6 @@
       }
     ]
   };
-
-  // Update editor when value prop changes
-  $: if (editor && value !== editor.getValue()) {
-    editor.setValue(value);
-  }
-
-  // Handle disabled state
-  $: if (editor) {
-    editor.updateOptions({ readOnly: disabled });
-  }
-
-  // Initialize editor when container becomes available
-  $: if (editorContainer && !isInitialized) {
-    initializeEditor();
-  }
 
   async function initializeEditor() {
     if (isInitialized || !editorContainer) return;
@@ -406,6 +395,24 @@
       sql: 'UPDATE table_name\nSET column1 = value1\nWHERE condition;'
     }
   ];
+  // Update editor when value prop changes
+  $effect(() => {
+    if (editor && value !== editor.getValue()) {
+      editor.setValue(value);
+    }
+  });
+  // Handle disabled state
+  $effect(() => {
+    if (editor) {
+      editor.updateOptions({ readOnly: disabled });
+    }
+  });
+  // Initialize editor when container becomes available
+  $effect(() => {
+    if (editorContainer && !isInitialized) {
+      initializeEditor();
+    }
+  });
 </script>
 
 <div
@@ -418,7 +425,7 @@
     >
       <button
         class="flex cursor-pointer items-center gap-1.5 rounded border-0 bg-blue-600 px-3 py-1.5 text-xs text-white transition-colors hover:bg-blue-700"
-        on:click={openSchemaSidebar}
+        onclick={openSchemaSidebar}
         title="Open Schema Sidebar"
       >
         <span class="material-symbols-outlined text-sm">schema</span>
@@ -427,7 +434,7 @@
 
       <button
         class="flex cursor-pointer items-center gap-1.5 rounded border-0 bg-green-600 px-3 py-1.5 text-xs text-white transition-colors hover:bg-green-700"
-        on:click={formatSQL}
+        onclick={formatSQL}
         title="Format SQL (Shift+Alt+F)"
       >
         <span class="material-symbols-outlined text-sm">code</span>

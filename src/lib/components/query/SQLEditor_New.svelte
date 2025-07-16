@@ -1,17 +1,21 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 
-  export let value = '';
-  export let disabled = false;
+  interface Props {
+    value?: string;
+    disabled?: boolean;
+  }
+
+  let { value = $bindable(''), disabled = false }: Props = $props();
 
   const dispatch = createEventDispatcher();
 
-  let editorContainer: HTMLElement;
-  let textareaElement: HTMLTextAreaElement;
+  let editorContainer: HTMLElement = $state();
+  let textareaElement: HTMLTextAreaElement = $state();
   let editor: any = null;
   let monaco: any = null;
-  let useMonaco = false;
-  let isLoading = false;
+  let useMonaco = $state(false);
+  let isLoading = $state(false);
 
   // Mock database schema for demonstration
   const mockSchema = {
@@ -46,8 +50,8 @@
     ]
   };
 
-  let showSchema = false;
-  let selectedTable: any = null;
+  let showSchema = $state(false);
+  let selectedTable: any = $state(null);
 
   async function tryInitializeMonaco() {
     if (useMonaco || !editorContainer) return;
@@ -269,7 +273,7 @@
       <h3 class="m-0 text-sm font-semibold">Database Schema</h3>
       <button
         class="cursor-pointer rounded border-0 bg-transparent p-1 text-lg hover:bg-gray-100"
-        on:click={() => (showSchema = false)}>×</button
+        onclick={() => (showSchema = false)}>×</button
       >
     </div>
 
@@ -280,7 +284,7 @@
         {#each sqlTemplates as template}
           <button
             class="mb-1 block w-full cursor-pointer rounded border-0 bg-blue-600 p-1.5 text-left text-[11px] text-white hover:bg-blue-700"
-            on:click={() => insertTemplate(template.sql)}
+            onclick={() => insertTemplate(template.sql)}
           >
             {template.name}
           </button>
@@ -294,8 +298,8 @@
           <div class="mb-2">
             <div
               class="flex cursor-pointer items-center justify-between rounded border border-gray-300 bg-white p-2 hover:border-blue-600"
-              on:click={() => selectTable(table)}
-              on:keydown={(e) => e.key === 'Enter' && selectTable(table)}
+              onclick={() => selectTable(table)}
+              onkeydown={(e) => e.key === 'Enter' && selectTable(table)}
               role="button"
               tabindex="0"
             >
@@ -303,12 +307,18 @@
               <div class="flex gap-1">
                 <button
                   class="h-5 w-5 cursor-pointer rounded-sm border-0 bg-blue-600 text-[11px] text-white"
-                  on:click|stopPropagation={() => insertTableName(table.name)}
+                  onclick={(event) => {
+                    event.stopPropagation();
+                    insertTableName(table.name);
+                  }}
                   title="Insert table">+</button
                 >
                 <button
                   class="h-5 w-5 cursor-pointer rounded-sm border-0 bg-blue-600 text-[11px] text-white"
-                  on:click|stopPropagation={() => insertSelectAll(table.name)}
+                  onclick={(event) => {
+                    event.stopPropagation();
+                    insertSelectAll(table.name);
+                  }}
                   title="SELECT *">★</button
                 >
               </div>
@@ -319,8 +329,8 @@
                 {#each table.columns as column}
                   <div
                     class="mb-0.5 flex cursor-pointer items-center justify-between rounded-sm border border-gray-100 bg-white p-1 text-xs hover:border-blue-600 hover:bg-blue-50"
-                    on:click={() => insertColumnName(table.name, column.name)}
-                    on:keydown={(e) =>
+                    onclick={() => insertColumnName(table.name, column.name)}
+                    onkeydown={(e) =>
                       e.key === 'Enter' && insertColumnName(table.name, column.name)}
                     role="button"
                     tabindex="0"
@@ -348,11 +358,11 @@
     >
       <button
         class="cursor-pointer rounded border-0 bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700"
-        on:click={() => (showSchema = !showSchema)}>Schema</button
+        onclick={() => (showSchema = !showSchema)}>Schema</button
       >
       <button
         class="cursor-pointer rounded border-0 bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700"
-        on:click={formatSQL}>Format</button
+        onclick={formatSQL}>Format</button
       >
       <span class="text-xs text-gray-500">SQL Editor • Ctrl+Enter to execute</span>
     </div>
@@ -391,8 +401,8 @@
       <textarea
         bind:this={textareaElement}
         bind:value
-        on:input={handleTextareaInput}
-        on:keydown={handleKeydown}
+        oninput={handleTextareaInput}
+        onkeydown={handleKeydown}
         {disabled}
         class="flex-1 resize-none border-0 bg-white p-3 font-mono text-sm leading-relaxed text-gray-700 outline-0 focus:outline-0"
         placeholder="Enter your SQL query here..."
@@ -406,7 +416,7 @@
           <span>Using basic text editor</span>
           <button
             class="cursor-pointer rounded-sm border-0 bg-yellow-400 px-2 py-1 text-[11px] text-white hover:bg-yellow-500"
-            on:click={retryMonaco}>Try Monaco Editor</button
+            onclick={retryMonaco}>Try Monaco Editor</button
           >
         </div>
       {/if}

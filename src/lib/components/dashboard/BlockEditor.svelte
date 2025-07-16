@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import type { Block, Query } from '../../types/index.js';
+  import type { Block, Query } from '../../types/index.ts';
   import Modal from '../ui/Modal.svelte';
 
   let {
@@ -219,7 +219,7 @@
 </script>
 
 {#if editedBlock}
-  <Modal {isOpen} title="Edit Block" size="large" on:close={handleClose}>
+  <Modal {isOpen} title="Edit Block" size="large" close={handleClose}>
     <div class="space-y-4 p-4 sm:space-y-6 sm:p-6">
       <div class="space-y-2">
         <label for="block-title" class="block text-sm font-medium text-gray-700">Title</label>
@@ -459,11 +459,11 @@
               class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4"
             >
               <label class="flex items-center">
-                <!-- <input
+                <input
                   type="checkbox"
                   bind:checked={editedBlock.config.pagination.enabled}
                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                /> -->
+                />
                 <span class="ml-2 text-sm text-gray-600">Enable pagination</span>
               </label>
               {#if editedBlock.config.pagination?.enabled}
@@ -510,7 +510,7 @@
                     {/each}
                   </select>
                   <select
-                    bind:value={editedBlock.config.sorting.defaultSort?.direction}
+                    bind:value={editedBlock.config.sorting.defaultSort.direction}
                     class="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="asc">Ascending</option>
@@ -530,7 +530,7 @@
               <label class="flex items-center">
                 <input
                   type="checkbox"
-                  bind:checked={editedBlock.config.filtering?.enabled}
+                  bind:checked={editedBlock.config.filtering.enabled}
                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span class="ml-2 text-sm text-gray-600">Enable filtering</span>

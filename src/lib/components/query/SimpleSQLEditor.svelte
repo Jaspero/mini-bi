@@ -1,15 +1,19 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 
-  export let value = '';
-  export let disabled = false;
+  interface Props {
+    value?: string;
+    disabled?: boolean;
+  }
+
+  let { value = $bindable(''), disabled = false }: Props = $props();
 
   const dispatch = createEventDispatcher();
 
-  let editorContainer: HTMLElement;
-  let editor: any = null;
+  let editorContainer: HTMLElement = $state();
+  let editor: any = $state(null);
   let monaco: any = null;
-  let loading = true;
+  let loading = $state(true);
 
   onMount(async () => {
     try {
@@ -62,10 +66,11 @@
     }
   });
 
-  // Update editor when value changes
-  $: if (editor && value !== editor.getValue()) {
-    editor.setValue(value);
-  }
+  $effect(() => {
+    if (editor && value !== editor.getValue()) {
+      editor.setValue(value);
+    }
+  });
 </script>
 
 <div class="h-96 overflow-hidden rounded border border-gray-300">

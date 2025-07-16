@@ -1,39 +1,51 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte';
-  import type { Dashboard, Block, Position, Size, IDashboardService } from '../../types/index.js';
+  import { onMount } from 'svelte';
+  import type { Dashboard, Block, Position, Size, IDashboardService } from '../../types/index.ts';
   import TableBlock from '../blocks/TableBlock.svelte';
   import GraphBlock from '../blocks/GraphBlock.svelte';
   import TextBlock from '../blocks/TextBlock.svelte';
 
-  export let dashboard: Dashboard;
-  export let dashboardService: IDashboardService;
-  export let editable = true;
-  export let editMode = false; // Controls whether block edit controls are shown
+  interface Props {
+    dashboard: Dashboard;
+    dashboardService: IDashboardService;
+    editable?: boolean;
+    editMode?: boolean; // Controls whether block edit controls are shown
+    onBlockMoved?: (blockId: string, position: Position) => void;
+    onBlockResized?: (blockId: string, size: Size) => void;
+    onDashboardUpdated?: (dashboard: Dashboard) => void;
+    onBlockEdit?: (block: Block) => void;
+    onBlockDelete?: (blockId: string) => void;
+    onBlockDeleteRequest?: (block: Block) => void;
+  }
 
-  const dispatch = createEventDispatcher<{
-    'block-moved': { blockId: string; position: Position };
-    'block-resized': { blockId: string; size: Size };
-    'dashboard-updated': { dashboard: Dashboard };
-    'block-edit': { block: Block };
-    'block-delete': { blockId: string };
-    'block-delete-request': { block: Block };
-  }>();
+  let {
+    dashboard = $bindable(),
+    dashboardService,
+    editable = true,
+    editMode = false,
+    onBlockMoved = () => {},
+    onBlockResized = () => {},
+    onDashboardUpdated = () => {},
+    onBlockEdit = () => {},
+    onBlockDelete = () => {},
+    onBlockDeleteRequest = () => {}
+  }: Props = $props();
 
-  let canvasElement: HTMLDivElement;
-  let draggedBlock: Block | null = null;
+  let canvasElement: HTMLDivElement = $state();
+  let draggedBlock: Block | null = $state(null);
   let dragOffset = { x: 0, y: 0 };
-  let resizingBlock: Block | null = null;
+  let resizingBlock: Block | null = $state(null);
   let resizeMode = '';
   let isDragging = false;
   let isResizing = false;
-  let canvasWidth = 1600;
-  let canvasHeight = 1000;
+  let canvasWidth = $state(1600);
+  let canvasHeight = $state(1000);
 
   // Grid settings
-  $: gridSize = dashboard.layout.gridSize;
+  let gridSize = $derived(dashboard.layout.gridSize);
 
   // Calculate canvas dimensions based on dashboard configuration
-  $: {
+  $effect(() => {
     if (dashboard.layout.canvasWidth) {
       if (dashboard.layout.canvasWidth.type === 'screen') {
         canvasWidth =
@@ -57,7 +69,7 @@
     } else {
       canvasHeight = 1000; // Default fallback
     }
-  }
+  });
 
   // Update canvas size based on container and content
   onMount(() => {
@@ -244,17 +256,11 @@
     event.preventDefault();
 
     if (isDragging && draggedBlock) {
-      dispatch('block-moved', {
-        blockId: draggedBlock.id,
-        position: draggedBlock.position
-      });
+      onBlockMoved(draggedBlock.id, draggedBlock.position);
     }
 
     if (isResizing && resizingBlock) {
-      dispatch('block-resized', {
-        blockId: resizingBlock.id,
-        size: resizingBlock.size
-      });
+      onBlockResized(resizingBlock.id, resizingBlock.size);
     }
 
     // Clean up
@@ -391,17 +397,11 @@
 
   function handleMouseUp() {
     if (isDragging && draggedBlock) {
-      dispatch('block-moved', {
-        blockId: draggedBlock.id,
-        position: draggedBlock.position
-      });
+      onBlockMoved(draggedBlock.id, draggedBlock.position);
     }
 
     if (isResizing && resizingBlock) {
-      dispatch('block-resized', {
-        blockId: resizingBlock.id,
-        size: resizingBlock.size
-      });
+      onBlockResized(resizingBlock.id, resizingBlock.size);
     }
 
     draggedBlock = null;
@@ -415,29 +415,33 @@
     dashboard.blocks = dashboard.blocks.map((block) =>
       block.id === blockId ? { ...block, position } : block
     );
+    onBlockMoved(blockId, position);
+    onDashboardUpdated(dashboard);
   }
 
   function updateBlockSize(blockId: string, size: Size) {
     dashboard.blocks = dashboard.blocks.map((block) =>
       block.id === blockId ? { ...block, size } : block
     );
+    onBlockResized(blockId, size);
+    onDashboardUpdated(dashboard);
   }
 
   function handleBlockUpdate(block: Block) {
     dashboard.blocks = dashboard.blocks.map((b) => (b.id === block.id ? block : b));
-    dispatch('dashboard-updated', { dashboard });
+    onDashboardUpdated(dashboard);
   }
 
   function handleBlockEdit(block: Block) {
-    dispatch('block-edit', { block });
+    onBlockEdit(block);
   }
 
   function handleBlockDelete(blockId: string) {
-    dispatch('block-delete', { blockId });
+    onBlockDelete(blockId);
   }
 
   function handleBlockDeleteRequest(block: Block) {
-    dispatch('block-delete-request', { block });
+    onBlockDeleteRequest(block);
   }
 </script>
 
@@ -465,8 +469,8 @@
           ? 'cursor-default'
           : ''}"
         style={getBlockStyle(block)}
-        on:mousedown={(e) => handleBlockMouseDown(e, block)}
-        on:touchstart={(e) => handleBlockTouchStart(e, block)}
+        onmousedown={(e) => handleBlockMouseDown(e, block)}
+        ontouchstart={(e) => handleBlockTouchStart(e, block)}
         role="button"
         tabindex="0"
       >
@@ -513,32 +517,32 @@
             <!-- Corner handles - larger touch targets on mobile -->
             <div
               class="pointer-events-auto absolute -top-1 -left-1 h-3 w-3 cursor-nw-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              on:mousedown={(e) => handleResizeMouseDown(e, block, 'nw')}
-              on:touchstart={(e) => handleResizeTouchStart(e, block, 'nw')}
+              onmousedown={(e) => handleResizeMouseDown(e, block, 'nw')}
+              ontouchstart={(e) => handleResizeTouchStart(e, block, 'nw')}
               role="button"
               tabindex="0"
               aria-label="Resize northwest"
             ></div>
             <div
               class="pointer-events-auto absolute -top-1 -right-1 h-3 w-3 cursor-ne-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              on:mousedown={(e) => handleResizeMouseDown(e, block, 'ne')}
-              on:touchstart={(e) => handleResizeTouchStart(e, block, 'ne')}
+              onmousedown={(e) => handleResizeMouseDown(e, block, 'ne')}
+              ontouchstart={(e) => handleResizeTouchStart(e, block, 'ne')}
               role="button"
               tabindex="0"
               aria-label="Resize northeast"
             ></div>
             <div
               class="pointer-events-auto absolute -bottom-1 -left-1 h-3 w-3 cursor-sw-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              on:mousedown={(e) => handleResizeMouseDown(e, block, 'sw')}
-              on:touchstart={(e) => handleResizeTouchStart(e, block, 'sw')}
+              onmousedown={(e) => handleResizeMouseDown(e, block, 'sw')}
+              ontouchstart={(e) => handleResizeTouchStart(e, block, 'sw')}
               role="button"
               tabindex="0"
               aria-label="Resize southwest"
             ></div>
             <div
               class="pointer-events-auto absolute -right-1 -bottom-1 h-3 w-3 cursor-se-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              on:mousedown={(e) => handleResizeMouseDown(e, block, 'se')}
-              on:touchstart={(e) => handleResizeTouchStart(e, block, 'se')}
+              onmousedown={(e) => handleResizeMouseDown(e, block, 'se')}
+              ontouchstart={(e) => handleResizeTouchStart(e, block, 'se')}
               role="button"
               tabindex="0"
               aria-label="Resize southeast"
@@ -547,32 +551,32 @@
             <!-- Edge handles -->
             <div
               class="pointer-events-auto absolute -top-1 left-1/2 h-3 w-3 -translate-x-1/2 cursor-n-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              on:mousedown={(e) => handleResizeMouseDown(e, block, 'n')}
-              on:touchstart={(e) => handleResizeTouchStart(e, block, 'n')}
+              onmousedown={(e) => handleResizeMouseDown(e, block, 'n')}
+              ontouchstart={(e) => handleResizeTouchStart(e, block, 'n')}
               role="button"
               tabindex="0"
               aria-label="Resize north"
             ></div>
             <div
               class="pointer-events-auto absolute -bottom-1 left-1/2 h-3 w-3 -translate-x-1/2 cursor-s-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              on:mousedown={(e) => handleResizeMouseDown(e, block, 's')}
-              on:touchstart={(e) => handleResizeTouchStart(e, block, 's')}
+              onmousedown={(e) => handleResizeMouseDown(e, block, 's')}
+              ontouchstart={(e) => handleResizeTouchStart(e, block, 's')}
               role="button"
               tabindex="0"
               aria-label="Resize south"
             ></div>
             <div
               class="pointer-events-auto absolute top-1/2 -right-1 h-3 w-3 -translate-y-1/2 cursor-e-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              on:mousedown={(e) => handleResizeMouseDown(e, block, 'e')}
-              on:touchstart={(e) => handleResizeTouchStart(e, block, 'e')}
+              onmousedown={(e) => handleResizeMouseDown(e, block, 'e')}
+              ontouchstart={(e) => handleResizeTouchStart(e, block, 'e')}
               role="button"
               tabindex="0"
               aria-label="Resize east"
             ></div>
             <div
               class="pointer-events-auto absolute top-1/2 -left-1 h-3 w-3 -translate-y-1/2 cursor-w-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              on:mousedown={(e) => handleResizeMouseDown(e, block, 'w')}
-              on:touchstart={(e) => handleResizeTouchStart(e, block, 'w')}
+              onmousedown={(e) => handleResizeMouseDown(e, block, 'w')}
+              ontouchstart={(e) => handleResizeTouchStart(e, block, 'w')}
               role="button"
               tabindex="0"
               aria-label="Resize west"

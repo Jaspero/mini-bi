@@ -12,14 +12,14 @@
   } from '$lib';
 
   let dashboardService = new MockDashboardService();
-  let selectedDashboardId: string | null = null;
-  let availableDashboards: Dashboard[] = [];
-  let globalQueries: Query[] = [];
-  let loading = true;
-  let showDashboardSidebar = false;
-  let showQuerySidebar = false;
-  let showSchemaSidebar = false;
-  let schemaData: any = null;
+  let selectedDashboardId: string | null = $state(null);
+  let availableDashboards: Dashboard[] = $state([]);
+  let globalQueries: Query[] = $state([]);
+  let loading = $state(true);
+  let showDashboardSidebar = $state(false);
+  let showQuerySidebar = $state(false);
+  let showSchemaSidebar = $state(false);
+  let schemaData: any = $state(null);
 
   onMount(async () => {
     availableDashboards = await dashboardService.loadDashboards();
@@ -31,33 +31,33 @@
     loading = false;
   });
 
-  function handleDashboardSelected(event: CustomEvent<{ dashboardId: string | null }>) {
-    selectedDashboardId = event.detail.dashboardId;
+  function handleDashboardSelected(dashboard: Dashboard | null) {
+    selectedDashboardId = dashboard?.id || null;
     showDashboardSidebar = false;
   }
 
-  function handleDashboardCreated(event: CustomEvent<{ dashboard: Dashboard }>) {
-    availableDashboards = [...availableDashboards, event.detail.dashboard];
+  function handleDashboardCreated(dashboard: Dashboard) {
+    availableDashboards = [...availableDashboards, dashboard];
   }
 
-  function handleDashboardDeleted(event: CustomEvent<{ dashboardId: string }>) {
-    availableDashboards = availableDashboards.filter((d) => d.id !== event.detail.dashboardId);
+  function handleDashboardDeleted(dashboardId: string) {
+    availableDashboards = availableDashboards.filter((d) => d.id !== dashboardId);
   }
 
-  function handleQueryCreated(event: CustomEvent<{ query: Query }>) {
-    globalQueries = [...globalQueries, event.detail.query];
+  function handleQueryCreated(query: Query) {
+    globalQueries = [...globalQueries, query];
   }
 
-  function handleQueryUpdated(event: CustomEvent<{ query: Query }>) {
-    const index = globalQueries.findIndex((q) => q.id === event.detail.query.id);
+  function handleQueryUpdated(query: Query) {
+    const index = globalQueries.findIndex((q) => q.id === query.id);
     if (index !== -1) {
-      globalQueries[index] = event.detail.query;
+      globalQueries[index] = query;
       globalQueries = [...globalQueries];
     }
   }
 
-  function handleQueryDeleted(event: CustomEvent<{ queryId: string }>) {
-    globalQueries = globalQueries.filter((q) => q.id !== event.detail.queryId);
+  function handleQueryDeleted(queryId: string) {
+    globalQueries = globalQueries.filter((q) => q.id !== queryId);
   }
 
   function toggleDashboardSidebar() {
@@ -97,11 +97,11 @@
     }
   }
 
-  function handleSchemaInsertTemplate(event: CustomEvent<{ template: string }>) {
-    if (schemaData && schemaData.insertTemplate) {
-      schemaData.insertTemplate(event.detail.template);
-    }
-  }
+  // function handleSchemaInsertTemplate(event: CustomEvent<{ template: string }>) {
+  //   if (schemaData && schemaData.insertTemplate) {
+  //     schemaData.insertTemplate(event.detail.template);
+  //   }
+  // }
 
   function handleSchemaSetEditorValue(event: CustomEvent<{ value: string }>) {
     if (schemaData && schemaData.insertSelectAll) {
@@ -127,7 +127,7 @@
   <meta name="description" content="Demo of the Mini-BI dashboard library" />
 </svelte:head>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 {#if !loading}
   <DashboardComponent
@@ -138,8 +138,8 @@
     queryManagerOpen={showQuerySidebar}
     dashboardManagerOpen={showDashboardSidebar}
     availableDashboardsCount={availableDashboards.length}
-    on:toggle-query-manager={toggleQuerySidebar}
-    on:toggle-dashboard-manager={toggleDashboardSidebar}
+    toggleQueryManager={toggleQuerySidebar}
+    toggleDashboardManager={toggleDashboardSidebar}
   />
 
   <Sidebar
@@ -147,14 +147,15 @@
     title="Dashboard Management"
     width="w-96 sm:w-96"
     position="right"
-    on:close={closeDashboardSidebar}
+    onClose={closeDashboardSidebar}
   >
     <DashboardManager
       {dashboardService}
       currentDashboardId={selectedDashboardId}
-      on:dashboard-selected={handleDashboardSelected}
-      on:dashboard-created={handleDashboardCreated}
-      on:dashboard-deleted={handleDashboardDeleted}
+      onDashboardSelected={handleDashboardSelected}
+      onDashboardCreated={handleDashboardCreated}
+      onDashboardDeleted={handleDashboardDeleted}
+      onClose={closeDashboardSidebar}
     />
   </Sidebar>
 
@@ -163,22 +164,22 @@
     title="Query Management"
     width="w-full sm:w-[32rem]"
     position="right"
-    on:close={closeQuerySidebar}
+    onClose={closeQuerySidebar}
   >
     <GlobalQueryManager
       {dashboardService}
-      on:query-created={handleQueryCreated}
-      on:query-updated={handleQueryUpdated}
-      on:query-deleted={handleQueryDeleted}
-      on:open-schema={handleOpenSchema}
+      onQueryCreated={handleQueryCreated}
+      onQueryUpdated={handleQueryUpdated}
+      onQueryDeleted={handleQueryDeleted}
+      onOpenSchema={handleOpenSchema}
     />
   </Sidebar>
 
   {#if showSchemaSidebar && !showQuerySidebar && !showDashboardSidebar}
     <div
       class="fixed inset-0 z-30 bg-black/30 transition-opacity"
-      on:click={closeSchemaSidebar}
-      on:keydown={(e) => e.key === 'Escape' && closeSchemaSidebar()}
+      onclick={closeSchemaSidebar}
+      onkeydown={(e) => e.key === 'Escape' && closeSchemaSidebar()}
       role="button"
       tabindex="-1"
     ></div>
@@ -199,7 +200,7 @@
         <h2 class="text-lg font-semibold text-gray-900">Database Schema</h2>
         <button
           class="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
-          on:click={closeSchemaSidebar}
+          onclick={closeSchemaSidebar}
           aria-label="Close schema sidebar"
         >
           <span class="material-symbols-outlined text-xl">close</span>
@@ -210,9 +211,8 @@
           <SchemaSidebar
             mockSchema={schemaData.mockSchema}
             sqlTemplates={schemaData.sqlTemplates}
-            on:insert-text={handleSchemaInsertText}
-            on:insert-template={handleSchemaInsertTemplate}
-            on:set-editor-value={handleSchemaSetEditorValue}
+            onInsertText={handleSchemaInsertText}
+            onSetEditorValue={handleSchemaSetEditorValue}
           />
         {/if}
       </div>
