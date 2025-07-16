@@ -254,20 +254,26 @@ export class MockDashboardService implements IDashboardService {
 
   // Mock query result storage
   private queryResults = new Map<string, any[]>([
-    ['sales-query', [
-      { month: 'Jan', sales: 4000, target: 4500 },
-      { month: 'Feb', sales: 3000, target: 3500 },
-      { month: 'Mar', sales: 5000, target: 4800 },
-      { month: 'Apr', sales: 4500, target: 4200 },
-      { month: 'May', sales: 6000, target: 5500 },
-      { month: 'Jun', sales: 5500, target: 5800 }
-    ]],
-    ['campaign-query', [
-      { campaign_name: 'Summer Sale', impressions: 125000, clicks: 3200 },
-      { campaign_name: 'Back to School', impressions: 98000, clicks: 2800 },
-      { campaign_name: 'Holiday Promo', impressions: 156000, clicks: 4100 },
-      { campaign_name: 'New Year Deal', impressions: 87000, clicks: 2300 }
-    ]]
+    [
+      'sales-query',
+      [
+        { month: 'Jan', sales: 4000, target: 4500 },
+        { month: 'Feb', sales: 3000, target: 3500 },
+        { month: 'Mar', sales: 5000, target: 4800 },
+        { month: 'Apr', sales: 4500, target: 4200 },
+        { month: 'May', sales: 6000, target: 5500 },
+        { month: 'Jun', sales: 5500, target: 5800 }
+      ]
+    ],
+    [
+      'campaign-query',
+      [
+        { campaign_name: 'Summer Sale', impressions: 125000, clicks: 3200 },
+        { campaign_name: 'Back to School', impressions: 98000, clicks: 2800 },
+        { campaign_name: 'Holiday Promo', impressions: 156000, clicks: 4100 },
+        { campaign_name: 'New Year Deal', impressions: 87000, clicks: 2300 }
+      ]
+    ]
   ]);
 
   async loadDashboards(): Promise<Dashboard[]> {
@@ -278,7 +284,7 @@ export class MockDashboardService implements IDashboardService {
 
   async createDashboard(request: CreateDashboardRequest): Promise<Dashboard> {
     await this.delay(300);
-    
+
     const newDashboard: Dashboard = {
       id: this.generateId(),
       name: request.name,
@@ -289,19 +295,19 @@ export class MockDashboardService implements IDashboardService {
       blocks: request.blocks || [],
       variables: request.variables || {}
     };
-    
+
     this.dashboards.push(newDashboard);
     return newDashboard;
   }
 
   async updateDashboard(id: string, request: UpdateDashboardRequest): Promise<Dashboard> {
     await this.delay(300);
-    
-    const dashboardIndex = this.dashboards.findIndex(d => d.id === id);
+
+    const dashboardIndex = this.dashboards.findIndex((d) => d.id === id);
     if (dashboardIndex === -1) {
       throw new Error(`Dashboard with id ${id} not found`);
     }
-    
+
     const dashboard = this.dashboards[dashboardIndex];
     const updatedDashboard: Dashboard = {
       ...dashboard,
@@ -310,39 +316,46 @@ export class MockDashboardService implements IDashboardService {
       created: dashboard.created, // Preserve creation date
       lastModified: new Date()
     };
-    
+
     this.dashboards[dashboardIndex] = updatedDashboard;
     return updatedDashboard;
   }
 
   async deleteDashboard(id: string): Promise<void> {
     await this.delay(300);
-    
-    const dashboardIndex = this.dashboards.findIndex(d => d.id === id);
+
+    const dashboardIndex = this.dashboards.findIndex((d) => d.id === id);
     if (dashboardIndex === -1) {
       throw new Error(`Dashboard with id ${id} not found`);
     }
-    
+
     this.dashboards.splice(dashboardIndex, 1);
   }
 
-  async loadBlockData(blockId: string, blockType: BlockType, config: BlockConfig): Promise<BlockData> {
+  async loadBlockData(
+    blockId: string,
+    blockType: BlockType,
+    config: BlockConfig
+  ): Promise<BlockData> {
     await this.delay(200);
-    
+
     // Check if the block has a dataSource configuration
     const dataSource = (config as any)?.dataSource;
-    
+
     // If dataSource is query type, use query execution
     if (dataSource?.type === 'query' && dataSource?.queryId) {
       try {
         const queryResult = await this.executeQuery(dataSource.queryId);
         return this.convertQueryResultToBlockData(queryResult);
       } catch (error) {
-        console.warn(`Failed to execute query ${dataSource.queryId}, falling back to mock data:`, error);
+        console.warn(
+          `Failed to execute query ${dataSource.queryId}, falling back to mock data:`,
+          error
+        );
         // Fall back to mock data if query fails
       }
     }
-    
+
     // Default behavior: generate mock data based on block type
     switch (blockType) {
       case 'table':
@@ -358,37 +371,36 @@ export class MockDashboardService implements IDashboardService {
 
   async executeQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult> {
     await this.delay(300);
-    
+
     // Find the query in global queries
-    const query = this.globalQueries.find(q => q.id === queryId);
-    
+    const query = this.globalQueries.find((q) => q.id === queryId);
+
     if (!query) {
       throw new Error(`Query with id ${queryId} not found`);
     }
-    
+
     if (!query.isActive) {
       throw new Error(`Query ${queryId} is not active`);
     }
-    
+
     // Get mock data for this query
     const mockData = this.queryResults.get(queryId);
     if (!mockData) {
       throw new Error(`No mock data available for query ${queryId}`);
     }
-    
+
     // Convert to QueryResult format
-    const columns: QueryColumn[] = mockData.length > 0 
-      ? Object.keys(mockData[0]).map(key => ({
-          name: key,
-          type: typeof mockData[0][key] === 'number' ? 'number' : 'string',
-          nullable: false
-        }))
-      : [];
-    
-    const rows = mockData.map(row => 
-      columns.map(col => row[col.name])
-    );
-    
+    const columns: QueryColumn[] =
+      mockData.length > 0
+        ? Object.keys(mockData[0]).map((key) => ({
+            name: key,
+            type: typeof mockData[0][key] === 'number' ? 'number' : 'string',
+            nullable: false
+          }))
+        : [];
+
+    const rows = mockData.map((row) => columns.map((col) => row[col.name]));
+
     return {
       columns,
       rows,
@@ -399,18 +411,18 @@ export class MockDashboardService implements IDashboardService {
 
   async validateQuery(sql: string): Promise<{ isValid: boolean; error?: string }> {
     await this.delay(100);
-    
+
     // Simple validation - check for basic SQL structure
     const sqlLower = sql.toLowerCase().trim();
-    
+
     if (!sqlLower.startsWith('select')) {
       return { isValid: false, error: 'Query must start with SELECT' };
     }
-    
+
     if (!sqlLower.includes('from')) {
       return { isValid: false, error: 'Query must include FROM clause' };
     }
-    
+
     // Check for dangerous operations
     const dangerousKeywords = ['drop', 'delete', 'truncate', 'alter', 'create', 'insert', 'update'];
     for (const keyword of dangerousKeywords) {
@@ -418,35 +430,35 @@ export class MockDashboardService implements IDashboardService {
         return { isValid: false, error: `Operation ${keyword.toUpperCase()} is not allowed` };
       }
     }
-    
+
     return { isValid: true };
   }
 
   async getQueryPreview(sql: string, limit = 10): Promise<QueryResult> {
     await this.delay(200);
-    
+
     // Validate first
     const validation = await this.validateQuery(sql);
     if (!validation.isValid) {
       throw new Error(validation.error);
     }
-    
+
     // Return sample data for preview
     const sampleData = [
       { id: 1, name: 'Sample Item 1', value: 100, date: '2024-01-01' },
       { id: 2, name: 'Sample Item 2', value: 200, date: '2024-01-02' },
       { id: 3, name: 'Sample Item 3', value: 150, date: '2024-01-03' }
     ].slice(0, limit);
-    
+
     const columns: QueryColumn[] = [
       { name: 'id', type: 'number', nullable: false },
       { name: 'name', type: 'string', nullable: false },
       { name: 'value', type: 'number', nullable: false },
       { name: 'date', type: 'string', nullable: false }
     ];
-    
-    const rows = sampleData.map(row => [row.id, row.name, row.value, row.date]);
-    
+
+    const rows = sampleData.map((row) => [row.id, row.name, row.value, row.date]);
+
     return {
       columns,
       rows,
@@ -457,14 +469,14 @@ export class MockDashboardService implements IDashboardService {
 
   private convertQueryResultToBlockData(queryResult: QueryResult): BlockData {
     // Convert rows and columns back to object format
-    const data = queryResult.rows.map(row => {
+    const data = queryResult.rows.map((row) => {
       const obj: any = {};
       queryResult.columns.forEach((column, index) => {
         obj[column.name] = row[index];
       });
       return obj;
     });
-    
+
     return {
       data,
       metadata: {
@@ -477,10 +489,18 @@ export class MockDashboardService implements IDashboardService {
 
   private generateTableData(): BlockData {
     const products = [
-      'MacBook Pro', 'iPhone 15', 'iPad Air', 'Apple Watch', 'AirPods Pro',
-      'iMac', 'Mac Mini', 'iPad Pro', 'Apple TV', 'HomePod'
+      'MacBook Pro',
+      'iPhone 15',
+      'iPad Air',
+      'Apple Watch',
+      'AirPods Pro',
+      'iMac',
+      'Mac Mini',
+      'iPad Pro',
+      'Apple TV',
+      'HomePod'
     ];
-    
+
     const data = products.map((product, index) => ({
       id: index + 1,
       product,
@@ -489,7 +509,7 @@ export class MockDashboardService implements IDashboardService {
       category: index % 2 === 0 ? 'Hardware' : 'Accessories',
       lastUpdated: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
     }));
-    
+
     return {
       data,
       metadata: {
@@ -502,7 +522,7 @@ export class MockDashboardService implements IDashboardService {
 
   private generateGraphData(config: any): BlockData {
     const chartType = config?.chartType || 'line';
-    
+
     switch (chartType) {
       case 'line':
       case 'bar':
@@ -518,7 +538,7 @@ export class MockDashboardService implements IDashboardService {
           ],
           metadata: { lastUpdated: new Date(), source: 'Sales Database' }
         };
-      
+
       case 'pie':
       case 'donut':
         return {
@@ -531,7 +551,7 @@ export class MockDashboardService implements IDashboardService {
           ],
           metadata: { lastUpdated: new Date(), source: 'Category Analytics' }
         };
-      
+
       case 'scatter':
         return {
           data: Array.from({ length: 50 }, (_, i) => ({
@@ -541,7 +561,7 @@ export class MockDashboardService implements IDashboardService {
           })),
           metadata: { lastUpdated: new Date(), source: 'Scatter Analysis' }
         };
-      
+
       default:
         return {
           data: [],
@@ -551,7 +571,7 @@ export class MockDashboardService implements IDashboardService {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private generateId(): string {
@@ -570,36 +590,36 @@ export class MockDashboardService implements IDashboardService {
       created: new Date(),
       lastModified: new Date()
     };
-    
+
     this.globalQueries.push(newQuery);
     return newQuery;
   }
 
   async updateGlobalQuery(queryId: string, updates: Partial<Query>): Promise<Query> {
-    const queryIndex = this.globalQueries.findIndex(q => q.id === queryId);
+    const queryIndex = this.globalQueries.findIndex((q) => q.id === queryId);
     if (queryIndex === -1) {
       throw new Error(`Query with id ${queryId} not found`);
     }
-    
+
     this.globalQueries[queryIndex] = {
       ...this.globalQueries[queryIndex],
       ...updates,
       lastModified: new Date()
     };
-    
+
     return this.globalQueries[queryIndex];
   }
 
   async deleteGlobalQuery(queryId: string): Promise<void> {
-    const queryIndex = this.globalQueries.findIndex(q => q.id === queryId);
+    const queryIndex = this.globalQueries.findIndex((q) => q.id === queryId);
     if (queryIndex === -1) {
       throw new Error(`Query with id ${queryId} not found`);
     }
-    
+
     this.globalQueries.splice(queryIndex, 1);
   }
 
   async getGlobalQuery(queryId: string): Promise<Query | null> {
-    return this.globalQueries.find(q => q.id === queryId) || null;
+    return this.globalQueries.find((q) => q.id === queryId) || null;
   }
 }

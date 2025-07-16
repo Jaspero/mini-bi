@@ -34,12 +34,12 @@ export function validateDashboard(dashboard: Partial<Dashboard>): ValidationResu
   if (dashboard.blocks) {
     dashboard.blocks.forEach((block, index) => {
       const blockValidation = validateBlock(block, dashboard.layout);
-      errors.push(...blockValidation.errors.map(err => `Block ${index + 1}: ${err}`));
-      warnings.push(...blockValidation.warnings.map(warn => `Block ${index + 1}: ${warn}`));
+      errors.push(...blockValidation.errors.map((err) => `Block ${index + 1}: ${err}`));
+      warnings.push(...blockValidation.warnings.map((warn) => `Block ${index + 1}: ${warn}`));
     });
 
     // Check for duplicate block IDs
-    const blockIds = dashboard.blocks.map(b => b.id);
+    const blockIds = dashboard.blocks.map((b) => b.id);
     const duplicateIds = blockIds.filter((id, index) => blockIds.indexOf(id) !== index);
     if (duplicateIds.length > 0) {
       errors.push(`Duplicate block IDs found: ${duplicateIds.join(', ')}`);
@@ -48,7 +48,9 @@ export function validateDashboard(dashboard: Partial<Dashboard>): ValidationResu
     // Check for overlapping blocks
     const overlaps = findOverlappingBlocks(dashboard.blocks);
     if (overlaps.length > 0) {
-      warnings.push(`Overlapping blocks detected: ${overlaps.map(o => `${o[0]} and ${o[1]}`).join(', ')}`);
+      warnings.push(
+        `Overlapping blocks detected: ${overlaps.map((o) => `${o[0]} and ${o[1]}`).join(', ')}`
+      );
     }
   }
 
@@ -136,7 +138,10 @@ export function validateLayout(layout: Partial<DashboardLayout>): ValidationResu
 /**
  * Validate block position
  */
-export function validatePosition(position: Partial<Position>, layout?: DashboardLayout): ValidationResult {
+export function validatePosition(
+  position: Partial<Position>,
+  layout?: DashboardLayout
+): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 

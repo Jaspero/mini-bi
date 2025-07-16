@@ -229,15 +229,20 @@ export interface IDashboardService {
   createDashboard(dashboard: CreateDashboardRequest): Promise<Dashboard>;
   updateDashboard(id: string, dashboard: UpdateDashboardRequest): Promise<Dashboard>;
   deleteDashboard(id: string): Promise<void>;
-  
+
   // Block data operations
-  loadBlockData(blockId: string, blockType: BlockType, config: BlockConfig, dataSource?: DataSourceConfig): Promise<BlockData>;
-  
+  loadBlockData(
+    blockId: string,
+    blockType: BlockType,
+    config: BlockConfig,
+    dataSource?: DataSourceConfig
+  ): Promise<BlockData>;
+
   // Query operations
   executeQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult>;
   validateQuery(sql: string): Promise<{ isValid: boolean; error?: string }>;
   getQueryPreview(sql: string, limit?: number): Promise<QueryResult>;
-  
+
   // Global Query Management
   loadGlobalQueries(): Promise<Query[]>;
   saveGlobalQuery(query: Omit<Query, 'id' | 'created'>): Promise<Query>;

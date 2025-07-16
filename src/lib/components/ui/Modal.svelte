@@ -65,31 +65,35 @@
 {#if isOpen}
   <div
     bind:this={modalElement}
-    class="fixed inset-0 bg-transparent backdrop-blur-xs flex items-center justify-center p-4 z-50"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4 backdrop-blur-xs"
     on:click={handleOverlayClick}
     on:keydown={handleKeyDown}
     role="dialog"
     aria-modal="true"
     tabindex="-1"
   >
-    <div 
-      class="bg-white rounded-lg shadow-2xl w-full {sizeClasses[size]} max-h-[90vh] flex flex-col overflow-hidden"
+    <div
+      class="w-full rounded-lg bg-white shadow-2xl {sizeClasses[
+        size
+      ]} flex max-h-[90vh] flex-col overflow-hidden"
       role="document"
     >
       <!-- Header slot or default header -->
       <slot name="header">
         {#if title || showCloseButton}
-          <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+          <div
+            class="flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 p-6"
+          >
             {#if title}
               <h2 class="text-xl font-semibold text-gray-900">{title}</h2>
             {:else}
               <div></div>
             {/if}
-            
+
             {#if showCloseButton}
-              <button 
-                class="text-gray-400 hover:text-gray-600 transition-colors p-1" 
-                on:click={handleClose} 
+              <button
+                class="p-1 text-gray-400 transition-colors hover:text-gray-600"
+                on:click={handleClose}
                 aria-label="Close"
               >
                 <span class="material-symbols-outlined text-2xl">close</span>

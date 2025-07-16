@@ -135,12 +135,12 @@
     try {
       deleting = true;
       await dashboardService.deleteDashboard(dashboardId);
-      dashboards = dashboards.filter(d => d.id !== dashboardId);
-      
+      dashboards = dashboards.filter((d) => d.id !== dashboardId);
+
       if (currentDashboardId === dashboardId) {
         dispatch('dashboard-selected', { dashboardId: null });
       }
-      
+
       dispatch('dashboard-deleted', { dashboardId });
       deleting = false;
       dashboardToDelete = null;
@@ -164,19 +164,19 @@
 </script>
 
 <!-- Dashboard Manager Content -->
-<div class="h-full flex flex-col">
+<div class="flex h-full flex-col">
   {#if error}
-    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-4">{error}</div>
+    <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-red-800">{error}</div>
   {/if}
 
   {#if showCreateForm}
     <!-- Dashboard Creation Form -->
-    <div class="h-full flex flex-col">
+    <div class="flex h-full flex-col">
       <!-- Fixed Header -->
-      <div class="flex items-center justify-between mb-4 flex-shrink-0">
+      <div class="mb-4 flex flex-shrink-0 items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-900">New Dashboard</h3>
-        <button 
-          class="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+        <button
+          class="p-2 text-gray-500 transition-colors hover:text-gray-700"
           on:click={hideCreateForm}
         >
           <span class="material-symbols-outlined">close</span>
@@ -184,46 +184,52 @@
       </div>
 
       <!-- Scrollable Content Area -->
-      <div class="flex-1 overflow-y-auto pr-2 -mr-2">
+      <div class="-mr-2 flex-1 overflow-y-auto pr-2">
         <div class="space-y-4">
           <div>
-            <label for="sidebar-dashboard-name" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="sidebar-dashboard-name"
+              class="mb-2 block text-sm font-medium text-gray-700"
+            >
               Dashboard Name *
             </label>
-            <input 
+            <input
               id="sidebar-dashboard-name"
-              type="text" 
-              bind:value={newDashboardName} 
+              type="text"
+              bind:value={newDashboardName}
               placeholder="Enter dashboard name"
               maxlength="100"
               disabled={creating}
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
 
           <div>
-            <label for="sidebar-dashboard-description" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="sidebar-dashboard-description"
+              class="mb-2 block text-sm font-medium text-gray-700"
+            >
               Description
             </label>
-            <textarea 
+            <textarea
               id="sidebar-dashboard-description"
-              bind:value={newDashboardDescription} 
+              bind:value={newDashboardDescription}
               placeholder="Optional description"
               rows="3"
               maxlength="500"
               disabled={creating}
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              class="w-full resize-none rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             ></textarea>
           </div>
 
           <!-- Canvas Size Configuration -->
           <div class="border-t border-gray-200 pt-4">
-            <h4 class="text-sm font-semibold text-gray-900 mb-3">Canvas Size</h4>
-            
+            <h4 class="mb-3 text-sm font-semibold text-gray-900">Canvas Size</h4>
+
             <div class="space-y-4">
               <!-- Canvas Width -->
               <div>
-                <span class="block text-sm font-medium text-gray-700 mb-2">Width</span>
+                <span class="mb-2 block text-sm font-medium text-gray-700">Width</span>
                 <div class="space-y-2">
                   <div class="flex gap-4">
                     <label class="flex items-center">
@@ -236,12 +242,7 @@
                       <span class="text-sm">Screen</span>
                     </label>
                     <label class="flex items-center">
-                      <input
-                        type="radio"
-                        bind:group={canvasWidthType}
-                        value="fixed"
-                        class="mr-2"
-                      />
+                      <input type="radio" bind:group={canvasWidthType} value="fixed" class="mr-2" />
                       <span class="text-sm">Fixed</span>
                     </label>
                   </div>
@@ -252,7 +253,7 @@
                       min="800"
                       max="4000"
                       step="100"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       placeholder="Width in pixels"
                     />
                   {/if}
@@ -261,7 +262,7 @@
 
               <!-- Canvas Height -->
               <div>
-                <span class="block text-sm font-medium text-gray-700 mb-2">Height</span>
+                <span class="mb-2 block text-sm font-medium text-gray-700">Height</span>
                 <div class="space-y-2">
                   <div class="flex gap-4">
                     <label class="flex items-center">
@@ -290,7 +291,7 @@
                       min="600"
                       max="3000"
                       step="100"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       placeholder="Height in pixels"
                     />
                   {/if}
@@ -300,7 +301,10 @@
               <!-- Grid Settings -->
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label for="sidebar-grid-size" class="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    for="sidebar-grid-size"
+                    class="mb-2 block text-sm font-medium text-gray-700"
+                  >
                     Grid Size
                   </label>
                   <input
@@ -311,11 +315,11 @@
                     max="200"
                     step="5"
                     disabled={creating}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
                   />
                 </div>
                 <div>
-                  <label for="sidebar-columns" class="block text-sm font-medium text-gray-700 mb-2">
+                  <label for="sidebar-columns" class="mb-2 block text-sm font-medium text-gray-700">
                     Columns
                   </label>
                   <input
@@ -326,7 +330,7 @@
                     max="50"
                     step="1"
                     disabled={creating}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -339,19 +343,19 @@
       </div>
 
       <!-- Fixed Footer -->
-      <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 bg-white flex-shrink-0">
-        <button 
+      <div class="flex flex-shrink-0 justify-end space-x-3 border-t border-gray-200 bg-white pt-4">
+        <button
           type="button"
-          class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          class="rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           on:click={hideCreateForm}
           disabled={creating}
         >
           Cancel
         </button>
-        <button 
+        <button
           type="button"
-          class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-          on:click={createDashboard} 
+          class="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
+          on:click={createDashboard}
           disabled={creating || !newDashboardName.trim()}
         >
           {creating ? 'Creating...' : 'Create Dashboard'}
@@ -360,15 +364,15 @@
     </div>
   {:else}
     <!-- Dashboard List -->
-    <div class="h-full flex flex-col">
-      <div class="flex justify-between items-center mb-4 flex-shrink-0">
+    <div class="flex h-full flex-col">
+      <div class="mb-4 flex flex-shrink-0 items-center justify-between">
         <h3 class="text-lg font-medium text-gray-900">Dashboards ({dashboards.length})</h3>
-        <button 
-          class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed" 
-          on:click={showCreateDashboard} 
+        <button
+          class="inline-flex items-center rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+          on:click={showCreateDashboard}
           disabled={showCreateForm || creating}
         >
-          <span class="material-symbols-outlined text-base mr-2">add</span>
+          <span class="material-symbols-outlined mr-2 text-base">add</span>
           New Dashboard
         </button>
       </div>
@@ -377,19 +381,22 @@
         <div class="space-y-3">
           {#if loading}
             <div class="flex flex-col items-center justify-center py-8 text-gray-500">
-              <div class="w-6 h-6 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-2"></div>
+              <div
+                class="mb-2 h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"
+              ></div>
               <p class="text-xs">Loading dashboards...</p>
             </div>
           {:else if dashboards.length === 0}
-            <div class="text-center py-8 text-gray-500">
-              <span class="material-symbols-outlined text-4xl mb-3 opacity-50 block">dashboard</span>
-              <p class="text-xs mb-2 font-medium">No Dashboards Found</p>
+            <div class="py-8 text-center text-gray-500">
+              <span class="material-symbols-outlined mb-3 block text-4xl opacity-50">dashboard</span
+              >
+              <p class="mb-2 text-xs font-medium">No Dashboards Found</p>
               <p class="text-xs">Create your first dashboard to get started</p>
             </div>
           {:else}
             {#each dashboards as dashboard}
-              <div 
-                class="bg-white border border-gray-200 hover:border-blue-300 rounded-lg p-3 cursor-pointer transition-all shadow-sm hover:shadow-md" 
+              <div
+                class="cursor-pointer rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
                 class:border-blue-500={currentDashboardId === dashboard.id}
                 class:bg-blue-50={currentDashboardId === dashboard.id}
                 on:click={() => selectDashboard(dashboard.id)}
@@ -397,22 +404,28 @@
                 role="button"
                 tabindex="0"
               >
-                <div class="flex justify-between items-start mb-2">
-                  <h4 class="text-sm font-medium text-gray-900 truncate flex-1 mr-2">{dashboard.name}</h4>
-                  <button 
-                    class="text-gray-400 hover:text-red-600 p-1 rounded transition-colors" 
-                    on:click={(e) => { e.stopPropagation(); e.preventDefault(); deleteDashboard(dashboard, e); }}
+                <div class="mb-2 flex items-start justify-between">
+                  <h4 class="mr-2 flex-1 truncate text-sm font-medium text-gray-900">
+                    {dashboard.name}
+                  </h4>
+                  <button
+                    class="rounded p-1 text-gray-400 transition-colors hover:text-red-600"
+                    on:click={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      deleteDashboard(dashboard, e);
+                    }}
                     disabled={deleting}
                     aria-label="Delete dashboard"
                   >
                     <span class="material-symbols-outlined text-sm">delete</span>
                   </button>
                 </div>
-                
+
                 {#if dashboard.description}
-                  <p class="text-xs text-gray-500 mb-2 line-clamp-2">{dashboard.description}</p>
+                  <p class="mb-2 line-clamp-2 text-xs text-gray-500">{dashboard.description}</p>
                 {/if}
-                
+
                 <div class="flex justify-between text-xs text-gray-400">
                   <span>{dashboard.blocks.length} blocks</span>
                   <span>{formatDate(dashboard.lastModified)}</span>
@@ -430,11 +443,11 @@
 <ConfirmationModal
   isOpen={showConfirmModal}
   title="Delete Dashboard"
-  message={dashboardToDelete ? `Are you sure you want to delete "${dashboardToDelete.name}"? This action cannot be undone.` : ''}
+  message={dashboardToDelete
+    ? `Are you sure you want to delete "${dashboardToDelete.name}"? This action cannot be undone.`
+    : ''}
   confirmText="Delete"
   cancelText="Cancel"
   on:confirm={confirmDeleteDashboard}
   on:cancel={cancelDeleteDashboard}
 />
-
-

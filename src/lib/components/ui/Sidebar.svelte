@@ -32,8 +32,8 @@
 
 {#if isOpen}
   <!-- Backdrop -->
-  <div 
-    class="fixed inset-0 bg-black/30 z-40 transition-opacity"
+  <div
+    class="fixed inset-0 z-40 bg-black/30 transition-opacity"
     on:click={handleBackdropClick}
     on:keydown={handleKeydown}
     role="button"
@@ -43,16 +43,18 @@
   ></div>
 
   <!-- Sidebar -->
-  <div 
-    class="fixed top-0 {position === 'right' ? 'right-0' : 'left-0'} h-full {width} bg-white shadow-2xl z-50 flex flex-col max-w-full"
+  <div
+    class="fixed top-0 {position === 'right'
+      ? 'right-0'
+      : 'left-0'} h-full {width} z-50 flex max-w-full flex-col bg-white shadow-2xl"
     in:fly={{ x: position === 'right' ? 400 : -400, duration: 300 }}
     out:fly={{ x: position === 'right' ? 400 : -400, duration: 300 }}
   >
     <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+    <div class="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
       <h2 class="text-lg font-semibold text-gray-900">{title}</h2>
-      <button 
-        class="p-1 hover:bg-gray-200 rounded-md transition-colors text-gray-400 hover:text-gray-600" 
+      <button
+        class="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
         on:click={handleClose}
         aria-label="Close sidebar"
       >
@@ -61,7 +63,7 @@
     </div>
 
     <!-- Content -->
-    <div class="flex-1 overflow-y-auto p-4 h-full">
+    <div class="h-full flex-1 overflow-y-auto p-4">
       <slot />
     </div>
 

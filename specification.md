@@ -7,6 +7,7 @@ Mini-BI is a lightweight, flexible dashboard library built with SvelteKit that e
 ## Core Features
 
 ### Dashboard Management
+
 - Create new dashboards
 - Load existing dashboards
 - Update dashboard configurations
@@ -14,6 +15,7 @@ Mini-BI is a lightweight, flexible dashboard library built with SvelteKit that e
 - Dashboard persistence through injectable services
 
 ### Block System
+
 - **Draggable blocks**: Users can drag blocks to reposition them within the dashboard
 - **Resizable blocks**: Blocks can be resized to accommodate different content needs
 - **Block types**: Support for multiple block types (Table, Graph, Text)
@@ -21,6 +23,7 @@ Mini-BI is a lightweight, flexible dashboard library built with SvelteKit that e
 - **Block removal**: Remove blocks from dashboards
 
 ### Data Integration
+
 - **Service injection**: Flexible data service architecture
 - **Mock service**: Built-in mock service for development and testing
 - **Real-time updates**: Support for dynamic data refresh
@@ -30,6 +33,7 @@ Mini-BI is a lightweight, flexible dashboard library built with SvelteKit that e
 ### Service Layer
 
 #### IDashboardService Interface
+
 ```typescript
 interface IDashboardService {
   // Dashboard CRUD operations
@@ -37,13 +41,14 @@ interface IDashboardService {
   createDashboard(dashboard: CreateDashboardRequest): Promise<Dashboard>;
   updateDashboard(id: string, dashboard: UpdateDashboardRequest): Promise<Dashboard>;
   deleteDashboard(id: string): Promise<void>;
-  
+
   // Block data operations
   loadBlockData(blockId: string, blockType: BlockType, config: BlockConfig): Promise<BlockData>;
 }
 ```
 
 #### MockDashboardService
+
 - Provides hardcoded sample data for all dashboard and block operations
 - Includes realistic sample datasets for tables, graphs, and text blocks
 - Simulates async operations with appropriate delays
@@ -52,6 +57,7 @@ interface IDashboardService {
 ### Block Types
 
 #### 1. Table Block
+
 - **Technology**: wx-svelte-grid
 - **Features**:
   - Sortable columns
@@ -68,6 +74,7 @@ interface IDashboardService {
   - Filter configurations
 
 #### 2. Graph Block
+
 - **Technology**: Apache ECharts
 - **Supported chart types**:
   - Line charts
@@ -94,6 +101,7 @@ interface IDashboardService {
   - Animation settings
 
 #### 3. Text Block
+
 - **Technology**: Custom Svelte component with Handlebars-like templating
 - **Features**:
   - Rich text formatting (bold, italic, underline)
@@ -114,6 +122,7 @@ interface IDashboardService {
 ## Data Models
 
 ### Dashboard Model
+
 ```typescript
 interface Dashboard {
   id: string;
@@ -128,6 +137,7 @@ interface Dashboard {
 ```
 
 ### Block Model
+
 ```typescript
 interface Block {
   id: string;
@@ -155,6 +165,7 @@ interface Size {
 ### Block Configurations
 
 #### TableBlockConfig
+
 ```typescript
 interface TableBlockConfig extends BlockConfig {
   columns: ColumnDefinition[];
@@ -165,6 +176,7 @@ interface TableBlockConfig extends BlockConfig {
 ```
 
 #### GraphBlockConfig
+
 ```typescript
 interface GraphBlockConfig extends BlockConfig {
   chartType: ChartType;
@@ -178,6 +190,7 @@ interface GraphBlockConfig extends BlockConfig {
 ```
 
 #### TextBlockConfig
+
 ```typescript
 interface TextBlockConfig extends BlockConfig {
   content: string; // Template with {{variable}} syntax
@@ -189,6 +202,7 @@ interface TextBlockConfig extends BlockConfig {
 ## User Interface
 
 ### Dashboard Canvas
+
 - **Grid-based layout**: Snap-to-grid positioning for consistent alignment
 - **Drag and drop**: Intuitive block manipulation
 - **Resize handles**: Visual indicators for resizing blocks
@@ -196,12 +210,14 @@ interface TextBlockConfig extends BlockConfig {
 - **Toolbar**: Quick access to common actions
 
 ### Block Editor
+
 - **Modal/sidebar interface** for configuring block properties
 - **Real-time preview** of changes
 - **Data source selection** and mapping
 - **Validation and error handling**
 
 ### Dashboard Management
+
 - **Dashboard list view** with search and filtering
 - **Creation wizard** for new dashboards
 - **Template gallery** with pre-built dashboard examples
@@ -210,16 +226,19 @@ interface TextBlockConfig extends BlockConfig {
 ## Technical Requirements
 
 ### Dependencies
+
 - **SvelteKit**: Core framework
 - **Apache ECharts**: Chart library
 - **wx-svelte-grid**: Table component
 - **TypeScript**: Type safety and development experience
 
 ### Browser Support
+
 - Modern browsers with ES2020+ support
 - Chrome 88+, Firefox 85+, Safari 14+, Edge 88+
 
 ### Performance
+
 - **Lazy loading**: Load block data on demand
 - **Virtual scrolling**: For large datasets in tables
 - **Chart optimization**: Efficient rendering for large datasets
@@ -230,23 +249,27 @@ interface TextBlockConfig extends BlockConfig {
 ### Dashboard Service Methods
 
 #### loadDashboards()
+
 - **Returns**: `Promise<Dashboard[]>`
 - **Description**: Retrieve all available dashboards
 - **Error handling**: Network errors, permission errors
 
 #### createDashboard(request)
+
 - **Parameters**: `CreateDashboardRequest`
 - **Returns**: `Promise<Dashboard>`
 - **Description**: Create a new dashboard
 - **Validation**: Name uniqueness, required fields
 
 #### updateDashboard(id, request)
+
 - **Parameters**: `string, UpdateDashboardRequest`
 - **Returns**: `Promise<Dashboard>`
 - **Description**: Update existing dashboard
 - **Validation**: Dashboard existence, permission checks
 
 #### loadBlockData(blockId, blockType, config)
+
 - **Parameters**: `string, BlockType, BlockConfig`
 - **Returns**: `Promise<BlockData>`
 - **Description**: Load data for a specific block
@@ -255,11 +278,13 @@ interface TextBlockConfig extends BlockConfig {
 ## Security Considerations
 
 ### Data Access
+
 - **Service-level authentication**: Delegate security to injected services
 - **Input validation**: Sanitize all user inputs
 - **XSS prevention**: Proper escaping in text blocks
 
 ### Template Security
+
 - **Limited template syntax**: Restrict to safe operations only
 - **No code execution**: Prevent arbitrary JavaScript execution
 - **Content sanitization**: Clean HTML content in text blocks
@@ -267,6 +292,7 @@ interface TextBlockConfig extends BlockConfig {
 ## Development Guidelines
 
 ### Code Organization
+
 ```
 src/
 ├── lib/
@@ -293,12 +319,14 @@ src/
 ```
 
 ### Testing Strategy
+
 - **Unit tests**: Individual components and services
 - **Integration tests**: Dashboard functionality
 - **E2E tests**: Complete user workflows
 - **Visual regression tests**: UI consistency
 
 ### Documentation
+
 - **API documentation**: Comprehensive service documentation
 - **Component documentation**: Props and usage examples
 - **User guide**: Dashboard creation and management
@@ -307,6 +335,7 @@ src/
 ## Future Enhancements
 
 ### Phase 2 Features
+
 - **Advanced chart types**: 3D charts, map visualizations
 - **Collaborative editing**: Multi-user dashboard editing
 - **Advanced templating**: More complex template expressions
@@ -314,6 +343,7 @@ src/
 - **Mobile responsiveness**: Touch-friendly interactions
 
 ### Extensibility
+
 - **Plugin system**: Third-party block types
 - **Custom data sources**: Additional service implementations
 - **Theme framework**: Custom styling system

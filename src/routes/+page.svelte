@@ -186,10 +186,14 @@
 
   {#if showSchemaSidebar}
     <div
-      class="fixed top-0 flex h-full w-full sm:w-96 flex-col bg-white shadow-2xl transition-all duration-300"
+      class="fixed top-0 flex h-full w-full flex-col bg-white shadow-2xl transition-all duration-300 sm:w-96"
       class:z-40={!showQuerySidebar && !showDashboardSidebar}
       class:z-45={showQuerySidebar || showDashboardSidebar}
-      style="right: {showQuerySidebar ? (typeof window !== 'undefined' && window.innerWidth < 640 ? '0' : '32rem') : '0'}"
+      style="right: {showQuerySidebar
+        ? typeof window !== 'undefined' && window.innerWidth < 640
+          ? '0'
+          : '32rem'
+        : '0'}"
     >
       <div class="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
         <h2 class="text-lg font-semibold text-gray-900">Database Schema</h2>

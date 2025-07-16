@@ -83,7 +83,7 @@
 
   async function initializeEditor() {
     if (isInitialized || !editorContainer) return;
-    
+
     try {
       // Check if container is visible and has dimensions
       const containerRect = editorContainer.getBoundingClientRect();
@@ -96,7 +96,7 @@
       }
 
       console.log('Initializing Monaco editor...');
-      
+
       // Dynamically import Monaco Editor
       const monacoModule = await import('monaco-editor');
       monaco = monacoModule.default;
@@ -130,22 +130,122 @@
 
           // Add SQL keywords
           const sqlKeywords = [
-            'SELECT', 'FROM', 'WHERE', 'JOIN', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN',
-            'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'OFFSET', 'UNION', 'UNION ALL',
-            'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'TRUNCATE',
-            'CREATE TABLE', 'CREATE INDEX', 'CREATE VIEW', 'DROP TABLE', 'DROP INDEX', 'DROP VIEW',
-            'ALTER TABLE', 'ADD COLUMN', 'DROP COLUMN', 'MODIFY COLUMN',
-            'PRIMARY KEY', 'FOREIGN KEY', 'REFERENCES', 'CONSTRAINT', 'INDEX',
-            'NOT NULL', 'NULL', 'DEFAULT', 'UNIQUE', 'CHECK', 'AUTO_INCREMENT',
-            'AND', 'OR', 'NOT', 'IN', 'NOT IN', 'EXISTS', 'NOT EXISTS', 'BETWEEN', 'NOT BETWEEN',
-            'LIKE', 'NOT LIKE', 'ILIKE', 'REGEXP', 'RLIKE', 'IS NULL', 'IS NOT NULL',
-            'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'IF', 'IFNULL', 'COALESCE', 'NULLIF',
-            'CAST', 'CONVERT', 'EXTRACT', 'DATE_FORMAT', 'SUBSTRING', 'CONCAT', 'LENGTH', 'TRIM',
-            'UPPER', 'LOWER', 'REPLACE', 'ROUND', 'CEIL', 'FLOOR', 'ABS', 'SQRT', 'POWER',
-            'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'STDDEV', 'VARIANCE',
-            'DISTINCT', 'ALL', 'AS', 'ASC', 'DESC', 'OVER', 'PARTITION BY', 'ROW_NUMBER', 'RANK',
-            'WITH', 'RECURSIVE', 'CTE', 'WINDOW', 'FRAME', 'ROWS', 'RANGE', 'PRECEDING', 'FOLLOWING',
-            'CURRENT ROW', 'UNBOUNDED', 'FIRST_VALUE', 'LAST_VALUE', 'LAG', 'LEAD'
+            'SELECT',
+            'FROM',
+            'WHERE',
+            'JOIN',
+            'INNER JOIN',
+            'LEFT JOIN',
+            'RIGHT JOIN',
+            'FULL JOIN',
+            'ORDER BY',
+            'GROUP BY',
+            'HAVING',
+            'LIMIT',
+            'OFFSET',
+            'UNION',
+            'UNION ALL',
+            'INSERT',
+            'INTO',
+            'VALUES',
+            'UPDATE',
+            'SET',
+            'DELETE',
+            'TRUNCATE',
+            'CREATE TABLE',
+            'CREATE INDEX',
+            'CREATE VIEW',
+            'DROP TABLE',
+            'DROP INDEX',
+            'DROP VIEW',
+            'ALTER TABLE',
+            'ADD COLUMN',
+            'DROP COLUMN',
+            'MODIFY COLUMN',
+            'PRIMARY KEY',
+            'FOREIGN KEY',
+            'REFERENCES',
+            'CONSTRAINT',
+            'INDEX',
+            'NOT NULL',
+            'NULL',
+            'DEFAULT',
+            'UNIQUE',
+            'CHECK',
+            'AUTO_INCREMENT',
+            'AND',
+            'OR',
+            'NOT',
+            'IN',
+            'NOT IN',
+            'EXISTS',
+            'NOT EXISTS',
+            'BETWEEN',
+            'NOT BETWEEN',
+            'LIKE',
+            'NOT LIKE',
+            'ILIKE',
+            'REGEXP',
+            'RLIKE',
+            'IS NULL',
+            'IS NOT NULL',
+            'CASE',
+            'WHEN',
+            'THEN',
+            'ELSE',
+            'END',
+            'IF',
+            'IFNULL',
+            'COALESCE',
+            'NULLIF',
+            'CAST',
+            'CONVERT',
+            'EXTRACT',
+            'DATE_FORMAT',
+            'SUBSTRING',
+            'CONCAT',
+            'LENGTH',
+            'TRIM',
+            'UPPER',
+            'LOWER',
+            'REPLACE',
+            'ROUND',
+            'CEIL',
+            'FLOOR',
+            'ABS',
+            'SQRT',
+            'POWER',
+            'COUNT',
+            'SUM',
+            'AVG',
+            'MIN',
+            'MAX',
+            'STDDEV',
+            'VARIANCE',
+            'DISTINCT',
+            'ALL',
+            'AS',
+            'ASC',
+            'DESC',
+            'OVER',
+            'PARTITION BY',
+            'ROW_NUMBER',
+            'RANK',
+            'WITH',
+            'RECURSIVE',
+            'CTE',
+            'WINDOW',
+            'FRAME',
+            'ROWS',
+            'RANGE',
+            'PRECEDING',
+            'FOLLOWING',
+            'CURRENT ROW',
+            'UNBOUNDED',
+            'FIRST_VALUE',
+            'LAST_VALUE',
+            'LAG',
+            'LEAD'
           ];
 
           for (const keyword of sqlKeywords) {
@@ -219,15 +319,15 @@
           }
         });
       });
-      
+
       observer.observe(editorContainer);
-      
+
       // Cleanup
       return () => {
         observer.disconnect();
       };
     }
-    
+
     console.log('SQLEditor component mounted');
   });
 
@@ -240,10 +340,17 @@
   function insertText(text: string) {
     if (editor) {
       const position = editor.getPosition();
-      editor.executeEdits('', [{
-        range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-        text: text
-      }]);
+      editor.executeEdits('', [
+        {
+          range: new monaco.Range(
+            position.lineNumber,
+            position.column,
+            position.lineNumber,
+            position.column
+          ),
+          text: text
+        }
+      ]);
       editor.focus();
     }
   }
@@ -262,8 +369,8 @@
   }
 
   function openSchemaSidebar() {
-    dispatch('open-schema', { 
-      mockSchema, 
+    dispatch('open-schema', {
+      mockSchema,
       sqlTemplates,
       insertText,
       insertTemplate,
@@ -301,30 +408,44 @@
   ];
 </script>
 
-<div class="flex h-[500px] border border-gray-300 rounded-md overflow-hidden relative resize-y min-h-[300px] max-h-[80vh]">
+<div
+  class="relative flex h-[500px] max-h-[80vh] min-h-[300px] resize-y overflow-hidden rounded-md border border-gray-300"
+>
   <!-- Editor Area -->
-  <div class="flex-1 flex flex-col overflow-hidden">
-    <div class="flex justify-between items-center px-3 py-2 bg-gray-50 border-b border-gray-300 gap-2">
-      <button class="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white border-0 px-3 py-1.5 rounded text-xs cursor-pointer transition-colors" on:click={openSchemaSidebar} title="Open Schema Sidebar">
+  <div class="flex flex-1 flex-col overflow-hidden">
+    <div
+      class="flex items-center justify-between gap-2 border-b border-gray-300 bg-gray-50 px-3 py-2"
+    >
+      <button
+        class="flex cursor-pointer items-center gap-1.5 rounded border-0 bg-blue-600 px-3 py-1.5 text-xs text-white transition-colors hover:bg-blue-700"
+        on:click={openSchemaSidebar}
+        title="Open Schema Sidebar"
+      >
         <span class="material-symbols-outlined text-sm">schema</span>
         Schema
       </button>
-      
-      <button class="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white border-0 px-3 py-1.5 rounded text-xs cursor-pointer transition-colors" on:click={formatSQL} title="Format SQL (Shift+Alt+F)">
+
+      <button
+        class="flex cursor-pointer items-center gap-1.5 rounded border-0 bg-green-600 px-3 py-1.5 text-xs text-white transition-colors hover:bg-green-700"
+        on:click={formatSQL}
+        title="Format SQL (Shift+Alt+F)"
+      >
         <span class="material-symbols-outlined text-sm">code</span>
         Format
       </button>
-      
+
       <div class="text-xs text-gray-500">
         SQL Editor with IntelliSense • Ctrl+Enter to execute • Ctrl+S to save
       </div>
     </div>
-    
-    <div class="flex-1 overflow-hidden relative" bind:this={editorContainer}>
+
+    <div class="relative flex-1 overflow-hidden" bind:this={editorContainer}>
       {#if !isInitialized}
-        <div class="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
-          <div class="w-8 h-8 border-3 border-gray-100 border-t-blue-600 rounded-full animate-spin mb-3"></div>
-          <p class="text-gray-500 text-sm m-0">Loading SQL Editor...</p>
+        <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white">
+          <div
+            class="mb-3 h-8 w-8 animate-spin rounded-full border-3 border-gray-100 border-t-blue-600"
+          ></div>
+          <p class="m-0 text-sm text-gray-500">Loading SQL Editor...</p>
         </div>
       {/if}
     </div>

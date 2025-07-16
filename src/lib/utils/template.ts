@@ -29,7 +29,7 @@ export function processTemplate(template: string, context: TemplateContext): str
  */
 export function getSystemVariables(): Record<string, string> {
   const now = new Date();
-  
+
   return {
     currentDate: now.toLocaleDateString(),
     currentTime: now.toLocaleTimeString(),
@@ -47,8 +47,8 @@ export function getSystemVariables(): Record<string, string> {
 export function extractVariables(template: string): string[] {
   const matches = template.match(/\{\{(\w+)\}\}/g);
   if (!matches) return [];
-  
-  return matches.map(match => match.replace(/\{\{|\}\}/g, ''));
+
+  return matches.map((match) => match.replace(/\{\{|\}\}/g, ''));
 }
 
 /**
@@ -56,21 +56,21 @@ export function extractVariables(template: string): string[] {
  */
 export function validateTemplate(template: string): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
-  
+
   // Check for unmatched braces
   const openBraces = (template.match(/\{\{/g) || []).length;
   const closeBraces = (template.match(/\}\}/g) || []).length;
-  
+
   if (openBraces !== closeBraces) {
     errors.push('Unmatched template braces detected');
   }
-  
+
   // Check for invalid variable names (should only contain word characters)
   const invalidVariables = template.match(/\{\{[^}]*[^\w}][^}]*\}\}/g);
   if (invalidVariables) {
     errors.push(`Invalid variable names: ${invalidVariables.join(', ')}`);
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors

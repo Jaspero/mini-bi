@@ -39,7 +39,7 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if isOpen}
-  <div 
+  <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
     on:click={handleBackdropClick}
     on:keydown={handleKeydown}
@@ -49,9 +49,9 @@
     aria-describedby="modal-description"
     tabindex="-1"
   >
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all">
+    <div class="mx-4 w-full max-w-md transform rounded-lg bg-white shadow-xl transition-all">
       <!-- Header -->
-      <div class="px-6 py-4 border-b border-gray-200">
+      <div class="border-b border-gray-200 px-6 py-4">
         <h3 id="modal-title" class="text-lg font-semibold text-gray-900">
           {title}
         </h3>
@@ -59,23 +59,23 @@
 
       <!-- Content -->
       <div class="px-6 py-4">
-        <p id="modal-description" class="text-gray-600 leading-relaxed">
+        <p id="modal-description" class="leading-relaxed text-gray-600">
           {message}
         </p>
       </div>
 
       <!-- Actions -->
-      <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+      <div class="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
         <button
           type="button"
-          class="px-4 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 {cancelButtonClass}"
+          class="rounded-md px-4 py-2 font-medium transition-colors focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none {cancelButtonClass}"
           on:click={handleCancel}
         >
           {cancelText}
         </button>
         <button
           type="button"
-          class="px-4 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 {confirmButtonClass}"
+          class="rounded-md px-4 py-2 font-medium transition-colors focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none {confirmButtonClass}"
           on:click={handleConfirm}
         >
           {confirmText}

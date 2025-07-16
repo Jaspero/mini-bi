@@ -34,14 +34,14 @@
   }
 </script>
 
-<div class="flex flex-col h-full">
+<div class="flex h-full flex-col">
   <!-- SQL Templates Section -->
   <div class="mb-6">
-    <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">SQL Templates</h3>
+    <h3 class="mb-3 text-sm font-semibold tracking-wide text-gray-700 uppercase">SQL Templates</h3>
     <div class="flex flex-col gap-2">
       {#each sqlTemplates as template}
-        <button 
-          class="flex items-center gap-2 px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white border-0 rounded-md text-sm cursor-pointer transition-colors text-left w-full" 
+        <button
+          class="flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-blue-600 px-3 py-2.5 text-left text-sm text-white transition-colors hover:bg-blue-700"
           on:click={() => insertTemplate(template.sql)}
           title="Click to insert template"
         >
@@ -54,53 +54,58 @@
 
   <!-- Database Schema Section -->
   <div class="flex-1 overflow-y-auto">
-    <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Database Schema</h3>
+    <h3 class="mb-3 text-sm font-semibold tracking-wide text-gray-700 uppercase">
+      Database Schema
+    </h3>
     <div class="space-y-3">
       {#each mockSchema.tables as table}
-        <div class="border border-gray-200 rounded-lg overflow-hidden">
+        <div class="overflow-hidden rounded-lg border border-gray-200">
           <!-- Table Header -->
-          <div 
-            class="flex items-center gap-3 p-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-200" 
-            on:click={() => selectTable(table)} 
-            on:keydown={(e) => e.key === 'Enter' && selectTable(table)} 
-            role="button" 
+          <div
+            class="flex cursor-pointer items-center gap-3 border-b border-gray-200 bg-gray-50 p-3 transition-colors hover:bg-gray-100"
+            on:click={() => selectTable(table)}
+            on:keydown={(e) => e.key === 'Enter' && selectTable(table)}
+            role="button"
             tabindex="0"
           >
             <span class="material-symbols-outlined text-lg text-gray-600">table_view</span>
             <div class="flex-1">
-              <h4 class="font-medium text-gray-900 text-sm m-0">{table.name}</h4>
-              <p class="text-xs text-gray-500 m-0 mt-0.5">{table.columns.length} columns</p>
+              <h4 class="m-0 text-sm font-medium text-gray-900">{table.name}</h4>
+              <p class="m-0 mt-0.5 text-xs text-gray-500">{table.columns.length} columns</p>
             </div>
             <div class="flex gap-1">
-              <button 
-                class="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white border-0 rounded w-7 h-7 text-xs cursor-pointer transition-colors" 
-                on:click|stopPropagation={() => insertTableName(table.name)} 
+              <button
+                class="flex h-7 w-7 cursor-pointer items-center justify-center rounded border-0 bg-blue-600 text-xs text-white transition-colors hover:bg-blue-700"
+                on:click|stopPropagation={() => insertTableName(table.name)}
                 title="Insert table name"
               >
                 <span class="material-symbols-outlined text-sm">add</span>
               </button>
-              <button 
-                class="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white border-0 rounded w-7 h-7 text-xs cursor-pointer transition-colors" 
-                on:click|stopPropagation={() => insertSelectAll(table.name)} 
+              <button
+                class="flex h-7 w-7 cursor-pointer items-center justify-center rounded border-0 bg-green-600 text-xs text-white transition-colors hover:bg-green-700"
+                on:click|stopPropagation={() => insertSelectAll(table.name)}
                 title="SELECT * FROM table"
               >
                 <span class="material-symbols-outlined text-sm">play_arrow</span>
               </button>
             </div>
-            <span class="material-symbols-outlined text-gray-400 transition-transform duration-200" class:rotate-180={selectedTable === table}>
+            <span
+              class="material-symbols-outlined text-gray-400 transition-transform duration-200"
+              class:rotate-180={selectedTable === table}
+            >
               expand_more
             </span>
           </div>
-          
+
           <!-- Table Columns -->
           {#if selectedTable === table}
             <div class="divide-y divide-gray-100">
               {#each table.columns as column}
-                <div 
-                  class="flex justify-between items-center p-3 cursor-pointer hover:bg-blue-50 transition-colors" 
-                  on:click={() => insertColumnName(table.name, column.name)} 
-                  on:keydown={(e) => e.key === 'Enter' && insertColumnName(table.name, column.name)} 
-                  role="button" 
+                <div
+                  class="flex cursor-pointer items-center justify-between p-3 transition-colors hover:bg-blue-50"
+                  on:click={() => insertColumnName(table.name, column.name)}
+                  on:keydown={(e) => e.key === 'Enter' && insertColumnName(table.name, column.name)}
+                  role="button"
                   tabindex="0"
                   title="Click to insert {table.name}.{column.name}"
                 >
@@ -110,17 +115,23 @@
                     </span>
                     <div class="flex flex-col">
                       <span class="text-sm font-medium text-gray-900">{column.name}</span>
-                      <span class="text-xs text-gray-500 font-mono">{column.type}</span>
+                      <span class="font-mono text-xs text-gray-500">{column.type}</span>
                     </div>
                   </div>
                   <div class="flex gap-1">
                     {#if column.primary}
-                      <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full font-medium" title="Primary Key">
+                      <span
+                        class="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800"
+                        title="Primary Key"
+                      >
                         PK
                       </span>
                     {/if}
                     {#if !column.nullable}
-                      <span class="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full font-medium" title="Not Null">
+                      <span
+                        class="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800"
+                        title="Not Null"
+                      >
                         NN
                       </span>
                     {/if}

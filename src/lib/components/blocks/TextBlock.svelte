@@ -72,26 +72,43 @@
   }
 </script>
 
-<div class="w-full h-full flex flex-col bg-white rounded-lg shadow-sm overflow-hidden" bind:this={element}>
-  <div class="flex justify-between items-start py-2 sm:py-3 px-2 sm:px-4 border-b border-gray-200 bg-gray-50">
-    <div class="flex flex-col gap-1 min-w-0 flex-1">
-      <h3 class="text-sm sm:text-base font-semibold text-gray-900 m-0 truncate">{block.title}</h3>
+<div
+  class="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-sm"
+  bind:this={element}
+>
+  <div
+    class="flex items-start justify-between border-b border-gray-200 bg-gray-50 px-2 py-2 sm:px-4 sm:py-3"
+  >
+    <div class="flex min-w-0 flex-1 flex-col gap-1">
+      <h3 class="m-0 truncate text-sm font-semibold text-gray-900 sm:text-base">{block.title}</h3>
     </div>
-    <div class="flex items-center gap-1 flex-shrink-0">
+    <div class="flex flex-shrink-0 items-center gap-1">
       {#if showControls}
-        <button class="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors touch-manipulation" on:click={handleEdit} aria-label="Edit text">
+        <button
+          class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+          on:click={handleEdit}
+          aria-label="Edit text"
+        >
           <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
         </button>
-        <button class="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors touch-manipulation" on:click={handleRefresh} aria-label="Refresh text content">
+        <button
+          class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600"
+          on:click={handleRefresh}
+          aria-label="Refresh text content"
+        >
           <span class="material-symbols-outlined text-sm sm:text-base">refresh</span>
         </button>
-        <button class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors touch-manipulation" on:click={handleDelete} aria-label="Delete text">
+        <button
+          class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
+          on:click={handleDelete}
+          aria-label="Delete text"
+        >
           <span class="material-symbols-outlined text-sm sm:text-base">delete</span>
         </button>
       {/if}
     </div>
   </div>
-  <div class="flex-1 flex flex-col leading-relaxed text-content" style={getStyleString()}>
+  <div class="text-content flex flex-1 flex-col leading-relaxed" style={getStyleString()}>
     {@html processedContent}
   </div>
 </div>

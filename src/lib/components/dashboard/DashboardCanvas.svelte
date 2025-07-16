@@ -31,12 +31,14 @@
 
   // Grid settings
   $: gridSize = dashboard.layout.gridSize;
-  
+
   // Calculate canvas dimensions based on dashboard configuration
   $: {
     if (dashboard.layout.canvasWidth) {
       if (dashboard.layout.canvasWidth.type === 'screen') {
-        canvasWidth = (typeof window !== 'undefined' ? window.innerWidth : 1600) - (window.innerWidth < 640 ? 20 : 40); // Smaller margins on mobile
+        canvasWidth =
+          (typeof window !== 'undefined' ? window.innerWidth : 1600) -
+          (window.innerWidth < 640 ? 20 : 40); // Smaller margins on mobile
       } else {
         canvasWidth = dashboard.layout.canvasWidth.value || 1600;
       }
@@ -46,7 +48,9 @@
 
     if (dashboard.layout.canvasHeight) {
       if (dashboard.layout.canvasHeight.type === 'screen') {
-        canvasHeight = (typeof window !== 'undefined' ? window.innerHeight : 1000) - (window.innerWidth < 640 ? 100 : 120); // Smaller header on mobile
+        canvasHeight =
+          (typeof window !== 'undefined' ? window.innerHeight : 1000) -
+          (window.innerWidth < 640 ? 100 : 120); // Smaller header on mobile
       } else {
         canvasHeight = dashboard.layout.canvasHeight.value || 1000;
       }
@@ -54,7 +58,7 @@
       canvasHeight = 1000; // Default fallback
     }
   }
-  
+
   // Update canvas size based on container and content
   onMount(() => {
     updateCanvasSize();
@@ -64,20 +68,28 @@
 
   function handleWindowResize() {
     // Update dimensions if using screen-based sizing
-    if (dashboard.layout.canvasWidth?.type === 'screen' || dashboard.layout.canvasHeight?.type === 'screen') {
+    if (
+      dashboard.layout.canvasWidth?.type === 'screen' ||
+      dashboard.layout.canvasHeight?.type === 'screen'
+    ) {
       updateCanvasSize();
     }
   }
 
   function updateCanvasSize() {
     if (canvasElement) {
-      const containerWidth = canvasElement.parentElement?.clientWidth || (typeof window !== 'undefined' ? window.innerWidth : 1600);
-      const containerHeight = canvasElement.parentElement?.clientHeight || (typeof window !== 'undefined' ? window.innerHeight : 1000);
-      
+      const containerWidth =
+        canvasElement.parentElement?.clientWidth ||
+        (typeof window !== 'undefined' ? window.innerWidth : 1600);
+      const containerHeight =
+        canvasElement.parentElement?.clientHeight ||
+        (typeof window !== 'undefined' ? window.innerHeight : 1000);
+
       // Update canvas dimensions based on configuration
       if (dashboard.layout.canvasWidth) {
         if (dashboard.layout.canvasWidth.type === 'screen') {
-          canvasWidth = containerWidth - (typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 40); // Smaller margins on mobile
+          canvasWidth =
+            containerWidth - (typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 40); // Smaller margins on mobile
         } else {
           canvasWidth = dashboard.layout.canvasWidth.value || 1600;
         }
@@ -85,16 +97,18 @@
 
       if (dashboard.layout.canvasHeight) {
         if (dashboard.layout.canvasHeight.type === 'screen') {
-          canvasHeight = containerHeight - (typeof window !== 'undefined' && window.innerWidth < 640 ? 100 : 120); // Smaller header on mobile
+          canvasHeight =
+            containerHeight -
+            (typeof window !== 'undefined' && window.innerWidth < 640 ? 100 : 120); // Smaller header on mobile
         } else {
           canvasHeight = dashboard.layout.canvasHeight.value || 1000;
         }
       }
-      
+
       // Ensure minimum size based on grid layout
       const minWidth = dashboard.layout.columns * gridSize;
       const minHeight = dashboard.layout.rows * gridSize;
-      
+
       canvasWidth = Math.max(minWidth, canvasWidth);
       canvasHeight = Math.max(minHeight, canvasHeight);
     }
@@ -103,7 +117,7 @@
   onMount(() => {
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    
+
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -119,11 +133,11 @@
 
     const touch = event.touches[0];
     const canvasRect = canvasElement.getBoundingClientRect();
-    
+
     draggedBlock = block;
     dragOffset = {
-      x: touch.clientX - canvasRect.left - (block.position.x * gridSize),
-      y: touch.clientY - canvasRect.top - (block.position.y * gridSize)
+      x: touch.clientX - canvasRect.left - block.position.x * gridSize,
+      y: touch.clientY - canvasRect.top - block.position.y * gridSize
     };
 
     isDragging = true;
@@ -140,16 +154,16 @@
     resizingBlock = block;
     resizeMode = mode;
     isResizing = true;
-    
+
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('touchend', handleTouchEnd);
   }
 
   function handleTouchMove(event: TouchEvent) {
     event.preventDefault();
-    
+
     const touch = event.touches[0];
-    
+
     if (isDragging && draggedBlock) {
       const canvasRect = canvasElement.getBoundingClientRect();
       const x = touch.clientX - canvasRect.left - dragOffset.x;
@@ -228,7 +242,7 @@
 
   function handleTouchEnd(event: TouchEvent) {
     event.preventDefault();
-    
+
     if (isDragging && draggedBlock) {
       dispatch('block-moved', {
         blockId: draggedBlock.id,
@@ -272,13 +286,13 @@
 
   function handleBlockMouseDown(event: MouseEvent, block: Block) {
     if (!editable || editMode) return; // Don't allow dragging in edit mode
-    
+
     event.preventDefault();
     event.stopPropagation();
 
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
     const canvasRect = canvasElement.getBoundingClientRect();
-    
+
     draggedBlock = block;
     dragOffset = {
       x: event.clientX - rect.left,
@@ -289,7 +303,7 @@
 
   function handleResizeMouseDown(event: MouseEvent, block: Block, mode: string) {
     if (!editable || editMode) return; // Don't allow resizing in edit mode
-    
+
     event.preventDefault();
     event.stopPropagation();
 
@@ -377,16 +391,16 @@
 
   function handleMouseUp() {
     if (isDragging && draggedBlock) {
-      dispatch('block-moved', { 
-        blockId: draggedBlock.id, 
-        position: draggedBlock.position 
+      dispatch('block-moved', {
+        blockId: draggedBlock.id,
+        position: draggedBlock.position
       });
     }
 
     if (isResizing && resizingBlock) {
-      dispatch('block-resized', { 
-        blockId: resizingBlock.id, 
-        size: resizingBlock.size 
+      dispatch('block-resized', {
+        blockId: resizingBlock.id,
+        size: resizingBlock.size
       });
     }
 
@@ -398,21 +412,19 @@
   }
 
   function updateBlockPosition(blockId: string, position: Position) {
-    dashboard.blocks = dashboard.blocks.map(block => 
+    dashboard.blocks = dashboard.blocks.map((block) =>
       block.id === blockId ? { ...block, position } : block
     );
   }
 
   function updateBlockSize(blockId: string, size: Size) {
-    dashboard.blocks = dashboard.blocks.map(block => 
+    dashboard.blocks = dashboard.blocks.map((block) =>
       block.id === blockId ? { ...block, size } : block
     );
   }
 
   function handleBlockUpdate(block: Block) {
-    dashboard.blocks = dashboard.blocks.map(b => 
-      b.id === block.id ? block : b
-    );
+    dashboard.blocks = dashboard.blocks.map((b) => (b.id === block.id ? block : b));
     dispatch('dashboard-updated', { dashboard });
   }
 
@@ -429,21 +441,29 @@
   }
 </script>
 
-<div class="w-full h-full overflow-auto bg-slate-50 relative" bind:this={canvasElement}>
-  <div 
-    class="relative m-2 sm:m-5 min-w-full min-h-full"
+<div class="relative h-full w-full overflow-auto bg-slate-50" bind:this={canvasElement}>
+  <div
+    class="relative m-2 min-h-full min-w-full sm:m-5"
     style="width: {canvasWidth}px; height: {canvasHeight}px;"
   >
     <!-- Grid background -->
-    <div class="absolute top-0 left-0 w-full h-full opacity-50 pointer-events-none" style="
+    <div
+      class="pointer-events-none absolute top-0 left-0 h-full w-full opacity-50"
+      style="
       background-image: linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
       background-size: {gridSize}px {gridSize}px;
-    "></div>
+    "
+    ></div>
 
     <!-- Blocks -->
     {#each dashboard.blocks as block (block.id)}
-      <div 
-        class="select-none cursor-move transition-shadow duration-200 ease-in-out hover:shadow-xl group touch-manipulation {draggedBlock === block ? 'shadow-2xl [transform:rotate(2deg)]' : ''} {resizingBlock === block ? 'shadow-lg shadow-blue-400' : ''} {editMode ? 'cursor-default' : ''}"
+      <div
+        class="group cursor-move touch-manipulation transition-shadow duration-200 ease-in-out select-none hover:shadow-xl {draggedBlock ===
+        block
+          ? '[transform:rotate(2deg)] shadow-2xl'
+          : ''} {resizingBlock === block ? 'shadow-lg shadow-blue-400' : ''} {editMode
+          ? 'cursor-default'
+          : ''}"
         style={getBlockStyle(block)}
         on:mousedown={(e) => handleBlockMouseDown(e, block)}
         on:touchstart={(e) => handleBlockTouchStart(e, block)}
@@ -451,28 +471,33 @@
         tabindex="0"
       >
         <!-- Block content -->
-        <div class="w-full h-full pointer-events-auto {draggedBlock === block || resizingBlock === block ? 'pointer-events-none' : ''}">
+        <div
+          class="pointer-events-auto h-full w-full {draggedBlock === block ||
+          resizingBlock === block
+            ? 'pointer-events-none'
+            : ''}"
+        >
           {#if block.type === 'table'}
-            <TableBlock 
-              {block} 
-              {dashboardService} 
+            <TableBlock
+              {block}
+              {dashboardService}
               showControls={editMode}
               onBlockUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock)}
               onBlockEdit={(editBlock) => handleBlockEdit(editBlock)}
               onBlockDelete={() => handleBlockDeleteRequest(block)}
             />
           {:else if block.type === 'graph'}
-            <GraphBlock 
-              {block} 
-              {dashboardService} 
+            <GraphBlock
+              {block}
+              {dashboardService}
               showControls={editMode}
               onBlockUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock)}
               onBlockEdit={(editBlock) => handleBlockEdit(editBlock)}
               onBlockDelete={() => handleBlockDeleteRequest(block)}
             />
           {:else if block.type === 'text'}
-            <TextBlock 
-              {block} 
+            <TextBlock
+              {block}
               dashboardVariables={dashboard.variables}
               showControls={editMode}
               onBlockUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock)}
@@ -484,68 +509,68 @@
 
         <!-- Resize handles (only show when not in edit mode and editable) -->
         {#if editable && !editMode}
-          <div class="absolute top-0 left-0 right-0 bottom-0 pointer-events-none">
+          <div class="pointer-events-none absolute top-0 right-0 bottom-0 left-0">
             <!-- Corner handles - larger touch targets on mobile -->
-            <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 -left-1 w-3 h-3 sm:w-2 sm:h-2 cursor-nw-resize touch-manipulation" 
+            <div
+              class="pointer-events-auto absolute -top-1 -left-1 h-3 w-3 cursor-nw-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'nw')}
               on:touchstart={(e) => handleResizeTouchStart(e, block, 'nw')}
               role="button"
               tabindex="0"
               aria-label="Resize northwest"
             ></div>
-            <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 -right-1 w-3 h-3 sm:w-2 sm:h-2 cursor-ne-resize touch-manipulation" 
+            <div
+              class="pointer-events-auto absolute -top-1 -right-1 h-3 w-3 cursor-ne-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'ne')}
               on:touchstart={(e) => handleResizeTouchStart(e, block, 'ne')}
               role="button"
               tabindex="0"
               aria-label="Resize northeast"
             ></div>
-            <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 -left-1 w-3 h-3 sm:w-2 sm:h-2 cursor-sw-resize touch-manipulation" 
+            <div
+              class="pointer-events-auto absolute -bottom-1 -left-1 h-3 w-3 cursor-sw-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'sw')}
               on:touchstart={(e) => handleResizeTouchStart(e, block, 'sw')}
               role="button"
               tabindex="0"
               aria-label="Resize southwest"
             ></div>
-            <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 -right-1 w-3 h-3 sm:w-2 sm:h-2 cursor-se-resize touch-manipulation" 
+            <div
+              class="pointer-events-auto absolute -right-1 -bottom-1 h-3 w-3 cursor-se-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'se')}
               on:touchstart={(e) => handleResizeTouchStart(e, block, 'se')}
               role="button"
               tabindex="0"
               aria-label="Resize southeast"
             ></div>
-            
+
             <!-- Edge handles -->
-            <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -top-1 left-1/2 -translate-x-1/2 w-3 h-3 sm:w-2 sm:h-2 cursor-n-resize touch-manipulation" 
+            <div
+              class="pointer-events-auto absolute -top-1 left-1/2 h-3 w-3 -translate-x-1/2 cursor-n-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'n')}
               on:touchstart={(e) => handleResizeTouchStart(e, block, 'n')}
               role="button"
               tabindex="0"
               aria-label="Resize north"
             ></div>
-            <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 sm:w-2 sm:h-2 cursor-s-resize touch-manipulation" 
+            <div
+              class="pointer-events-auto absolute -bottom-1 left-1/2 h-3 w-3 -translate-x-1/2 cursor-s-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
               on:mousedown={(e) => handleResizeMouseDown(e, block, 's')}
               on:touchstart={(e) => handleResizeTouchStart(e, block, 's')}
               role="button"
               tabindex="0"
               aria-label="Resize south"
             ></div>
-            <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -right-1 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-2 sm:h-2 cursor-e-resize touch-manipulation" 
+            <div
+              class="pointer-events-auto absolute top-1/2 -right-1 h-3 w-3 -translate-y-1/2 cursor-e-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'e')}
               on:touchstart={(e) => handleResizeTouchStart(e, block, 'e')}
               role="button"
               tabindex="0"
               aria-label="Resize east"
             ></div>
-            <div 
-              class="absolute bg-blue-500 border border-white pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out -left-1 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-2 sm:h-2 cursor-w-resize touch-manipulation" 
+            <div
+              class="pointer-events-auto absolute top-1/2 -left-1 h-3 w-3 -translate-y-1/2 cursor-w-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
               on:mousedown={(e) => handleResizeMouseDown(e, block, 'w')}
               on:touchstart={(e) => handleResizeTouchStart(e, block, 'w')}
               role="button"

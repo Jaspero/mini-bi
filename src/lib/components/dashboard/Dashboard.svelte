@@ -172,11 +172,13 @@
 
   function confirmBlockDeletion() {
     if (!blockToDelete) return;
-    
-    handleBlockDelete(new CustomEvent('block-delete', { 
-      detail: { blockId: blockToDelete.id } 
-    }));
-    
+
+    handleBlockDelete(
+      new CustomEvent('block-delete', {
+        detail: { blockId: blockToDelete.id }
+      })
+    );
+
     blockToDelete = null;
     showBlockDeleteModal = false;
   }
@@ -186,10 +188,10 @@
     showBlockDeleteModal = false;
   }
 
-  function handleBlockEditorSave(event: CustomEvent<{ block: Block }>) {
+  function blockUpdated(block: Block) {
     if (dashboard) {
       dashboard.blocks = dashboard.blocks.map((b) =>
-        b.id === event.detail.block.id ? event.detail.block : b
+        b.id === block.id ? block : b
       );
       hasUnsavedChanges = true;
     }
@@ -374,14 +376,16 @@
   {:else if dashboard}
     <div class="sticky top-0 z-30 border-b border-gray-200 bg-white">
       <div class="px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between py-2 sm:py-4 gap-2">
-          <div class="flex flex-1 items-baseline gap-2 sm:gap-4 min-w-0">
+        <div class="flex items-center justify-between gap-2 py-2 sm:py-4">
+          <div class="flex min-w-0 flex-1 items-baseline gap-2 sm:gap-4">
             <div class="min-w-0 flex-1">
-              <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5">
-                <h2 class="text-lg sm:text-2xl font-bold text-gray-900 truncate">{dashboard.name}</h2>
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
+                <h2 class="truncate text-lg font-bold text-gray-900 sm:text-2xl">
+                  {dashboard.name}
+                </h2>
                 <div class="flex items-center gap-2">
                   <button
-                    class="inline-flex h-8 w-8 items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700 touch-manipulation"
+                    class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700"
                     class:!bg-purple-100={dashboardManagerOpen}
                     class:!text-purple-700={dashboardManagerOpen}
                     on:click={() => dispatch('toggle-dashboard-manager')}
@@ -393,7 +397,7 @@
                     <span class="material-symbols-outlined text-lg">dashboard</span>
                   </button>
                   <button
-                    class="inline-flex h-8 w-8 items-center justify-center rounded-md text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 touch-manipulation"
+                    class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
                     class:!bg-blue-100={queryManagerOpen}
                     class:!text-blue-700={queryManagerOpen}
                     on:click={() => dispatch('toggle-query-manager')}
@@ -407,13 +411,15 @@
                 </div>
               </div>
               {#if dashboard.description}
-                <p class="hidden mt-1 text-sm text-gray-600 truncate lg:block">{dashboard.description}</p>
+                <p class="mt-1 hidden truncate text-sm text-gray-600 lg:block">
+                  {dashboard.description}
+                </p>
               {/if}
             </div>
           </div>
 
           {#if editable}
-            <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            <div class="flex flex-shrink-0 items-center space-x-1 sm:space-x-2">
               {#if hasUnsavedChanges}
                 <span
                   class="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800"
@@ -426,7 +432,7 @@
 
               <div class="add-block-container relative">
                 <button
-                  class="inline-flex h-8 sm:h-10 w-8 sm:w-10 items-center justify-center rounded-md text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 touch-manipulation"
+                  class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 sm:h-10 sm:w-10"
                   on:click={toggleAddBlockDropdown}
                   title="Add new block"
                   aria-label="Add new block"
@@ -439,21 +445,21 @@
                   >
                     <div class="py-1">
                       <button
-                        class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 touch-manipulation"
+                        class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         on:click={() => handleAddBlock('table')}
                       >
                         <span class="material-symbols-outlined mr-3 text-base">table</span>
                         Table Block
                       </button>
                       <button
-                        class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 touch-manipulation"
+                        class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         on:click={() => handleAddBlock('graph')}
                       >
                         <span class="material-symbols-outlined mr-3 text-base">bar_chart</span>
                         Graph Block
                       </button>
                       <button
-                        class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 touch-manipulation"
+                        class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         on:click={() => handleAddBlock('text')}
                       >
                         <span class="material-symbols-outlined mr-3 text-base">text_fields</span>
@@ -465,7 +471,7 @@
               </div>
 
               <button
-                class="inline-flex h-8 sm:h-10 w-8 sm:w-10 items-center justify-center rounded-md text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation"
+                class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10"
                 class:animate-pulse={saving}
                 disabled={saving || !hasUnsavedChanges}
                 on:click={saveDashboard}
@@ -473,14 +479,16 @@
                 aria-label={saving ? 'Saving dashboard' : 'Save dashboard'}
               >
                 {#if saving}
-                  <div class="h-4 w-4 sm:h-5 sm:w-5 animate-spin rounded-full border-b-2 border-current"></div>
+                  <div
+                    class="h-4 w-4 animate-spin rounded-full border-b-2 border-current sm:h-5 sm:w-5"
+                  ></div>
                 {:else}
                   <span class="material-symbols-outlined text-lg sm:text-xl">save</span>
                 {/if}
               </button>
 
               <button
-                class="inline-flex h-8 sm:h-10 w-8 sm:w-10 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-700 touch-manipulation"
+                class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-700 sm:h-10 sm:w-10"
                 on:click={refresh}
                 title="Refresh dashboard"
                 aria-label="Refresh dashboard"
@@ -489,7 +497,7 @@
               </button>
 
               <button
-                class="inline-flex h-8 sm:h-10 w-8 sm:w-10 items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700 touch-manipulation"
+                class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700 sm:h-10 sm:w-10"
                 class:!bg-purple-100={editMode}
                 class:!text-purple-700={editMode}
                 on:click={toggleEditMode}
@@ -529,15 +537,17 @@
   block={editingBlock}
   isOpen={showBlockEditor}
   {queries}
-  on:block-updated={handleBlockEditorSave}
-  on:close={handleBlockEditorClose}
+  {blockUpdated}
+  close={handleBlockEditorClose}
 />
 
 <!-- Block Deletion Confirmation Modal -->
 <ConfirmationModal
   isOpen={showBlockDeleteModal}
   title="Delete Block"
-  message={blockToDelete ? `Are you sure you want to delete the "${blockToDelete.title}" ${blockToDelete.type}? This action cannot be undone.` : ''}
+  message={blockToDelete
+    ? `Are you sure you want to delete the "${blockToDelete.title}" ${blockToDelete.type}? This action cannot be undone.`
+    : ''}
   confirmText="Delete"
   cancelText="Cancel"
   on:confirm={confirmBlockDeletion}

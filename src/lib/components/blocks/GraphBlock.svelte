@@ -46,7 +46,14 @@
         dataSource: block.dataSource
       };
       data = await dashboardService.loadBlockData(block.id, block.type, blockConfig);
-      console.log('GraphBlock loaded data:', data, 'for block:', block.id, 'dataSource:', block.dataSource);
+      console.log(
+        'GraphBlock loaded data:',
+        data,
+        'for block:',
+        block.id,
+        'dataSource:',
+        block.dataSource
+      );
       loading = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load data';
@@ -78,7 +85,7 @@
 
   function generateEChartsOption(): echarts.EChartsOption {
     if (!data) return {};
-    
+
     const { chartType, series, xAxis, yAxis, legend, colors, animations } = graphConfig;
 
     const baseOption: echarts.EChartsOption = {
@@ -92,15 +99,18 @@
         top: legend?.show ? '15%' : '10%',
         containLabel: true
       },
-      legend: legend?.show ? {
-        show: true,
-        type: 'plain',
-        orient: 'horizontal',
-        left: legend.align,
-        top: legend.position === 'top' ? 'top' : legend.position === 'bottom' ? 'bottom' : 'top',
-        right: legend.position === 'right' ? 'right' : undefined,
-        bottom: legend.position === 'bottom' ? 'bottom' : undefined
-      } : { show: false }
+      legend: legend?.show
+        ? {
+            show: true,
+            type: 'plain',
+            orient: 'horizontal',
+            left: legend.align,
+            top:
+              legend.position === 'top' ? 'top' : legend.position === 'bottom' ? 'bottom' : 'top',
+            right: legend.position === 'right' ? 'right' : undefined,
+            bottom: legend.position === 'bottom' ? 'bottom' : undefined
+          }
+        : { show: false }
     };
 
     switch (chartType) {
@@ -112,7 +122,7 @@
           xAxis: {
             type: xAxis?.type || 'category',
             name: xAxis?.name,
-            data: data.data.map(item => item[getDataKey()])
+            data: data.data.map((item) => item[getDataKey()])
           },
           yAxis: {
             type: yAxis?.type || 'value',
@@ -120,10 +130,10 @@
             min: yAxis?.min,
             max: yAxis?.max
           },
-          series: series.map(s => ({
+          series: series.map((s) => ({
             name: s.name,
             type: chartType === 'area' ? 'line' : chartType,
-            data: data.data.map(item => item[s.dataKey]),
+            data: data.data.map((item) => item[s.dataKey]),
             areaStyle: chartType === 'area' ? {} : undefined,
             smooth: chartType === 'line' || chartType === 'area'
           }))
@@ -133,22 +143,24 @@
       case 'donut':
         return {
           ...baseOption,
-          series: [{
-            name: series[0]?.name || 'Data',
-            type: 'pie',
-            radius: chartType === 'donut' ? ['40%', '70%'] : '70%',
-            data: data.data.map(item => ({
-              name: item.name,
-              value: item.value
-            })),
-            emphasis: {
-              itemStyle: {
-                shadowBlur: 10,
-                shadowOffsetX: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.5)'
+          series: [
+            {
+              name: series[0]?.name || 'Data',
+              type: 'pie',
+              radius: chartType === 'donut' ? ['40%', '70%'] : '70%',
+              data: data.data.map((item) => ({
+                name: item.name,
+                value: item.value
+              })),
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
               }
             }
-          }]
+          ]
         };
 
       case 'scatter':
@@ -162,22 +174,26 @@
             type: 'value',
             name: yAxis?.name
           },
-          series: [{
-            name: series[0]?.name || 'Data',
-            type: 'scatter',
-            data: data.data.map(item => [item.x, item.y, item.size])
-          }]
+          series: [
+            {
+              name: series[0]?.name || 'Data',
+              type: 'scatter',
+              data: data.data.map((item) => [item.x, item.y, item.size])
+            }
+          ]
         };
 
       case 'gauge':
         return {
           ...baseOption,
-          series: [{
-            name: series[0]?.name || 'Gauge',
-            type: 'gauge',
-            data: [{ value: data.data[0]?.value || 0, name: 'Value' }],
-            detail: { fontSize: 20 }
-          }]
+          series: [
+            {
+              name: series[0]?.name || 'Gauge',
+              type: 'gauge',
+              data: [{ value: data.data[0]?.value || 0, name: 'Value' }],
+              detail: { fontSize: 20 }
+            }
+          ]
         };
 
       case 'heatmap':
@@ -185,31 +201,33 @@
           ...baseOption,
           xAxis: {
             type: 'category',
-            data: [...new Set(data.data.map(item => item.x))]
+            data: [...new Set(data.data.map((item) => item.x))]
           },
           yAxis: {
             type: 'category',
-            data: [...new Set(data.data.map(item => item.y))]
+            data: [...new Set(data.data.map((item) => item.y))]
           },
           visualMap: {
-            min: Math.min(...data.data.map(item => item.value)),
-            max: Math.max(...data.data.map(item => item.value)),
+            min: Math.min(...data.data.map((item) => item.value)),
+            max: Math.max(...data.data.map((item) => item.value)),
             calculable: true,
             orient: 'horizontal',
             left: 'center',
             bottom: '5%'
           },
-          series: [{
-            name: series[0]?.name || 'Heatmap',
-            type: 'heatmap',
-            data: data.data.map(item => [item.x, item.y, item.value]),
-            emphasis: {
-              itemStyle: {
-                shadowBlur: 10,
-                shadowColor: 'rgba(0, 0, 0, 0.5)'
+          series: [
+            {
+              name: series[0]?.name || 'Heatmap',
+              type: 'heatmap',
+              data: data.data.map((item) => [item.x, item.y, item.value]),
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
               }
             }
-          }]
+          ]
         };
 
       default:
@@ -221,10 +239,12 @@
     // For x-axis data, use the first available key
     const firstDataItem = data?.data[0];
     if (!firstDataItem) return 'x';
-    
-    return Object.keys(firstDataItem).find(key => 
-      key !== 'value' && typeof firstDataItem[key] === 'string'
-    ) || 'x';
+
+    return (
+      Object.keys(firstDataItem).find(
+        (key) => key !== 'value' && typeof firstDataItem[key] === 'string'
+      ) || 'x'
+    );
   }
 
   async function refresh(event: MouseEvent) {
@@ -246,31 +266,33 @@
   }
 </script>
 
-<div class="w-full h-full flex flex-col bg-white rounded-lg shadow-sm overflow-hidden">
-  <div class="flex justify-between items-start py-2 sm:py-3 px-2 sm:px-4 border-b border-gray-200 bg-gray-50">
-    <div class="flex flex-col gap-1 min-w-0 flex-1">
-      <h3 class="text-sm sm:text-base font-semibold text-gray-900 m-0 truncate">{block.title}</h3>
+<div class="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-sm">
+  <div
+    class="flex items-start justify-between border-b border-gray-200 bg-gray-50 px-2 py-2 sm:px-4 sm:py-3"
+  >
+    <div class="flex min-w-0 flex-1 flex-col gap-1">
+      <h3 class="m-0 truncate text-sm font-semibold text-gray-900 sm:text-base">{block.title}</h3>
     </div>
-    <div class="flex items-center gap-1 flex-shrink-0">
+    <div class="flex flex-shrink-0 items-center gap-1">
       {#if showControls}
-        <button 
-          class="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors touch-manipulation" 
-          on:click={handleEdit} 
+        <button
+          class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+          on:click={handleEdit}
           aria-label="Edit graph"
         >
           <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
         </button>
-        <button 
-          class="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50 touch-manipulation" 
-          on:click={refresh} 
-          disabled={loading} 
+        <button
+          class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
+          on:click={refresh}
+          disabled={loading}
           aria-label="Refresh chart data"
         >
           <span class="material-symbols-outlined text-sm sm:text-base">refresh</span>
         </button>
-        <button 
-          class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors touch-manipulation" 
-          on:click={handleDelete} 
+        <button
+          class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
+          on:click={handleDelete}
           aria-label="Delete graph"
         >
           <span class="material-symbols-outlined text-sm sm:text-base">delete</span>
@@ -280,23 +302,23 @@
   </div>
 
   {#if loading}
-    <div class="flex-1 flex flex-col justify-center items-center text-gray-500">
-      <div class="w-8 h-8 border-3 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+    <div class="flex flex-1 flex-col items-center justify-center text-gray-500">
+      <div
+        class="mb-3 h-8 w-8 animate-spin rounded-full border-3 border-gray-200 border-t-blue-600"
+      ></div>
       <p class="m-0">Loading chart data...</p>
     </div>
   {:else if error}
-    <div class="flex-1 flex flex-col justify-center items-center text-red-600 p-5">
+    <div class="flex flex-1 flex-col items-center justify-center p-5 text-red-600">
       <p class="m-0">Error: {error}</p>
-      <button 
-        class="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white border-0 rounded cursor-pointer transition-colors"
+      <button
+        class="mt-3 cursor-pointer rounded border-0 bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
         on:click={refresh}
       >
         Retry
       </button>
     </div>
   {:else}
-    <div class="flex-1 min-h-0 w-full" bind:this={chartContainer}></div>
+    <div class="min-h-0 w-full flex-1" bind:this={chartContainer}></div>
   {/if}
 </div>
-
-

@@ -14,22 +14,22 @@
   onMount(async () => {
     try {
       console.log('Starting Monaco editor initialization...');
-      
+
       // Import Monaco
       const monacoModule = await import('monaco-editor');
       monaco = monacoModule.default;
-      
+
       console.log('Monaco imported successfully');
-      
+
       // Wait a bit to ensure the container is ready
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       if (!editorContainer) {
         throw new Error('Editor container not found');
       }
-      
+
       console.log('Creating Monaco editor...');
-      
+
       // Create editor with minimal configuration
       editor = monaco.editor.create(editorContainer, {
         value: value || 'SELECT * FROM users;',
@@ -40,17 +40,16 @@
         fontSize: 14,
         wordWrap: 'on'
       });
-      
+
       // Listen for changes
       editor.onDidChangeModelContent(() => {
         const newValue = editor.getValue();
         value = newValue;
         dispatch('change', { value: newValue });
       });
-      
+
       loading = false;
       console.log('Monaco editor created successfully!');
-      
     } catch (error) {
       console.error('Failed to initialize Monaco editor:', error);
       loading = false;
@@ -69,15 +68,15 @@
   }
 </script>
 
-<div class="h-96 border border-gray-300 rounded overflow-hidden">
-  <div class="w-full h-full relative" bind:this={editorContainer}>
+<div class="h-96 overflow-hidden rounded border border-gray-300">
+  <div class="relative h-full w-full" bind:this={editorContainer}>
     {#if loading}
-      <div class="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
-        <div class="w-6 h-6 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-2.5"></div>
-        <p class="m-0 text-gray-600 text-sm">Loading SQL Editor...</p>
+      <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white">
+        <div
+          class="mb-2.5 h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500"
+        ></div>
+        <p class="m-0 text-sm text-gray-600">Loading SQL Editor...</p>
       </div>
     {/if}
   </div>
 </div>
-
-

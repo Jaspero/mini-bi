@@ -21,11 +21,11 @@ A reusable modal dialog component with transparent backdrop and scroll preventio
 ```svelte
 <script>
   import Modal from '$lib/components/ui/Modal.svelte';
-  
+
   let isOpen = false;
 </script>
 
-<Modal {isOpen} title="My Modal" on:close={() => isOpen = false}>
+<Modal {isOpen} title="My Modal" on:close={() => (isOpen = false)}>
   <p>Modal content goes here</p>
 </Modal>
 ```
@@ -37,12 +37,12 @@ A reusable modal dialog component with transparent backdrop and scroll preventio
   <div slot="header" class="custom-header">
     <h2>Custom Header</h2>
   </div>
-  
+
   <div class="p-6">
     <p>Modal content</p>
   </div>
-  
-  <div slot="footer" class="flex justify-end gap-3 p-6 border-t">
+
+  <div slot="footer" class="flex justify-end gap-3 border-t p-6">
     <button on:click={handleClose}>Cancel</button>
     <button on:click={handleSave}>Save</button>
   </div>
@@ -51,14 +51,14 @@ A reusable modal dialog component with transparent backdrop and scroll preventio
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `isOpen` | `boolean` | `false` | Controls modal visibility |
-| `title` | `string \| null` | `null` | Modal title (shows default header) |
-| `size` | `'small' \| 'medium' \| 'large' \| 'xlarge' \| 'full'` | `'medium'` | Modal size |
-| `showCloseButton` | `boolean` | `true` | Show close button in header |
-| `closeOnOverlayClick` | `boolean` | `true` | Close when clicking backdrop |
-| `closeOnEscape` | `boolean` | `true` | Close when pressing Escape |
+| Prop                  | Type                                                   | Default    | Description                        |
+| --------------------- | ------------------------------------------------------ | ---------- | ---------------------------------- |
+| `isOpen`              | `boolean`                                              | `false`    | Controls modal visibility          |
+| `title`               | `string \| null`                                       | `null`     | Modal title (shows default header) |
+| `size`                | `'small' \| 'medium' \| 'large' \| 'xlarge' \| 'full'` | `'medium'` | Modal size                         |
+| `showCloseButton`     | `boolean`                                              | `true`     | Show close button in header        |
+| `closeOnOverlayClick` | `boolean`                                              | `true`     | Close when clicking backdrop       |
+| `closeOnEscape`       | `boolean`                                              | `true`     | Close when pressing Escape         |
 
 ## Size Classes
 
@@ -81,6 +81,7 @@ A reusable modal dialog component with transparent backdrop and scroll preventio
 ## Styling
 
 The modal uses Tailwind CSS classes and provides:
+
 - Transparent backdrop with blur effect
 - White content area with rounded corners and shadow
 - Responsive sizing and max-height constraints
@@ -93,8 +94,8 @@ Replace your existing modal structure:
 ```svelte
 <!-- Before -->
 {#if isOpen}
-  <div class="fixed inset-0 bg-transparent backdrop-blur-md flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-transparent backdrop-blur-md">
+    <div class="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-lg bg-white shadow-xl">
       <!-- header, content, footer -->
     </div>
   </div>
@@ -113,4 +114,4 @@ Replace your existing modal structure:
 
 - `BlockEditor.svelte` - Block editing dialog
 - `GlobalQueryManager.svelte` - Query management interface
-- *(Ready for use in other components)*
+- _(Ready for use in other components)_
