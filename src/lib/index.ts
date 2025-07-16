@@ -9,6 +9,7 @@ export { default as GraphBlock } from './components/blocks/GraphBlock.svelte';
 export { default as TextBlock } from './components/blocks/TextBlock.svelte';
 export { default as ConfirmationModal } from './components/ui/ConfirmationModal.svelte';
 export { default as SchemaSidebar } from './components/ui/SchemaSidebar.svelte';
+export { default as Sidebar } from './components/ui/Sidebar.svelte';
 
 // Services
 export { MockDashboardService } from './services/MockDashboardService.js';
@@ -42,7 +43,8 @@ export type {
   IDashboardService,
   DashboardEvent,
   BlockMoveEvent,
-  BlockResizeEvent
+  BlockResizeEvent,
+  Query
 } from './types/index.js';
 
 // Utilities

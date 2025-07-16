@@ -6,10 +6,10 @@
     GlobalQueryManager,
     MockDashboardService,
     SchemaSidebar,
+    Sidebar,
     type Dashboard,
     type Query
   } from '$lib';
-  import Sidebar from '$lib/components/ui/Sidebar.svelte';
 
   let dashboardService = new MockDashboardService();
   let selectedDashboardId: string | null = null;
@@ -44,27 +44,6 @@
     availableDashboards = availableDashboards.filter((d) => d.id !== event.detail.dashboardId);
   }
 
-  function handleDashboardLoaded(event: CustomEvent<{ dashboard: Dashboard }>) {
-    console.log('Dashboard loaded:', event.detail.dashboard);
-  }
-
-  function handleDashboardUpdated(event: CustomEvent<{ dashboard: Dashboard }>) {
-    console.log('Dashboard updated:', event.detail.dashboard);
-  }
-
-  function handleDashboardSaved(event: CustomEvent<{ dashboard: Dashboard }>) {
-    console.log('Dashboard saved:', event.detail.dashboard);
-  }
-
-  function handleBlockEdit(event: CustomEvent<{ block: any }>) {
-    console.log('Block edit requested:', event.detail.block);
-  }
-
-  function handleBlockDelete(event: CustomEvent<{ blockId: string }>) {
-    console.log('Block deleted:', event.detail.blockId);
-  }
-
-  // Query management handlers
   function handleQueryCreated(event: CustomEvent<{ query: Query }>) {
     globalQueries = [...globalQueries, event.detail.query];
   }
@@ -85,7 +64,6 @@
     showDashboardSidebar = !showDashboardSidebar;
     if (showDashboardSidebar) {
       showQuerySidebar = false;
-      // Keep schema sidebar open if it was already open
     }
   }
 
@@ -93,7 +71,6 @@
     showQuerySidebar = !showQuerySidebar;
     if (showQuerySidebar) {
       showDashboardSidebar = false;
-      // Keep schema sidebar open if it was already open
     }
   }
 
@@ -161,11 +138,6 @@
     queryManagerOpen={showQuerySidebar}
     dashboardManagerOpen={showDashboardSidebar}
     availableDashboardsCount={availableDashboards.length}
-    on:dashboard-loaded={handleDashboardLoaded}
-    on:dashboard-updated={handleDashboardUpdated}
-    on:dashboard-saved={handleDashboardSaved}
-    on:block-edit={handleBlockEdit}
-    on:block-delete={handleBlockDelete}
     on:toggle-query-manager={toggleQuerySidebar}
     on:toggle-dashboard-manager={toggleDashboardSidebar}
   />

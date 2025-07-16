@@ -20,11 +20,6 @@
   export let availableDashboardsCount: number = 0;
 
   const dispatch = createEventDispatcher<{
-    'dashboard-loaded': { dashboard: Dashboard };
-    'dashboard-updated': { dashboard: Dashboard };
-    'dashboard-saved': { dashboard: Dashboard };
-    'block-edit': { block: Block };
-    'block-delete': { blockId: string };
     'toggle-query-manager': void;
     'toggle-dashboard-manager': void;
   }>();
@@ -83,7 +78,6 @@
       }
 
       dashboard = foundDashboard;
-      dispatch('dashboard-loaded', { dashboard });
       loading = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load dashboard';
@@ -119,7 +113,6 @@
 
       let savedDashboard: Dashboard;
       if (dashboard.id) {
-        // Update existing dashboard
         savedDashboard = await dashboardService.updateDashboard(dashboard.id, {
           name: dashboard.name,
           description: dashboard.description,
@@ -128,7 +121,6 @@
           variables: dashboard.variables
         });
       } else {
-        // Create new dashboard
         savedDashboard = await dashboardService.createDashboard({
           name: dashboard.name,
           description: dashboard.description,
@@ -140,7 +132,6 @@
 
       dashboard = savedDashboard;
       hasUnsavedChanges = false;
-      dispatch('dashboard-saved', { dashboard });
       saving = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to save dashboard';
@@ -151,7 +142,6 @@
   function handleDashboardUpdated(event: CustomEvent<{ dashboard: Dashboard }>) {
     dashboard = event.detail.dashboard;
     hasUnsavedChanges = true;
-    dispatch('dashboard-updated', { dashboard });
   }
 
   function handleBlockMoved(event: CustomEvent<{ blockId: string; position: any }>) {
@@ -172,8 +162,6 @@
     if (dashboard) {
       dashboard.blocks = dashboard.blocks.filter((block) => block.id !== event.detail.blockId);
       hasUnsavedChanges = true;
-      dispatch('dashboard-updated', { dashboard });
-      dispatch('block-delete', { blockId: event.detail.blockId });
     }
   }
 
@@ -185,7 +173,6 @@
   function confirmBlockDeletion() {
     if (!blockToDelete) return;
     
-    // Call the existing delete handler with the block ID
     handleBlockDelete(new CustomEvent('block-delete', { 
       detail: { blockId: blockToDelete.id } 
     }));
@@ -205,7 +192,6 @@
         b.id === event.detail.block.id ? event.detail.block : b
       );
       hasUnsavedChanges = true;
-      dispatch('dashboard-updated', { dashboard });
     }
   }
 
@@ -259,7 +245,6 @@
     // Add the block to the dashboard
     dashboard.blocks = [...dashboard.blocks, newBlock];
     hasUnsavedChanges = true;
-    dispatch('dashboard-updated', { dashboard });
   }
 
   function getDefaultConfig(type: 'table' | 'graph' | 'text'): BlockConfig {
@@ -388,7 +373,7 @@
     </div>
   {:else if dashboard}
     <div class="sticky top-0 z-30 border-b border-gray-200 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between py-2 sm:py-4 gap-2">
           <div class="flex flex-1 items-baseline gap-2 sm:gap-4 min-w-0">
             <div class="min-w-0 flex-1">

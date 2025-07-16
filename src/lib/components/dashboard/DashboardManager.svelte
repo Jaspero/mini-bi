@@ -80,7 +80,7 @@
 
     const request: CreateDashboardRequest = {
       name: newDashboardName.trim(),
-      description: newDashboardDescription.trim() || undefined,
+      description: newDashboardDescription.trim() || '',
       layout: {
         gridSize,
         columns,
@@ -88,11 +88,11 @@
         gap: 10,
         canvasWidth: {
           type: canvasWidthType as 'fixed' | 'screen',
-          value: canvasWidthType === 'fixed' ? canvasWidthValue : undefined
+          value: canvasWidthType === 'fixed' ? canvasWidthValue : null
         },
         canvasHeight: {
           type: canvasHeightType as 'fixed' | 'screen',
-          value: canvasHeightType === 'fixed' ? canvasHeightValue : undefined
+          value: canvasHeightType === 'fixed' ? canvasHeightValue : null
         }
       },
       blocks: [],
