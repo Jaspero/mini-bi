@@ -279,36 +279,37 @@
 
 <div class="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-sm">
   <div
-    class="flex items-start justify-between border-b border-gray-200 bg-gray-50 px-2 py-2 sm:px-4 sm:py-3"
+    class="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-2 py-2 sm:px-4 sm:py-3 h-[50px]"
   >
     <div class="flex min-w-0 flex-1 flex-col gap-1">
       <h3 class="m-0 truncate text-sm font-semibold text-gray-900 sm:text-base">{block.title}</h3>
     </div>
     <div class="flex flex-shrink-0 items-center gap-1">
-      {#if showControls}
-        <button
-          class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
-          onclick={handleEdit}
-          aria-label="Edit graph"
-        >
-          <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
-        </button>
-        <button
-          class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
-          onclick={refresh}
-          disabled={loading}
-          aria-label="Refresh chart data"
-        >
-          <span class="material-symbols-outlined text-sm sm:text-base">refresh</span>
-        </button>
-        <button
-          class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
-          onclick={handleDelete}
-          aria-label="Delete graph"
-        >
-          <span class="material-symbols-outlined text-sm sm:text-base">delete</span>
-        </button>
-      {/if}
+      <button
+        class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600 flex"
+        class:hidden={!showControls}
+        onclick={handleEdit}
+        aria-label="Edit graph"
+      >
+        <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
+      </button>
+      <button
+        class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50 flex"
+        class:hidden={!showControls}
+        onclick={refresh}
+        disabled={loading}
+        aria-label="Refresh chart data"
+      >
+        <span class="material-symbols-outlined text-sm sm:text-base">refresh</span>
+      </button>
+      <button
+        class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 flex"
+        class:hidden={!showControls}
+        onclick={handleDelete}
+        aria-label="Delete graph"
+      >
+        <span class="material-symbols-outlined text-sm sm:text-base">delete</span>
+      </button>
     </div>
   </div>
 
