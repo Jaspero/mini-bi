@@ -28,6 +28,9 @@
   let draggedIndex: number | null = $state(null);
   let dragOverIndex: number | null = $state(null);
   let staticDataJson: string = $state('[]');
+  let apiEndpoint: string = $state('');
+  let apiMethod: 'GET' | 'POST' = $state('GET');
+  let apiToken: string = $state('');
 
   $effect(() => {
     if (block && isOpen && (!editedBlock || editedBlock.id !== block.id)) {
@@ -80,6 +83,9 @@
       staticDataJson = editedBlock.dataSource.staticData
         ? JSON.stringify(editedBlock.dataSource.staticData, null, 2)
         : '[]';
+      apiEndpoint = editedBlock.dataSource.endpoint || '';
+      apiMethod = editedBlock.dataSource.method || 'GET';
+      apiToken = editedBlock.dataSource.headers?.Authorization?.replace('Bearer ', '') || '';
 
       ckeditorLoaded = false;
       ckeditorError = false;
@@ -102,6 +108,9 @@
       if (dataSourceType === 'query') {
         editedBlock.dataSource.queryId = selectedQueryId;
         delete editedBlock.dataSource.staticData;
+        delete editedBlock.dataSource.endpoint;
+        delete editedBlock.dataSource.method;
+        delete editedBlock.dataSource.headers;
       } else if (dataSourceType === 'static') {
         try {
           editedBlock.dataSource.staticData = JSON.parse(staticDataJson);
@@ -110,9 +119,27 @@
           console.warn('Invalid JSON in static data:', e);
         }
         delete editedBlock.dataSource.queryId;
+        delete editedBlock.dataSource.endpoint;
+        delete editedBlock.dataSource.method;
+        delete editedBlock.dataSource.headers;
+      } else if (dataSourceType === 'api') {
+        editedBlock.dataSource.endpoint = apiEndpoint;
+        editedBlock.dataSource.method = apiMethod;
+        if (apiToken) {
+          editedBlock.dataSource.headers = {
+            Authorization: `Bearer ${apiToken}`
+          };
+        } else {
+          delete editedBlock.dataSource.headers;
+        }
+        delete editedBlock.dataSource.queryId;
+        delete editedBlock.dataSource.staticData;
       } else {
         delete editedBlock.dataSource.queryId;
         delete editedBlock.dataSource.staticData;
+        delete editedBlock.dataSource.endpoint;
+        delete editedBlock.dataSource.method;
+        delete editedBlock.dataSource.headers;
       }
     }
   }
@@ -120,6 +147,13 @@
   // Watch for changes in static data JSON and update the data source
   $effect(() => {
     if (dataSourceType === 'static' && staticDataJson) {
+      updateDataSource();
+    }
+  });
+
+  // Watch for changes in API configuration and update the data source
+  $effect(() => {
+    if (dataSourceType === 'api' && (apiEndpoint || apiMethod || apiToken)) {
       updateDataSource();
     }
   });
@@ -413,6 +447,62 @@
             <p class="text-xs text-gray-500">
               Enter your static data as valid JSON. Press Ctrl+S to save changes.
             </p>
+          </div>
+        {/if}
+
+        {#if dataSourceType === 'api'}
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <label for="api-endpoint" class="block text-sm font-medium text-gray-700"
+                >API Endpoint URL</label
+              >
+              <input
+                id="api-endpoint"
+                type="url"
+                bind:value={apiEndpoint}
+                oninput={updateDataSource}
+                placeholder="https://api.example.com/data"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+              <p class="text-xs text-gray-500">
+                Enter the full URL of your API endpoint
+              </p>
+            </div>
+
+            <div class="space-y-2">
+              <label for="api-method" class="block text-sm font-medium text-gray-700"
+                >HTTP Method</label
+              >
+              <select
+                id="api-method"
+                bind:value={apiMethod}
+                onchange={updateDataSource}
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+              </select>
+              <p class="text-xs text-gray-500">
+                Select the HTTP method to use for the API request
+              </p>
+            </div>
+
+            <div class="space-y-2">
+              <label for="api-token" class="block text-sm font-medium text-gray-700"
+                >Authorization Token (Optional)</label
+              >
+              <input
+                id="api-token"
+                type="password"
+                bind:value={apiToken}
+                oninput={updateDataSource}
+                placeholder="Enter bearer token"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+              <p class="text-xs text-gray-500">
+                Optional: Bearer token for API authentication. Will be sent as "Authorization: Bearer {apiToken}"
+              </p>
+            </div>
           </div>
         {/if}
       {/if}
