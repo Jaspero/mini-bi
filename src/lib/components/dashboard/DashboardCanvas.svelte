@@ -5,7 +5,17 @@
   import GraphBlock from '../blocks/GraphBlock.svelte';
   import TextBlock from '../blocks/TextBlock.svelte';
 
-  interface Props {
+  let {
+    dashboard = $bindable(),
+    dashboardService,
+    editable = true,
+    editMode = false,
+    onBlockMoved = () => {},
+    onBlockResized = () => {},
+    onDashboardUpdated = () => {},
+    onBlockEdit = () => {},
+    onBlockDeleteRequest = () => {}
+  }: {
     dashboard: Dashboard;
     dashboardService: IDashboardService;
     editable?: boolean;
@@ -16,22 +26,9 @@
     onBlockEdit?: (block: Block) => void;
     onBlockDelete?: (blockId: string) => void;
     onBlockDeleteRequest?: (block: Block) => void;
-  }
+  } = $props();
 
-  let {
-    dashboard = $bindable(),
-    dashboardService,
-    editable = true,
-    editMode = false,
-    onBlockMoved = () => {},
-    onBlockResized = () => {},
-    onDashboardUpdated = () => {},
-    onBlockEdit = () => {},
-    onBlockDelete = () => {},
-    onBlockDeleteRequest = () => {}
-  }: Props = $props();
-
-  let canvasElement: HTMLDivElement = $state();
+  let canvasElement = $state() as HTMLDivElement;
   let draggedBlock: Block | null = $state(null);
   let dragOffset = { x: 0, y: 0 };
   let resizingBlock: Block | null = $state(null);
@@ -427,21 +424,9 @@
     onDashboardUpdated(dashboard);
   }
 
-  function handleBlockUpdate(block: Block) {
+  function onBlockUpdate(block: Block) {
     dashboard.blocks = dashboard.blocks.map((b) => (b.id === block.id ? block : b));
     onDashboardUpdated(dashboard);
-  }
-
-  function handleBlockEdit(block: Block) {
-    onBlockEdit(block);
-  }
-
-  function handleBlockDelete(blockId: string) {
-    onBlockDelete(blockId);
-  }
-
-  function handleBlockDeleteRequest(block: Block) {
-    onBlockDeleteRequest(block);
   }
 </script>
 
@@ -486,27 +471,27 @@
               {block}
               {dashboardService}
               showControls={editMode}
-              onBlockUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock)}
-              onBlockEdit={(editBlock) => handleBlockEdit(editBlock)}
-              onBlockDelete={() => handleBlockDeleteRequest(block)}
+              {onBlockUpdate}
+              {onBlockEdit}
+              {onBlockDeleteRequest}
             />
           {:else if block.type === 'graph'}
             <GraphBlock
               {block}
               {dashboardService}
               showControls={editMode}
-              onBlockUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock)}
-              onBlockEdit={(editBlock) => handleBlockEdit(editBlock)}
-              onBlockDelete={() => handleBlockDeleteRequest(block)}
+              {onBlockUpdate}
+              {onBlockEdit}
+              {onBlockDeleteRequest}
             />
           {:else if block.type === 'text'}
             <TextBlock
               {block}
               dashboardVariables={dashboard.variables}
               showControls={editMode}
-              onBlockUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock)}
-              onBlockEdit={(editBlock) => handleBlockEdit(editBlock)}
-              onBlockDelete={() => handleBlockDeleteRequest(block)}
+              {onBlockUpdate}
+              {onBlockEdit}
+              {onBlockDeleteRequest}
             />
           {/if}
         </div>

@@ -9,7 +9,7 @@
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onBlockUpdate?: (block: Block) => void;
     onBlockEdit?: (block: Block) => void;
-    onBlockDelete?: (blockId: string) => void;
+    onBlockDeleteRequest?: (block: Block) => void;
     showControls?: boolean;
   }
 
@@ -18,7 +18,7 @@
     dashboardService,
     onBlockUpdate = () => {},
     onBlockEdit = () => {},
-    onBlockDelete = () => {},
+    onBlockDeleteRequest = () => {},
     showControls = false
   }: Props = $props();
 
@@ -273,7 +273,7 @@
 
   function handleDelete(event: MouseEvent) {
     event.stopPropagation();
-    onBlockDelete(block.id);
+    onBlockDeleteRequest(block);
   }
 </script>
 

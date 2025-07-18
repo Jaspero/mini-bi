@@ -17,19 +17,17 @@
     close?: () => void;
   } = $props();
 
-  let editedBlock: Block | null = null;
-  let editorInstance: any = null;
-  let editorElement: HTMLTextAreaElement;
+  let editedBlock: Block | null = $state(null);
+  let editorInstance: any = $state(null);
+  let editorElement: HTMLTextAreaElement | null = $state(null);
   let ckeditorLoaded = false;
-  let ckeditorError = false;
-
-  // Reactive variables for data source binding
-  let dataSourceType: 'api' | 'static' | 'mock' | 'query' = 'mock';
-  let selectedQueryId: string = '';
+  let ckeditorError = $state(false);
+  let dataSourceType: 'api' | 'static' | 'mock' | 'query' = $state('mock');
+  let selectedQueryId: string = $state('');
 
   $effect(() => {
     if (block && isOpen && (!editedBlock || editedBlock.id !== block.id)) {
-      editedBlock = structuredClone(block);
+      editedBlock = structuredClone($state.snapshot(block));
 
       // Initialize dataSource if it doesn't exist
       if (!editedBlock.dataSource) {
@@ -76,8 +74,6 @@
       dataSourceType = editedBlock.dataSource.type;
       selectedQueryId = editedBlock.dataSource.queryId || '';
 
-      console.log('editedBlock initialized:', editedBlock);
-
       ckeditorLoaded = false;
       ckeditorError = false;
       // Initialize CKEditor when opening text block
@@ -93,15 +89,15 @@
     }
   });
 
-  $effect(() => {
-    if (editedBlock && dataSourceType) {
-      editedBlock.dataSource = {
-        ...editedBlock.dataSource,
-        type: dataSourceType,
-        queryId: selectedQueryId || undefined
-      };
-    }
-  });
+  // $effect(() => {
+  //   if (editedBlock && dataSourceType) {
+  //     editedBlock.dataSource = {
+  //       ...editedBlock.dataSource,
+  //       type: dataSourceType,
+  //       queryId: selectedQueryId || undefined
+  //     };
+  //   }
+  // });
 
   // Sync data source changes back to editedBlock when user changes the form
   function updateDataSource() {
@@ -194,7 +190,10 @@
     close();
   }
 
-  function handleSave() {
+  function onsubmit(event: SubmitEvent) {
+
+    event.preventDefault();
+
     if (editedBlock) {
       // Make sure we get the latest content from CKEditor for text blocks
       if (editedBlock.type === 'text' && editorInstance) {
@@ -220,7 +219,7 @@
 
 {#if editedBlock}
   <Modal {isOpen} title="Edit Block" size="large" close={handleClose}>
-    <div class="space-y-4 p-4 sm:space-y-6 sm:p-6">
+    <form class="space-y-4 p-4 sm:space-y-6 sm:p-6" id="block-editor-form" {onsubmit}>
       <div class="space-y-2">
         <label for="block-title" class="block text-sm font-medium text-gray-700">Title</label>
         <input
@@ -229,7 +228,6 @@
           bind:value={editedBlock.title}
           placeholder="Enter block title"
           class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          on:input={() => console.log('Title changed to:', editedBlock?.title)}
         />
         <small class="text-xs text-gray-500">Current value: {editedBlock.title}</small>
       </div>
@@ -243,7 +241,6 @@
             bind:value={editedBlock.position.x}
             min="0"
             class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            on:input={() => console.log('X position changed to:', editedBlock?.position.x)}
           />
           <small class="text-xs text-gray-500">Current X: {editedBlock.position.x}</small>
         </div>
@@ -256,7 +253,6 @@
             bind:value={editedBlock.position.y}
             min="0"
             class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            on:input={() => console.log('Y position changed to:', editedBlock?.position.y)}
           />
           <small class="text-xs text-gray-500">Current Y: {editedBlock.position.y}</small>
         </div>
@@ -294,7 +290,7 @@
           <select
             id="data-source"
             bind:value={dataSourceType}
-            on:change={updateDataSource}
+            onchange={updateDataSource}
             class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           >
             <option value="mock">Mock Data</option>
@@ -312,7 +308,7 @@
             <select
               id="query-select"
               bind:value={selectedQueryId}
-              on:change={updateDataSource}
+              onchange={updateDataSource}
               class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             >
               <option value="">-- Select a query --</option>
@@ -333,15 +329,13 @@
         <!-- Table Configuration -->
         <div class="space-y-4">
           <h3 class="text-lg font-medium text-gray-900">Table Configuration</h3>
-
-          <!-- Columns Configuration -->
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <label class="block text-sm font-medium text-gray-700">Columns</label>
               <button
                 type="button"
                 class="text-sm text-blue-600 hover:text-blue-500"
-                on:click={() => {
+                onclick={() => {
                   if (editedBlock) {
                     const config = editedBlock.config as any;
                     if (!config.columns) config.columns = [];
@@ -434,7 +428,7 @@
                         <button
                           type="button"
                           class="w-full rounded bg-red-100 px-2 py-1 text-xs text-red-600 transition-colors hover:bg-red-200 sm:w-auto"
-                          on:click={() => {
+                          onclick={() => {
                             if (editedBlock) {
                               const config = editedBlock.config as any;
                               config.columns = config.columns.filter((_, i) => i !== index);
@@ -597,24 +591,27 @@
           {/if}
         </div>
       {/if}
-    </div>
+    </form>
 
-    <div
-      slot="footer"
-      class="flex flex-col gap-3 border-t border-gray-200 bg-gray-50 p-4 sm:flex-row sm:justify-end sm:p-6"
-    >
-      <button
-        class="touch-manipulation rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-        on:click={handleClose}
+    {#snippet footer()}
+      <div
+        class="flex flex-col gap-3 border-t border-gray-200 bg-gray-50 p-4 sm:flex-row sm:justify-end sm:p-6"
       >
-        Cancel
-      </button>
-      <button
-        class="touch-manipulation rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-        on:click={handleSave}
-      >
-        Save Changes
-      </button>
-    </div>
+        <button
+          class="touch-manipulation rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+          typeof="button"
+          onclick={handleClose}
+        >
+          Cancel
+        </button>
+        <button
+          class="touch-manipulation rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+          form="block-editor-form"
+          type="submit"
+        >
+          Save Changes
+        </button>
+      </div>
+    {/snippet}
   </Modal>
 {/if}

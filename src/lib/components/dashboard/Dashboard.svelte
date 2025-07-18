@@ -25,7 +25,7 @@
 
   let {
     dashboardId = null,
-  dashboardService,
+    dashboardService,
     queries = [],
     editable = true,
     queryManagerOpen = false,
@@ -42,7 +42,7 @@
   let hasUnsavedChanges = $state(false);
   let editingBlock: Block | null = $state(null);
   let showBlockEditor = $state(false);
-  let editMode = $state(true); // true = edit mode (controls visible, no drag/resize), false = move mode (drag/resize enabled, no controls)
+  let editMode = $state(true);
   let showAddBlockDropdown = $state(false);
 
   // Block deletion confirmation modal state
@@ -151,45 +151,38 @@
     }
   }
 
-  function handleDashboardUpdated(event: { dashboard: Dashboard }) {
-    dashboard = event.dashboard;
+  function onDashboardUpdated(d: Dashboard) {
+    dashboard = d;
     hasUnsavedChanges = true;
   }
 
-  function handleBlockMoved(event: { blockId: string; position: any }) {
+  function onBlockMoved() {
     hasUnsavedChanges = true;
   }
 
-  function handleBlockResized(event: { blockId: string; size: any }) {
+  function onBlockResized() {
     hasUnsavedChanges = true;
   }
 
-  function handleBlockEdit(event: { block: Block }) {
-    editingBlock = event.block;
+  function onBlockEdit(block: Block) {
+    editingBlock = block;
     showBlockEditor = true;
   }
 
-  function handleBlockDelete(event: { blockId: string }) {
-    // Remove the block from the dashboard
-    if (dashboard) {
-      dashboard.blocks = dashboard.blocks.filter((block) => block.id !== event.blockId);
-      hasUnsavedChanges = true;
-    }
-  }
-
-  function requestBlockDeletion(event: CustomEvent<{ block: Block }>) {
-    blockToDelete = event.detail.block;
+  function onBlockDeleteRequest(block: Block) {
+    blockToDelete = block;
     showBlockDeleteModal = true;
   }
 
   function confirmBlockDeletion() {
-    if (!blockToDelete) return;
+    if (!blockToDelete) {
+      return
+    };
 
-    handleBlockDelete(
-      new CustomEvent('block-delete', {
-        detail: { blockId: blockToDelete.id }
-      })
-    );
+    if (dashboard) {
+      dashboard.blocks = dashboard.blocks.filter((block) => block.id !== blockToDelete!.id);
+      hasUnsavedChanges = true;
+    }
 
     blockToDelete = null;
     showBlockDeleteModal = false;
@@ -532,12 +525,11 @@
         {dashboardService}
         editable={editable && !editMode}
         editMode={editable && editMode}
-        onDashboardUpdated={handleDashboardUpdated}
-        onBlockMoved={handleBlockMoved}
-        onBlockResized={handleBlockResized}
-        onBlockEdit={handleBlockEdit}
-        onBlockDelete={handleBlockDelete}
-        onBlockDeleteRequest={requestBlockDeletion}
+        {onDashboardUpdated}
+        {onBlockMoved}
+        {onBlockResized}
+        {onBlockEdit}
+        {onBlockDeleteRequest}
       />
     </div>
   {/if}
