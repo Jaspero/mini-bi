@@ -24,6 +24,8 @@
   let ckeditorError = $state(false);
   let dataSourceType: 'api' | 'static' | 'mock' | 'query' = $state('mock');
   let selectedQueryId: string = $state('');
+  let draggedIndex: number | null = $state(null);
+  let dragOverIndex: number | null = $state(null);
 
   $effect(() => {
     if (block && isOpen && (!editedBlock || editedBlock.id !== block.id)) {
@@ -182,6 +184,52 @@
         console.error('Error destroying CKEditor:', error);
       }
     }
+  }
+
+  function handleDragStart(event: DragEvent, index: number) {
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', index.toString());
+    }
+    draggedIndex = index;
+  }
+
+  function handleDragOver(event: DragEvent, index: number) {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    dragOverIndex = index;
+  }
+
+  function handleDragLeave() {
+    dragOverIndex = null;
+  }
+
+  function handleDrop(event: DragEvent, dropIndex: number) {
+    event.preventDefault();
+    
+    if (draggedIndex !== null && draggedIndex !== dropIndex && editedBlock) {
+      const config = editedBlock.config as any;
+      const columns = [...config.columns];
+      
+      // Remove the dragged item
+      const [draggedColumn] = columns.splice(draggedIndex, 1);
+      
+      // Insert it at the new position
+      columns.splice(dropIndex, 0, draggedColumn);
+      
+      config.columns = columns;
+      editedBlock = { ...editedBlock };
+    }
+    
+    draggedIndex = null;
+    dragOverIndex = null;
+  }
+
+  function handleDragEnd() {
+    draggedIndex = null;
+    dragOverIndex = null;
   }
 
   function handleClose() {
@@ -355,10 +403,83 @@
             </div>
 
             {#if editedBlock.config.columns}
-              <div class="max-h-60 space-y-2 overflow-y-auto">
+              <div class="space-y-2 overflow-y-auto">
                 {#each editedBlock.config.columns as column, index}
-                  <div class="space-y-2 rounded-md bg-gray-50 p-3">
-                    <!-- Mobile: Stack inputs vertically -->
+                  <div 
+                    class="space-y-2 rounded-md border border-gray-200 bg-gray-50 p-3 transition-all duration-200 hover:border-gray-300 hover:shadow-sm {draggedIndex === index ? 'opacity-50' : ''} {dragOverIndex === index ? 'border-blue-400 bg-blue-50' : ''}"
+                    draggable="true"
+                    ondragstart={(e) => handleDragStart(e, index)}
+                    ondragover={(e) => handleDragOver(e, index)}
+                    ondragleave={handleDragLeave}
+                    ondrop={(e) => handleDrop(e, index)}
+                    ondragend={handleDragEnd}
+                  >
+                    <!-- Column Header with Order Controls -->
+                    <div class="flex items-center justify-between border-b border-gray-200 pb-2">
+                      <div class="flex items-center space-x-2">
+                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-600">
+                          {index + 1}
+                        </span>
+                        <span class="text-sm font-medium text-gray-700">
+                          {column.header || column.key || `Column ${index + 1}`}
+                        </span>
+                      </div>
+                      <div class="flex items-center space-x-1">
+                        <!-- Move Up Button -->
+                        <button
+                          type="button"
+                          disabled={index === 0}
+                          class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                          onclick={() => {
+                            if (editedBlock && index > 0) {
+                              const config = editedBlock.config as any;
+                              const columns = [...config.columns];
+                              [columns[index - 1], columns[index]] = [columns[index], columns[index - 1]];
+                              config.columns = columns;
+                              editedBlock = { ...editedBlock };
+                            }
+                          }}
+                          title="Move up"
+                        >
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                          </svg>
+                        </button>
+                        <!-- Move Down Button -->
+                        <button
+                          type="button"
+                          disabled={index === editedBlock.config.columns.length - 1}
+                          class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                          onclick={() => {
+                            if (editedBlock && index < editedBlock.config.columns.length - 1) {
+                              const config = editedBlock.config as any;
+                              const columns = [...config.columns];
+                              [columns[index], columns[index + 1]] = [columns[index + 1], columns[index]];
+                              config.columns = columns;
+                              editedBlock = { ...editedBlock };
+                            }
+                          }}
+                          title="Move down"
+                        >
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        <!-- Drag Handle -->
+                        <div 
+                          class="cursor-grab rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600 active:cursor-grabbing" 
+                          title="Drag to reorder"
+                          onmousedown={(e) => e.currentTarget.style.cursor = 'grabbing'}
+                          onmouseup={(e) => e.currentTarget.style.cursor = 'grab'}
+                        >
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Column Configuration Fields -->
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center sm:gap-2">
                       <div class="sm:col-span-3">
                         <label class="block text-xs font-medium text-gray-600 sm:hidden">Key</label>
