@@ -13,8 +13,8 @@
     onClose?: () => void;
   }
 
-  let { 
-    dashboardService, 
+  let {
+    dashboardService,
     currentDashboardId = null,
     onDashboardSelected = () => {},
     onDashboardCreated = () => {},
@@ -62,7 +62,7 @@
 
   function selectDashboard(dashboardId: string | null) {
     if (dashboardId) {
-      const dashboard = dashboards.find(d => d.id === dashboardId);
+      const dashboard = dashboards.find((d) => d.id === dashboardId);
       if (dashboard) {
         onDashboardSelected(dashboard);
       }

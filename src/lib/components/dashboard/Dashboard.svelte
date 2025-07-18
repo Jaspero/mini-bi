@@ -176,8 +176,8 @@
 
   function confirmBlockDeletion() {
     if (!blockToDelete) {
-      return
-    };
+      return;
+    }
 
     if (dashboard) {
       dashboard.blocks = dashboard.blocks.filter((block) => block.id !== blockToDelete!.id);

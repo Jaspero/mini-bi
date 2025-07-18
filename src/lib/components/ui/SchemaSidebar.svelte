@@ -1,6 +1,6 @@
 <script lang="ts">
-  let { 
-    mockSchema, 
+  let {
+    mockSchema,
     sqlTemplates = [],
     onInsertText = () => {},
     onSetEditorValue = () => {}

@@ -208,21 +208,21 @@
 
   function handleDrop(event: DragEvent, dropIndex: number) {
     event.preventDefault();
-    
+
     if (draggedIndex !== null && draggedIndex !== dropIndex && editedBlock) {
       const config = editedBlock.config as any;
       const columns = [...config.columns];
-      
+
       // Remove the dragged item
       const [draggedColumn] = columns.splice(draggedIndex, 1);
-      
+
       // Insert it at the new position
       columns.splice(dropIndex, 0, draggedColumn);
-      
+
       config.columns = columns;
       editedBlock = { ...editedBlock };
     }
-    
+
     draggedIndex = null;
     dragOverIndex = null;
   }
@@ -239,7 +239,6 @@
   }
 
   function onsubmit(event: SubmitEvent) {
-
     event.preventDefault();
 
     if (editedBlock) {
@@ -405,8 +404,11 @@
             {#if editedBlock.config.columns}
               <div class="space-y-2 overflow-y-auto">
                 {#each editedBlock.config.columns as column, index}
-                  <div 
-                    class="space-y-2 rounded-md border border-gray-200 bg-gray-50 p-3 transition-all duration-200 hover:border-gray-300 hover:shadow-sm {draggedIndex === index ? 'opacity-50' : ''} {dragOverIndex === index ? 'border-blue-400 bg-blue-50' : ''}"
+                  <div
+                    class="space-y-2 rounded-md border border-gray-200 bg-gray-50 p-3 transition-all duration-200 hover:border-gray-300 hover:shadow-sm {draggedIndex ===
+                    index
+                      ? 'opacity-50'
+                      : ''} {dragOverIndex === index ? 'border-blue-400 bg-blue-50' : ''}"
                     draggable="true"
                     ondragstart={(e) => handleDragStart(e, index)}
                     ondragover={(e) => handleDragOver(e, index)}
@@ -417,7 +419,9 @@
                     <!-- Column Header with Order Controls -->
                     <div class="flex items-center justify-between border-b border-gray-200 pb-2">
                       <div class="flex items-center space-x-2">
-                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-600">
+                        <span
+                          class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-600"
+                        >
                           {index + 1}
                         </span>
                         <span class="text-sm font-medium text-gray-700">
@@ -434,15 +438,28 @@
                             if (editedBlock && index > 0) {
                               const config = editedBlock.config as any;
                               const columns = [...config.columns];
-                              [columns[index - 1], columns[index]] = [columns[index], columns[index - 1]];
+                              [columns[index - 1], columns[index]] = [
+                                columns[index],
+                                columns[index - 1]
+                              ];
                               config.columns = columns;
                               editedBlock = { ...editedBlock };
                             }
                           }}
                           title="Move up"
                         >
-                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                          <svg
+                            class="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M5 15l7-7 7 7"
+                            />
                           </svg>
                         </button>
                         <!-- Move Down Button -->
@@ -454,31 +471,54 @@
                             if (editedBlock && index < editedBlock.config.columns.length - 1) {
                               const config = editedBlock.config as any;
                               const columns = [...config.columns];
-                              [columns[index], columns[index + 1]] = [columns[index + 1], columns[index]];
+                              [columns[index], columns[index + 1]] = [
+                                columns[index + 1],
+                                columns[index]
+                              ];
                               config.columns = columns;
                               editedBlock = { ...editedBlock };
                             }
                           }}
                           title="Move down"
                         >
-                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                          <svg
+                            class="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19 9l-7 7-7-7"
+                            />
                           </svg>
                         </button>
                         <!-- Drag Handle -->
-                        <div 
-                          class="cursor-grab rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600 active:cursor-grabbing" 
+                        <div
+                          class="cursor-grab rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600 active:cursor-grabbing"
                           title="Drag to reorder"
-                          onmousedown={(e) => e.currentTarget.style.cursor = 'grabbing'}
-                          onmouseup={(e) => e.currentTarget.style.cursor = 'grab'}
+                          onmousedown={(e) => (e.currentTarget.style.cursor = 'grabbing')}
+                          onmouseup={(e) => (e.currentTarget.style.cursor = 'grab')}
                         >
-                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                          <svg
+                            class="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M4 8h16M4 16h16"
+                            />
                           </svg>
                         </div>
                       </div>
                     </div>
-                    
+
                     <!-- Column Configuration Fields -->
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center sm:gap-2">
                       <div class="sm:col-span-3">

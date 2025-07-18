@@ -6,15 +6,11 @@ import type {
   BlockData,
   BlockType,
   BlockConfig,
-  DashboardLayout,
   QueryResult,
   QueryColumn,
   Query,
-  DataSourceConfig,
-  DatabaseSchema,
-  TableSchema,
-  ColumnSchema
-} from '../types/index.js';
+  DatabaseSchema
+} from '../types/index.ts';
 
 export class MockDashboardService implements IDashboardService {
   private dashboards: Dashboard[] = [
@@ -207,7 +203,6 @@ export class MockDashboardService implements IDashboardService {
     }
   ];
 
-  // Global queries storage
   private globalQueries: Query[] = [
     {
       id: 'sales-query',
@@ -255,7 +250,6 @@ export class MockDashboardService implements IDashboardService {
     }
   ];
 
-  // Mock query result storage
   private queryResults = new Map<string, any[]>([
     [
       'sales-query',
@@ -280,7 +274,6 @@ export class MockDashboardService implements IDashboardService {
   ]);
 
   async loadDashboards(): Promise<Dashboard[]> {
-    // Simulate network delay
     await this.delay(500);
     return [...this.dashboards];
   }
@@ -440,13 +433,11 @@ export class MockDashboardService implements IDashboardService {
   async getQueryPreview(sql: string, limit = 10): Promise<QueryResult> {
     await this.delay(200);
 
-    // Validate first
     const validation = await this.validateQuery(sql);
     if (!validation.isValid) {
       throw new Error(validation.error);
     }
 
-    // Return sample data for preview
     const sampleData = [
       { id: 1, name: 'Sample Item 1', value: 100, date: '2024-01-01' },
       { id: 2, name: 'Sample Item 2', value: 200, date: '2024-01-02' },
@@ -471,7 +462,6 @@ export class MockDashboardService implements IDashboardService {
   }
 
   private convertQueryResultToBlockData(queryResult: QueryResult): BlockData {
-    // Convert rows and columns back to object format
     const data = queryResult.rows.map((row) => {
       const obj: any = {};
       queryResult.columns.forEach((column, index) => {
@@ -581,7 +571,6 @@ export class MockDashboardService implements IDashboardService {
     return Math.random().toString(36).substr(2, 9);
   }
 
-  // Global Query Management Methods
   async loadGlobalQueries(): Promise<Query[]> {
     return [...this.globalQueries];
   }
@@ -628,7 +617,7 @@ export class MockDashboardService implements IDashboardService {
 
   async getDatabaseSchema(): Promise<DatabaseSchema> {
     await this.delay(200);
-    
+
     return {
       tables: [
         {
@@ -759,9 +748,7 @@ export class MockDashboardService implements IDashboardService {
             { name: 'created_at', type: 'TIMESTAMP', nullable: false }
           ],
           primaryKeys: ['id'],
-          indexes: [
-            { name: 'idx_campaign_stats_name', columns: ['campaign_name'], unique: false }
-          ],
+          indexes: [{ name: 'idx_campaign_stats_name', columns: ['campaign_name'], unique: false }],
           showInActions: false
         }
       ],
@@ -813,9 +800,7 @@ export class MockDashboardService implements IDashboardService {
       functions: [
         {
           name: 'calculate_order_total',
-          parameters: [
-            { name: 'order_id', type: 'INTEGER', optional: false }
-          ],
+          parameters: [{ name: 'order_id', type: 'INTEGER', optional: false }],
           returnType: 'DECIMAL(10,2)',
           description: 'Calculates the total amount for a given order'
         },

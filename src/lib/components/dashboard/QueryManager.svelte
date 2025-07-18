@@ -10,9 +10,9 @@
     onClose?: () => void;
   }
 
-  let { 
-    queries = $bindable([]), 
-    dashboardService, 
+  let {
+    queries = $bindable([]),
+    dashboardService,
     isOpen = false,
     onQueriesUpdated = () => {},
     onClose = () => {}

@@ -83,7 +83,6 @@
       value = 'SELECT * FROM users;';
     }
 
-    // Load schema when component mounts
     await loadSchema();
   });
 

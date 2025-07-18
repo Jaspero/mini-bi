@@ -4,7 +4,7 @@
   import SQLEditor from './SQLEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 
-  let { 
+  let {
     dashboardService,
     onQueryCreated = () => {},
     onQueryUpdated = () => {},
