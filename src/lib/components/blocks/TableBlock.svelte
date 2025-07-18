@@ -44,20 +44,13 @@
     try {
       loading = true;
       error = '';
-      // Pass the block configuration which includes dataSource
+      
       const blockConfig = {
         ...block.config,
         dataSource: block.dataSource
       };
+
       data = await dashboardService.loadBlockData(block.id, block.type, blockConfig);
-      console.log(
-        'TableBlock loaded data:',
-        data,
-        'for block:',
-        block.id,
-        'dataSource:',
-        block.dataSource
-      );
       loading = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load data';
@@ -70,7 +63,6 @@
 
     let result = [...data.data];
 
-    // Apply search filter
     if (searchTerm.trim()) {
       result = result.filter((row) =>
         Object.values(row).some((value) =>
@@ -79,7 +71,6 @@
       );
     }
 
-    // Apply sorting
     if (sortColumn) {
       result.sort((a, b) => {
         const aVal = a[sortColumn];
@@ -94,7 +85,7 @@
     }
 
     filteredData = result;
-    currentPage = 1; // Reset to first page when data changes
+    currentPage = 1;
   }
 
   function handleSort(column: string) {

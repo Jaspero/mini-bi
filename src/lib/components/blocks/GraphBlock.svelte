@@ -51,20 +51,13 @@
     try {
       loading = true;
       error = '';
-      // Pass the block configuration which includes dataSource
+
       const blockConfig = {
         ...block.config,
         dataSource: block.dataSource
       };
+      
       data = await dashboardService.loadBlockData(block.id, block.type, blockConfig);
-      console.log(
-        'GraphBlock loaded data:',
-        data,
-        'for block:',
-        block.id,
-        'dataSource:',
-        block.dataSource
-      );
       loading = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load data';

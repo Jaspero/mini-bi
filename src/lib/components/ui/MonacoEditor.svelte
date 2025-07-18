@@ -158,7 +158,6 @@
             case 's':
               keyCode = monaco.KeyCode.KeyS;
               break;
-            // Add more key mappings as needed
           }
         });
 
@@ -175,7 +174,6 @@
     } catch (error) {
       console.warn(`Monaco initialization attempt ${initializationAttempts} failed:`, error);
 
-      // If we've exhausted attempts, give up on Monaco
       if (initializationAttempts >= 3) {
         console.log('Giving up on Monaco, using textarea fallback');
       }
@@ -187,10 +185,8 @@
       textareaElement.focus();
     }
 
-    // Try to initialize Monaco after component is mounted
-    setTimeout(tryInitializeMonaco, 100);
+    tryInitializeMonaco();
 
-    // Also try when container becomes visible (for modals)
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting && !monacoInitialized) {
@@ -214,13 +210,11 @@
     }
   });
 
-  // Handle textarea input
   function handleTextareaInput(event: Event) {
     const target = event.target as HTMLTextAreaElement;
     value = target.value;
   }
 
-  // Handle keyboard shortcuts in textarea
   function handleKeydown(event: KeyboardEvent) {
     keyboardShortcuts.forEach((shortcut) => {
       const keys = shortcut.key.toLowerCase().split('+');

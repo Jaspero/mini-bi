@@ -29,11 +29,9 @@
   let deleting = $state(false);
   let error = $state('');
 
-  // Confirmation modal state
   let showConfirmModal = $state(false);
   let dashboardToDelete: Dashboard | null = $state(null);
 
-  // Create form fields
   let newDashboardName = $state('');
   let newDashboardDescription = $state('');
   let gridSize = $state(80);
@@ -149,10 +147,11 @@
   }
 
   async function confirmDeleteDashboard() {
-    if (!dashboardToDelete) return;
+    if (!dashboardToDelete) {
+      return;
+    }
 
     const dashboardId = dashboardToDelete.id;
-    const dashboardName = dashboardToDelete.name;
 
     try {
       deleting = true;
@@ -470,6 +469,6 @@
     : ''}
   confirmText="Delete"
   cancelText="Cancel"
-  on:confirm={confirmDeleteDashboard}
-  on:cancel={cancelDeleteDashboard}
+  onConfirm={confirmDeleteDashboard}
+  onCancel={cancelDeleteDashboard}
 />
