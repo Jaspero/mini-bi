@@ -1,57 +1,50 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import MonacoEditor from '../ui/MonacoEditor.svelte';
+  import type { DatabaseSchema } from '../../types/index.ts';
 
-  let { 
-    value = $bindable(''), 
+  let {
+    value = $bindable(''),
     disabled = false,
+    dashboardService = null,
     onChange = () => {},
     onExecute = () => {},
     onSave = () => {},
-    onOpenSchema = () => {}
+    onOpenSchema = (schemaData: any) => {}
   }: {
     value?: string;
     disabled?: boolean;
+    dashboardService?: any;
     onChange?: (value: string) => void;
     onExecute?: () => void;
     onSave?: () => void;
-    onOpenSchema?: () => void;
+    onOpenSchema?: (schemaData: any) => void;
   } = $props();
 
-  let monacoEditor: any = null;
+  let monacoEditor: any = $state(null);
+  let schema: DatabaseSchema | null = $state(null);
+  let schemaLoading = $state(false);
+  let schemaError = $state<string | null>(null);
 
-  // Mock database schema for demonstration
-  const mockSchema = {
-    tables: [
-      {
-        name: 'users',
-        columns: [
-          { name: 'id', type: 'INTEGER', nullable: false, primary: true },
-          { name: 'username', type: 'VARCHAR(255)', nullable: false },
-          { name: 'email', type: 'VARCHAR(255)', nullable: false },
-          { name: 'created_at', type: 'TIMESTAMP', nullable: false }
-        ]
-      },
-      {
-        name: 'products',
-        columns: [
-          { name: 'id', type: 'INTEGER', nullable: false, primary: true },
-          { name: 'name', type: 'VARCHAR(255)', nullable: false },
-          { name: 'price', type: 'DECIMAL(10,2)', nullable: false },
-          { name: 'category_id', type: 'INTEGER', nullable: true }
-        ]
-      },
-      {
-        name: 'orders',
-        columns: [
-          { name: 'id', type: 'INTEGER', nullable: false, primary: true },
-          { name: 'user_id', type: 'INTEGER', nullable: false },
-          { name: 'total_amount', type: 'DECIMAL(10,2)', nullable: false },
-          { name: 'status', type: 'VARCHAR(50)', nullable: false }
-        ]
-      }
-    ]
-  };
+  async function loadSchema() {
+    if (!dashboardService) {
+      console.warn('Dashboard service not provided, schema will not be available');
+      return;
+    }
+
+    schemaLoading = true;
+    schemaError = null;
+
+    try {
+      schema = await dashboardService.getDatabaseSchema();
+    } catch (error) {
+      console.error('Failed to load database schema:', error);
+      schemaError = error instanceof Error ? error.message : 'Failed to load schema';
+      schema = null;
+    } finally {
+      schemaLoading = false;
+    }
+  }
 
   // Keyboard shortcuts for the Monaco editor
   const keyboardShortcuts = [
@@ -71,6 +64,7 @@
     if (monacoEditor) {
       monacoEditor.setValue(template);
     }
+
     value = template;
     onChange(value);
   }
@@ -84,19 +78,13 @@
     onChange(value);
   }
 
-  function handleValueChange() {
-    onChange(value);
-  }
-
-  function handleKeyboardShortcut(command: string) {
-    console.log(`Keyboard shortcut executed: ${command}`);
-  }
-
-  onMount(() => {
-    // Set default value if empty
+  onMount(async () => {
     if (!value) {
       value = 'SELECT * FROM users;';
     }
+
+    // Load schema when component mounts
+    await loadSchema();
   });
 
   const sqlTemplates = [
@@ -115,58 +103,107 @@
   ];
 
   function openSchemaSidebar() {
-    onOpenSchema();
+    if (!schema) {
+      console.warn('No schema available to display');
+      return;
+    }
+
+    onOpenSchema({
+      schema: schema,
+      sqlTemplates,
+      insertText: (text: string) => {
+        if (monacoEditor) {
+          monacoEditor.insertText(text);
+        }
+      },
+      insertSelectAll: (tableName: string) => {
+        insertSelectAll(tableName);
+      },
+      insertTemplate: (template: string) => {
+        insertTemplate(template);
+      },
+      // Legacy support for existing schema sidebar
+      mockSchema: {
+        tables: schema.tables.map((table) => ({
+          name: table.name,
+          columns: table.columns.map((col) => ({
+            name: col.name,
+            type: col.type,
+            nullable: col.nullable,
+            primary: col.primary
+          }))
+        }))
+      }
+    });
   }
 </script>
 
 <div
   class="relative flex h-[500px] max-h-[80vh] min-h-[300px] resize-y overflow-hidden rounded-md border border-gray-300"
 >
-  <!-- Editor Area -->
   <div class="flex flex-1 flex-col overflow-hidden">
-    <!-- Toolbar -->
     <div class="flex items-center justify-between gap-2 border-b border-gray-300 bg-gray-50 p-2">
       <div class="flex items-center gap-2">
-        <button
-          class="cursor-pointer rounded border-none bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600"
-          onclick={openSchemaSidebar}
-        >
-          Schema
-        </button>
-        
+        {#if schema}
+          <button
+            class="cursor-pointer rounded border-none bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600"
+            onclick={openSchemaSidebar}
+          >
+            Schema
+          </button>
+        {/if}
+
         <!-- Template Dropdown -->
         <select
           class="cursor-pointer rounded border border-gray-300 px-2 py-1 text-xs"
           onchange={(e) => {
-            const selectedTemplate = sqlTemplates.find(t => t.name === e.target.value);
+            const selectedTemplate = sqlTemplates.find((t) => t.name === e.target.value);
             if (selectedTemplate) {
               insertTemplate(selectedTemplate.sql);
             }
             e.target.value = '';
           }}
         >
-          <option value="">Quick Templates</option>
+          <option value="">Templates</option>
           {#each sqlTemplates as template}
             <option value={template.name}>{template.name}</option>
           {/each}
         </select>
       </div>
 
-      <!-- Quick Schema Actions -->
       <div class="flex items-center gap-2">
-        <span class="text-xs text-gray-500">Quick actions:</span>
-        {#each mockSchema.tables as table}
-          <button
-            class="cursor-pointer rounded border-none bg-green-500 px-2 py-1 text-xs text-white hover:bg-green-600"
-            onclick={() => insertSelectAll(table.name)}
-          >
-            {table.name}
-          </button>
-        {/each}
+        {#if dashboardService}
+          <span class="text-xs text-gray-500">Actions:</span>
+          {#if schemaLoading}
+            <span class="text-xs text-gray-400">Loading schema...</span>
+          {:else if schemaError}
+            <span class="text-xs text-red-500">Schema error</span>
+            <button
+              class="cursor-pointer rounded border-none bg-yellow-500 px-2 py-1 text-xs text-white hover:bg-yellow-600"
+              onclick={loadSchema}
+            >
+              Retry
+            </button>
+          {:else if schema}
+            {#each schema.tables.filter((table) => table.showInActions).slice(0, 3) as table}
+              <button
+                class="cursor-pointer rounded border-none bg-green-500 px-2 py-1 text-xs text-white hover:bg-green-600"
+                onclick={() => insertSelectAll(table.name)}
+                title="SELECT * FROM {table.name}"
+              >
+                {table.name}
+              </button>
+            {/each}
+            {#if schema.tables.filter((table) => table.showInActions).length > 4}
+              <span class="text-xs text-gray-400"
+                >+{schema.tables.filter((table) => table.showInActions).length - 4} more</span
+              >
+            {/if}
+          {/if}
+        {/if}
       </div>
     </div>
 
-    <!-- Monaco Editor Component -->
     <MonacoEditor
       bind:this={monacoEditor}
       bind:value
@@ -180,8 +217,6 @@
       minimap={false}
       autoFormat={true}
       {keyboardShortcuts}
-      onKeyboardShortcut={handleKeyboardShortcut}
-      onchange={handleValueChange}
     />
   </div>
 </div>

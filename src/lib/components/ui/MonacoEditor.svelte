@@ -41,7 +41,6 @@
   let monacoInitialized = false;
   let initializationAttempts = $state(0);
 
-  // Expose methods for parent components
   export function insertText(text: string) {
     if (useMonaco && editor) {
       const position = editor.getPosition();
@@ -81,28 +80,16 @@
     }
   }
 
-  export function formatCode() {
-    if (useMonaco && editor && monaco) {
-      editor.getAction('editor.action.formatDocument').run();
-    }
-  }
-
-  export function focus() {
-    if (useMonaco && editor) {
-      editor.focus();
-    } else if (textareaElement) {
-      textareaElement.focus();
-    }
-  }
-
-  export function getIsMonacoLoaded() {
-    return useMonaco;
-  }
-
-  export function retryMonacoInitialization() {
+  function retryMonacoInitialization() {
     initializationAttempts = 0;
     monacoInitialized = false;
     setTimeout(tryInitializeMonaco, 100);
+  }
+
+  function formatCode() {
+    if (useMonaco && editor && monaco) {
+      editor.getAction('editor.action.formatDocument').run();
+    }
   }
 
   async function tryInitializeMonaco() {
@@ -111,8 +98,6 @@
     initializationAttempts++;
 
     try {
-      console.log(`Monaco initialization attempt ${initializationAttempts}...`);
-
       // Wait for container to be properly rendered and visible
       if (!editorContainer) {
         console.log('Editor container not ready');
@@ -291,15 +276,17 @@
 <div class="flex items-center justify-between gap-2 border-t border-gray-300 bg-gray-50 p-2">
   <div class="flex items-center gap-2">
     <span class="text-xs text-gray-500">
-      {useMonaco ? `Monaco ${language.toUpperCase()} Editor` : `Basic ${language.toUpperCase()} Editor`}
+      {useMonaco
+        ? `Monaco ${language.toUpperCase()} Editor`
+        : `Basic ${language.toUpperCase()} Editor`}
     </span>
     {#if keyboardShortcuts.length > 0}
       <span class="text-xs text-gray-400">
-        • {keyboardShortcuts.map(s => s.key).join(', ')} shortcuts available
+        • {keyboardShortcuts.map((s) => s.key).join(', ')} shortcuts available
       </span>
     {/if}
   </div>
-  
+
   <div class="flex items-center gap-2">
     {#if useMonaco && autoFormat}
       <button
@@ -309,7 +296,7 @@
         Format
       </button>
     {/if}
-    
+
     {#if !useMonaco && initializationAttempts < 3}
       <button
         class="cursor-pointer rounded border-none bg-yellow-500 px-3 py-1.5 text-xs text-white hover:bg-yellow-600"

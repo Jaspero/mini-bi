@@ -196,6 +196,62 @@ export interface QueryColumn {
   nullable: boolean;
 }
 
+// Database schema types
+export interface DatabaseSchema {
+  tables: TableSchema[];
+  views?: ViewSchema[];
+  functions?: FunctionSchema[];
+}
+
+export interface TableSchema {
+  name: string;
+  columns: ColumnSchema[];
+  primaryKeys?: string[];
+  foreignKeys?: ForeignKeySchema[];
+  indexes?: IndexSchema[];
+  showInActions?: boolean; // Flag to show in quick actions
+}
+
+export interface ViewSchema {
+  name: string;
+  columns: ColumnSchema[];
+  definition: string;
+}
+
+export interface ColumnSchema {
+  name: string;
+  type: string;
+  nullable: boolean;
+  primary?: boolean;
+  defaultValue?: any;
+  comment?: string;
+}
+
+export interface ForeignKeySchema {
+  columnName: string;
+  referencedTable: string;
+  referencedColumn: string;
+}
+
+export interface IndexSchema {
+  name: string;
+  columns: string[];
+  unique: boolean;
+}
+
+export interface FunctionSchema {
+  name: string;
+  parameters: FunctionParameter[];
+  returnType: string;
+  description?: string;
+}
+
+export interface FunctionParameter {
+  name: string;
+  type: string;
+  optional: boolean;
+}
+
 // Request/Response types
 export interface CreateDashboardRequest {
   name: string;
@@ -242,6 +298,9 @@ export interface IDashboardService {
   executeQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult>;
   validateQuery(sql: string): Promise<{ isValid: boolean; error?: string }>;
   getQueryPreview(sql: string, limit?: number): Promise<QueryResult>;
+
+  // Schema operations
+  getDatabaseSchema(): Promise<DatabaseSchema>;
 
   // Global Query Management
   loadGlobalQueries(): Promise<Query[]>;

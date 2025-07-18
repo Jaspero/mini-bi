@@ -44,7 +44,18 @@ export type {
   DashboardEvent,
   BlockMoveEvent,
   BlockResizeEvent,
-  Query
+  Query,
+  QueryResult,
+  QueryColumn,
+  QueryParameter,
+  DatabaseSchema,
+  TableSchema,
+  ViewSchema,
+  ColumnSchema,
+  ForeignKeySchema,
+  IndexSchema,
+  FunctionSchema,
+  FunctionParameter
 } from './types/index.js';
 
 // Utilities

@@ -10,7 +10,10 @@ import type {
   QueryResult,
   QueryColumn,
   Query,
-  DataSourceConfig
+  DataSourceConfig,
+  DatabaseSchema,
+  TableSchema,
+  ColumnSchema
 } from '../types/index.js';
 
 export class MockDashboardService implements IDashboardService {
@@ -621,5 +624,212 @@ export class MockDashboardService implements IDashboardService {
 
   async getGlobalQuery(queryId: string): Promise<Query | null> {
     return this.globalQueries.find((q) => q.id === queryId) || null;
+  }
+
+  async getDatabaseSchema(): Promise<DatabaseSchema> {
+    await this.delay(200);
+    
+    return {
+      tables: [
+        {
+          name: 'users',
+          columns: [
+            { name: 'id', type: 'INTEGER', nullable: false, primary: true },
+            { name: 'username', type: 'VARCHAR(255)', nullable: false },
+            { name: 'email', type: 'VARCHAR(255)', nullable: false },
+            { name: 'created_at', type: 'TIMESTAMP', nullable: false },
+            { name: 'updated_at', type: 'TIMESTAMP', nullable: true },
+            { name: 'is_active', type: 'BOOLEAN', nullable: false, defaultValue: true }
+          ],
+          primaryKeys: ['id'],
+          indexes: [
+            { name: 'idx_users_email', columns: ['email'], unique: true },
+            { name: 'idx_users_username', columns: ['username'], unique: true }
+          ],
+          showInActions: true
+        },
+        {
+          name: 'products',
+          columns: [
+            { name: 'id', type: 'INTEGER', nullable: false, primary: true },
+            { name: 'name', type: 'VARCHAR(255)', nullable: false },
+            { name: 'price', type: 'DECIMAL(10,2)', nullable: false },
+            { name: 'category_id', type: 'INTEGER', nullable: true },
+            { name: 'description', type: 'TEXT', nullable: true },
+            { name: 'stock_quantity', type: 'INTEGER', nullable: false, defaultValue: 0 },
+            { name: 'created_at', type: 'TIMESTAMP', nullable: false },
+            { name: 'updated_at', type: 'TIMESTAMP', nullable: true }
+          ],
+          primaryKeys: ['id'],
+          foreignKeys: [
+            { columnName: 'category_id', referencedTable: 'categories', referencedColumn: 'id' }
+          ],
+          indexes: [
+            { name: 'idx_products_category', columns: ['category_id'], unique: false },
+            { name: 'idx_products_name', columns: ['name'], unique: false }
+          ],
+          showInActions: true
+        },
+        {
+          name: 'orders',
+          columns: [
+            { name: 'id', type: 'INTEGER', nullable: false, primary: true },
+            { name: 'user_id', type: 'INTEGER', nullable: false },
+            { name: 'total_amount', type: 'DECIMAL(10,2)', nullable: false },
+            { name: 'status', type: 'VARCHAR(50)', nullable: false },
+            { name: 'order_date', type: 'TIMESTAMP', nullable: false },
+            { name: 'shipped_date', type: 'TIMESTAMP', nullable: true },
+            { name: 'delivery_address', type: 'TEXT', nullable: true }
+          ],
+          primaryKeys: ['id'],
+          foreignKeys: [
+            { columnName: 'user_id', referencedTable: 'users', referencedColumn: 'id' }
+          ],
+          indexes: [
+            { name: 'idx_orders_user', columns: ['user_id'], unique: false },
+            { name: 'idx_orders_status', columns: ['status'], unique: false },
+            { name: 'idx_orders_date', columns: ['order_date'], unique: false }
+          ],
+          showInActions: true
+        },
+        {
+          name: 'categories',
+          columns: [
+            { name: 'id', type: 'INTEGER', nullable: false, primary: true },
+            { name: 'name', type: 'VARCHAR(255)', nullable: false },
+            { name: 'description', type: 'TEXT', nullable: true },
+            { name: 'parent_id', type: 'INTEGER', nullable: true },
+            { name: 'created_at', type: 'TIMESTAMP', nullable: false }
+          ],
+          primaryKeys: ['id'],
+          foreignKeys: [
+            { columnName: 'parent_id', referencedTable: 'categories', referencedColumn: 'id' }
+          ],
+          indexes: [
+            { name: 'idx_categories_name', columns: ['name'], unique: true },
+            { name: 'idx_categories_parent', columns: ['parent_id'], unique: false }
+          ],
+          showInActions: false
+        },
+        {
+          name: 'order_items',
+          columns: [
+            { name: 'id', type: 'INTEGER', nullable: false, primary: true },
+            { name: 'order_id', type: 'INTEGER', nullable: false },
+            { name: 'product_id', type: 'INTEGER', nullable: false },
+            { name: 'quantity', type: 'INTEGER', nullable: false },
+            { name: 'unit_price', type: 'DECIMAL(10,2)', nullable: false },
+            { name: 'total_price', type: 'DECIMAL(10,2)', nullable: false }
+          ],
+          primaryKeys: ['id'],
+          foreignKeys: [
+            { columnName: 'order_id', referencedTable: 'orders', referencedColumn: 'id' },
+            { columnName: 'product_id', referencedTable: 'products', referencedColumn: 'id' }
+          ],
+          indexes: [
+            { name: 'idx_order_items_order', columns: ['order_id'], unique: false },
+            { name: 'idx_order_items_product', columns: ['product_id'], unique: false }
+          ],
+          showInActions: false
+        },
+        {
+          name: 'monthly_sales',
+          columns: [
+            { name: 'id', type: 'INTEGER', nullable: false, primary: true },
+            { name: 'month', type: 'VARCHAR(50)', nullable: false },
+            { name: 'sales', type: 'DECIMAL(10,2)', nullable: false },
+            { name: 'target', type: 'DECIMAL(10,2)', nullable: false },
+            { name: 'year', type: 'INTEGER', nullable: false }
+          ],
+          primaryKeys: ['id'],
+          indexes: [
+            { name: 'idx_monthly_sales_month_year', columns: ['month', 'year'], unique: true }
+          ],
+          showInActions: true
+        },
+        {
+          name: 'campaign_stats',
+          columns: [
+            { name: 'id', type: 'INTEGER', nullable: false, primary: true },
+            { name: 'campaign_name', type: 'VARCHAR(255)', nullable: false },
+            { name: 'impressions', type: 'INTEGER', nullable: false },
+            { name: 'clicks', type: 'INTEGER', nullable: false },
+            { name: 'conversions', type: 'INTEGER', nullable: false },
+            { name: 'spend', type: 'DECIMAL(10,2)', nullable: false },
+            { name: 'created_at', type: 'TIMESTAMP', nullable: false }
+          ],
+          primaryKeys: ['id'],
+          indexes: [
+            { name: 'idx_campaign_stats_name', columns: ['campaign_name'], unique: false }
+          ],
+          showInActions: false
+        }
+      ],
+      views: [
+        {
+          name: 'user_order_summary',
+          columns: [
+            { name: 'user_id', type: 'INTEGER', nullable: false },
+            { name: 'username', type: 'VARCHAR(255)', nullable: false },
+            { name: 'total_orders', type: 'INTEGER', nullable: false },
+            { name: 'total_spent', type: 'DECIMAL(10,2)', nullable: false },
+            { name: 'avg_order_value', type: 'DECIMAL(10,2)', nullable: false }
+          ],
+          definition: `
+            SELECT 
+              u.id as user_id,
+              u.username,
+              COUNT(o.id) as total_orders,
+              SUM(o.total_amount) as total_spent,
+              AVG(o.total_amount) as avg_order_value
+            FROM users u
+            LEFT JOIN orders o ON u.id = o.user_id
+            GROUP BY u.id, u.username
+          `
+        },
+        {
+          name: 'product_sales_summary',
+          columns: [
+            { name: 'product_id', type: 'INTEGER', nullable: false },
+            { name: 'product_name', type: 'VARCHAR(255)', nullable: false },
+            { name: 'category_name', type: 'VARCHAR(255)', nullable: true },
+            { name: 'total_sold', type: 'INTEGER', nullable: false },
+            { name: 'revenue', type: 'DECIMAL(10,2)', nullable: false }
+          ],
+          definition: `
+            SELECT 
+              p.id as product_id,
+              p.name as product_name,
+              c.name as category_name,
+              SUM(oi.quantity) as total_sold,
+              SUM(oi.total_price) as revenue
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.id
+            LEFT JOIN order_items oi ON p.id = oi.product_id
+            GROUP BY p.id, p.name, c.name
+          `
+        }
+      ],
+      functions: [
+        {
+          name: 'calculate_order_total',
+          parameters: [
+            { name: 'order_id', type: 'INTEGER', optional: false }
+          ],
+          returnType: 'DECIMAL(10,2)',
+          description: 'Calculates the total amount for a given order'
+        },
+        {
+          name: 'get_user_stats',
+          parameters: [
+            { name: 'user_id', type: 'INTEGER', optional: false },
+            { name: 'start_date', type: 'DATE', optional: true },
+            { name: 'end_date', type: 'DATE', optional: true }
+          ],
+          returnType: 'TABLE',
+          description: 'Returns comprehensive statistics for a user within a date range'
+        }
+      ]
+    };
   }
 }

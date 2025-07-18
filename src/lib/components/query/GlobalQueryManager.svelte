@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Query, IDashboardService } from '../../types/index.js';
+  import type { Query, IDashboardService } from '../../types/index.ts';
   import SQLEditor from './SQLEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 
@@ -24,11 +24,9 @@
   let error = $state('');
   let showQueryEditor = $state(false);
 
-  // Confirmation modal state
   let showConfirmModal = $state(false);
   let queryToDelete: Query | null = $state(null);
 
-  // Form state
   let name = $state('');
   let description = $state('');
   let sql = $state('');
@@ -179,7 +177,6 @@
   }
 </script>
 
-<!-- Query Manager Content -->
 <div class="flex h-full flex-col">
   {#if error}
     <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-red-800">{error}</div>
@@ -193,9 +190,7 @@
   {/if}
 
   {#if showQueryEditor}
-    <!-- Query Editor Form -->
     <div class="flex h-full flex-col">
-      <!-- Fixed Header -->
       <div class="mb-4 flex flex-shrink-0 items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-900">
           {selectedQuery ? 'Edit Query' : 'New Query'}
@@ -205,7 +200,6 @@
         </button>
       </div>
 
-      <!-- Scrollable Content Area -->
       <div class="-mr-2 flex-1 overflow-y-auto pr-2">
         <div class="space-y-4">
           <div class="grid grid-cols-1 gap-4">
@@ -245,20 +239,18 @@
               <SQLEditor
                 bind:value={sql}
                 disabled={loading}
-                on:change={(e) => (sql = e.detail.value)}
-                on:execute={() => testQuery()}
-                on:save={() => saveQuery()}
-                on:open-schema={(e) => onOpenSchema()}
+                {dashboardService}
+                onExecute={testQuery}
+                onSave={saveQuery}
+                {onOpenSchema}
               />
             </div>
           </div>
 
-          <!-- Add some bottom padding to ensure content doesn't get hidden behind the footer -->
           <div class="h-4"></div>
         </div>
       </div>
 
-      <!-- Fixed Footer -->
       <div class="flex flex-shrink-0 justify-end space-x-3 border-t border-gray-200 bg-white pt-4">
         <button
           type="button"
@@ -287,7 +279,6 @@
       </div>
     </div>
   {:else}
-    <!-- Query List -->
     <div class="flex h-full flex-col">
       <div class="mb-4 flex flex-shrink-0 items-center justify-between">
         <h3 class="text-lg font-medium text-gray-900">Queries ({queries.length})</h3>
