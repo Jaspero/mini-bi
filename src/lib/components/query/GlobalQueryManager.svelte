@@ -1,16 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { Query, IDashboardService } from '../../types/index.js';
-  import SQLEditor from './SQLEditor_Reliable.svelte';
+  import SQLEditor from './SQLEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
-
-  interface Props {
-    dashboardService: IDashboardService;
-    onQueryCreated?: (query: Query) => void;
-    onQueryUpdated?: (query: Query) => void;
-    onQueryDeleted?: (queryId: string) => void;
-    onOpenSchema?: () => void;
-  }
 
   let { 
     dashboardService,
@@ -18,7 +10,13 @@
     onQueryUpdated = () => {},
     onQueryDeleted = () => {},
     onOpenSchema = () => {}
-  }: Props = $props();
+  }: {
+    dashboardService: IDashboardService;
+    onQueryCreated?: (query: Query) => void;
+    onQueryUpdated?: (query: Query) => void;
+    onQueryDeleted?: (queryId: string) => void;
+    onOpenSchema?: () => void;
+  } = $props();
 
   let queries: Query[] = $state([]);
   let selectedQuery: Query | null = $state(null);
