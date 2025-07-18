@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Query, IDashboardService } from '../../types/index.ts';
+  import type { Query, IDashboardService, QueryParameter } from '../../types/index.ts';
   import SQLEditor from './SQLEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 
@@ -30,6 +30,7 @@
   let name = $state('');
   let description = $state('');
   let sql = $state('');
+  let parameters: QueryParameter[] = $state([]);
 
   onMount(async () => {
     await loadQueries();
@@ -59,6 +60,7 @@
     name = query.name;
     description = query.description || '';
     sql = query.sql;
+    parameters = query.parameters ? [...query.parameters] : [];
     showQueryEditor = true;
   }
 
@@ -66,6 +68,7 @@
     name = '';
     description = '';
     sql = '';
+    parameters = [];
     showQueryEditor = false;
     selectedQuery = null;
     error = '';
@@ -87,6 +90,7 @@
           name: name.trim(),
           description: description.trim(),
           sql: sql.trim(),
+          parameters: parameters,
           isActive: true,
           lastModified: new Date()
         });
@@ -98,7 +102,7 @@
           name: name.trim(),
           description: description.trim(),
           sql: sql.trim(),
-          parameters: [],
+          parameters: parameters,
           isActive: true,
           lastModified: new Date()
         });
@@ -175,6 +179,29 @@
       loading = false;
     }
   }
+
+  function addParameter() {
+    parameters = [...parameters, {
+      name: '',
+      type: 'string',
+      defaultValue: '',
+      description: ''
+    }];
+  }
+
+  function removeParameter(index: number) {
+    parameters = parameters.filter((_, i) => i !== index);
+  }
+
+  function updateParameter(index: number, field: keyof QueryParameter, value: any) {
+    parameters = parameters.map((param, i) => 
+      i === index ? { ...param, [field]: value } : param
+    );
+  }
+
+  function getVariableNames(): string[] {
+    return parameters.map(p => p.name).filter(name => name.trim() !== '');
+  }
 </script>
 
 <div class="flex h-full flex-col">
@@ -231,6 +258,101 @@
             </div>
           </div>
 
+          <!-- Parameters Section -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="block text-sm font-medium text-gray-700">Variables</label>
+              <button
+                type="button"
+                class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                onclick={addParameter}
+                disabled={loading}
+              >
+                <span class="mr-1">+</span>
+                Add Variable
+              </button>
+            </div>
+
+            {#if parameters.length > 0}
+              <div class="space-y-3">
+                {#each parameters as param, index}
+                  <div class="rounded-md border border-gray-200 bg-gray-50 p-3">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <div class="space-y-1">
+                        <label class="block text-xs font-medium text-gray-600">Variable Name</label>
+                        <input
+                          type="text"
+                          value={param.name}
+                          oninput={(e) => updateParameter(index, 'name', e.target.value)}
+                          placeholder="variableName"
+                          disabled={loading}
+                          class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
+                        />
+                      </div>
+
+                      <div class="space-y-1">
+                        <label class="block text-xs font-medium text-gray-600">Type</label>
+                        <select
+                          value={param.type}
+                          onchange={(e) => updateParameter(index, 'type', e.target.value)}
+                          disabled={loading}
+                          class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
+                        >
+                          <option value="string">String</option>
+                          <option value="number">Number</option>
+                          <option value="boolean">Boolean</option>
+                          <option value="date">Date</option>
+                          <option value="list">List</option>
+                        </select>
+                      </div>
+
+                      <div class="space-y-1">
+                        <label class="block text-xs font-medium text-gray-600">Default Value</label>
+                        <input
+                          type="text"
+                          value={param.defaultValue || ''}
+                          oninput={(e) => updateParameter(index, 'defaultValue', e.target.value)}
+                          placeholder="Default value"
+                          disabled={loading}
+                          class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
+                        />
+                      </div>
+
+                      <div class="flex items-center justify-end">
+                        <button
+                          type="button"
+                          class="inline-flex items-center rounded-md border border-red-300 bg-white px-2 py-1 text-sm font-medium text-red-700 hover:bg-red-50"
+                          onclick={() => removeParameter(index)}
+                          disabled={loading}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="mt-3">
+                      <div class="space-y-1">
+                        <label class="block text-xs font-medium text-gray-600">Description</label>
+                        <input
+                          type="text"
+                          value={param.description || ''}
+                          oninput={(e) => updateParameter(index, 'description', e.target.value)}
+                          placeholder="Variable description"
+                          disabled={loading}
+                          class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {:else}
+              <div class="text-center py-4">
+                <p class="text-sm text-gray-500">No variables defined. Variables can be used in SQL queries with {`{{variableName}}`} syntax.</p>
+              </div>
+            {/if}
+          </div>
+
           <div class="space-y-2">
             <label for="query-sql" class="block text-sm font-medium text-gray-700"
               >SQL Query *</label
@@ -240,6 +362,7 @@
                 bind:value={sql}
                 disabled={loading}
                 {dashboardService}
+                variables={getVariableNames()}
                 onExecute={testQuery}
                 onSave={saveQuery}
                 {onOpenSchema}

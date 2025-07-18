@@ -13,6 +13,7 @@
     lineNumbers = 'on',
     minimap = false,
     autoFormat = false,
+    variables = [],
     onKeyboardShortcut = () => {},
     keyboardShortcuts = []
   }: {
@@ -26,6 +27,7 @@
     lineNumbers?: 'on' | 'off' | 'relative' | 'interval';
     minimap?: boolean;
     autoFormat?: boolean;
+    variables?: string[];
     onKeyboardShortcut?: (shortcut: string) => void;
     keyboardShortcuts?: Array<{
       key: string;
@@ -169,6 +171,53 @@
           });
         }
       });
+
+      // Add variable autocompletion
+      if (language === 'sql' && variables.length > 0) {
+        monaco.languages.registerCompletionItemProvider('sql', {
+          provideCompletionItems: (model: any, position: any) => {
+            const word = model.getWordUntilPosition(position);
+            const range = {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: word.startColumn,
+              endColumn: word.endColumn
+            };
+
+            // Check if we're inside {{ }} brackets
+            const lineContent = model.getLineContent(position.lineNumber);
+            const beforeCursor = lineContent.substring(0, position.column - 1);
+            const afterCursor = lineContent.substring(position.column - 1);
+            
+            const openBrackets = (beforeCursor.match(/\{\{/g) || []).length;
+            const closeBrackets = (beforeCursor.match(/\}\}/g) || []).length;
+            const isInsideBrackets = openBrackets > closeBrackets;
+
+            if (isInsideBrackets) {
+              return {
+                suggestions: variables.map((variable) => ({
+                  label: variable,
+                  kind: monaco.languages.CompletionItemKind.Variable,
+                  documentation: `Variable: ${variable}`,
+                  insertText: variable,
+                  range: range
+                }))
+              };
+            }
+
+            // If not inside brackets, suggest variable syntax
+            return {
+              suggestions: variables.map((variable) => ({
+                label: `{{${variable}}}`,
+                kind: monaco.languages.CompletionItemKind.Variable,
+                documentation: `Insert variable: ${variable}`,
+                insertText: `{{${variable}}}`,
+                range: range
+              }))
+            };
+          }
+        });
+      }
 
       useMonaco = true;
       monacoInitialized = true;

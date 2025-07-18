@@ -176,9 +176,9 @@ export interface Query {
 
 export interface QueryParameter {
   name: string;
-  type: 'string' | 'number' | 'date' | 'boolean';
+  type: 'string' | 'number' | 'date' | 'boolean' | 'list';
   defaultValue?: any;
-  required: boolean;
+  required?: boolean;
   description?: string;
 }
 
