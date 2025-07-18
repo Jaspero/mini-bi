@@ -308,6 +308,9 @@ export interface IDashboardService {
   updateGlobalQuery(queryId: string, updates: Partial<Query>): Promise<Query>;
   deleteGlobalQuery(queryId: string): Promise<void>;
   getGlobalQuery(queryId: string): Promise<Query | null>;
+
+  // AI Operations
+  generateSQLFromText(description: string): Promise<string>;
 }
 
 // Events
