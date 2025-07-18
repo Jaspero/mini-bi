@@ -44,7 +44,7 @@
     try {
       loading = true;
       error = '';
-      
+
       const blockConfig = {
         ...block.config,
         dataSource: block.dataSource
@@ -166,7 +166,7 @@
 
 <div class="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-sm">
   <div
-    class="flex items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-2 py-2 sm:gap-4 sm:px-4 sm:py-3 h-[50px]"
+    class="flex h-[50px] items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-2 py-2 sm:gap-4 sm:px-4 sm:py-3"
   >
     <div class="flex min-w-0 flex-1 flex-col gap-1">
       <h3 class="m-0 truncate text-sm font-semibold text-gray-900 sm:text-base">{block.title}</h3>
@@ -182,7 +182,7 @@
         />
       {/if}
       <button
-        class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600 flex"
+        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
         class:hidden={!showControls}
         onclick={handleEdit}
         aria-label="Edit table"
@@ -190,7 +190,7 @@
         <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
       </button>
       <button
-        class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50 flex"
+        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
         class:hidden={!showControls}
         onclick={refresh}
         disabled={loading}
@@ -199,7 +199,7 @@
         <span class="material-symbols-outlined text-sm sm:text-base">refresh</span>
       </button>
       <button
-        class="touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 flex"
+        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
         class:hidden={!showControls}
         onclick={handleDelete}
         aria-label="Delete table"

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import loader from '@monaco-editor/loader';
 
   let {
     value = $bindable(''),
@@ -35,15 +36,15 @@
 
   let editorContainer = $state() as HTMLElement;
   let textareaElement = $state() as HTMLTextAreaElement;
-  let editor: any = null;
-  let monaco: any = null;
+  let editor: any | null = null;
   let useMonaco = $state(false);
+  let monaco: any | null = null;
   let monacoInitialized = false;
   let initializationAttempts = $state(0);
 
   export function insertText(text: string) {
     if (useMonaco && editor) {
-      const position = editor.getPosition();
+      const position = editor.getPosition()!;
       editor.executeEdits('', [
         {
           range: new monaco.Range(
@@ -88,7 +89,7 @@
 
   function formatCode() {
     if (useMonaco && editor && monaco) {
-      editor.getAction('editor.action.formatDocument').run();
+      editor.getAction('editor.action.formatDocument')!.run();
     }
   }
 
@@ -111,7 +112,7 @@
         return;
       }
 
-      monaco = await import('monaco-editor');
+      monaco = await loader.init()
 
       // Create editor
       editor = monaco.editor.create(editorContainer, {
@@ -130,7 +131,7 @@
 
       // Listen for changes
       editor.onDidChangeModelContent(() => {
-        const newValue = editor.getValue();
+        const newValue = editor!.getValue();
         value = newValue;
       });
 
@@ -162,7 +163,7 @@
         });
 
         if (keyCode) {
-          editor.addCommand(keyMod | keyCode, () => {
+          editor!.addCommand(keyMod | keyCode, () => {
             shortcut.callback();
             onKeyboardShortcut(shortcut.command);
           });
@@ -242,7 +243,7 @@
   }
 </script>
 
-<div class="relative flex-1 overflow-hidden">
+<div class="relative h-full flex-1 overflow-hidden">
   <!-- Always show textarea (Monaco will overlay when ready) -->
   <textarea
     bind:this={textareaElement}

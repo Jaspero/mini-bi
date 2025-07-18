@@ -2,6 +2,7 @@
   import { onDestroy } from 'svelte';
   import type { Block, Query } from '../../types/index.ts';
   import Modal from '../ui/Modal.svelte';
+  import MonacoEditor from '../ui/MonacoEditor.svelte';
 
   let {
     block = null,
@@ -26,6 +27,7 @@
   let selectedQueryId: string = $state('');
   let draggedIndex: number | null = $state(null);
   let dragOverIndex: number | null = $state(null);
+  let staticDataJson: string = $state('[]');
 
   $effect(() => {
     if (block && isOpen && (!editedBlock || editedBlock.id !== block.id)) {
@@ -75,6 +77,9 @@
       // Sync reactive variables with editedBlock
       dataSourceType = editedBlock.dataSource.type;
       selectedQueryId = editedBlock.dataSource.queryId || '';
+      staticDataJson = editedBlock.dataSource.staticData
+        ? JSON.stringify(editedBlock.dataSource.staticData, null, 2)
+        : '[]';
 
       ckeditorLoaded = false;
       ckeditorError = false;
@@ -91,27 +96,33 @@
     }
   });
 
-  // $effect(() => {
-  //   if (editedBlock && dataSourceType) {
-  //     editedBlock.dataSource = {
-  //       ...editedBlock.dataSource,
-  //       type: dataSourceType,
-  //       queryId: selectedQueryId || undefined
-  //     };
-  //   }
-  // });
-
-  // Sync data source changes back to editedBlock when user changes the form
   function updateDataSource() {
     if (editedBlock?.dataSource) {
       editedBlock.dataSource.type = dataSourceType;
       if (dataSourceType === 'query') {
         editedBlock.dataSource.queryId = selectedQueryId;
+        delete editedBlock.dataSource.staticData;
+      } else if (dataSourceType === 'static') {
+        try {
+          editedBlock.dataSource.staticData = JSON.parse(staticDataJson);
+        } catch (e) {
+          // Keep existing static data if JSON is invalid
+          console.warn('Invalid JSON in static data:', e);
+        }
+        delete editedBlock.dataSource.queryId;
       } else {
         delete editedBlock.dataSource.queryId;
+        delete editedBlock.dataSource.staticData;
       }
     }
   }
+
+  // Watch for changes in static data JSON and update the data source
+  $effect(() => {
+    if (dataSourceType === 'static' && staticDataJson) {
+      updateDataSource();
+    }
+  });
 
   async function initializeCKEditor() {
     if (typeof window === 'undefined') return;
@@ -368,6 +379,40 @@
                 No active queries available. Create queries in the Query Manager.
               </p>
             {/if}
+          </div>
+        {/if}
+
+        {#if dataSourceType === 'static'}
+          <div class="space-y-2">
+            <label for="static-data" class="block text-sm font-medium text-gray-700"
+              >Static Data (JSON)</label
+            >
+            <div class="h-[300px] w-full overflow-hidden rounded-md border border-gray-300">
+              <MonacoEditor
+                bind:value={staticDataJson}
+                language="json"
+                theme="vs"
+                placeholder="Enter JSON data here..."
+                fontSize={12}
+                minimap={false}
+                autoFormat={true}
+                onKeyboardShortcut={(shortcut) => {
+                  if (shortcut === 'save') {
+                    updateDataSource();
+                  }
+                }}
+                keyboardShortcuts={[
+                  {
+                    key: 'Ctrl+S',
+                    command: 'save',
+                    callback: () => updateDataSource()
+                  }
+                ]}
+              />
+            </div>
+            <p class="text-xs text-gray-500">
+              Enter your static data as valid JSON. Press Ctrl+S to save changes.
+            </p>
           </div>
         {/if}
       {/if}
