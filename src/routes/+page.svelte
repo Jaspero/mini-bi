@@ -86,9 +86,17 @@
     showSchemaSidebar = false;
   }
 
-  function handleOpenSchema(event: CustomEvent) {
-    schemaData = event.detail;
+  function toggleSchemaSidebar() {
+    showSchemaSidebar = !showSchemaSidebar;
+  }
+
+  function handleOpenSchema(data: any) {
+    schemaData = data;
     showSchemaSidebar = true;
+  }
+
+  function handleToggleSchema() {
+    toggleSchemaSidebar();
   }
 
   function handleSchemaInsertText(event: CustomEvent<{ text: string }>) {
@@ -172,6 +180,7 @@
       onQueryUpdated={handleQueryUpdated}
       onQueryDeleted={handleQueryDeleted}
       onOpenSchema={handleOpenSchema}
+      onToggleSchema={handleToggleSchema}
     />
   </Sidebar>
 

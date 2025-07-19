@@ -9,13 +9,15 @@
     onQueryCreated = () => {},
     onQueryUpdated = () => {},
     onQueryDeleted = () => {},
-    onOpenSchema = () => {}
+    onOpenSchema = () => {},
+    onToggleSchema = () => {}
   }: {
     dashboardService: IDashboardService;
     onQueryCreated?: (query: Query) => void;
     onQueryUpdated?: (query: Query) => void;
     onQueryDeleted?: (queryId: string) => void;
     onOpenSchema?: () => void;
+    onToggleSchema?: () => void;
   } = $props();
 
   let queries: Query[] = $state([]);
@@ -404,6 +406,7 @@
                 onExecute={testQuery}
                 onSave={saveQuery}
                 {onOpenSchema}
+                {onToggleSchema}
               />
             </div>
           </div>

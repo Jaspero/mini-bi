@@ -12,7 +12,8 @@
     onChange = () => {},
     onExecute = () => {},
     onSave = () => {},
-    onOpenSchema = (schemaData: any) => {}
+    onOpenSchema = (schemaData: any) => {},
+    onToggleSchema = () => {}
   }: {
     value?: string;
     disabled?: boolean;
@@ -22,6 +23,7 @@
     onExecute?: () => void;
     onSave?: () => void;
     onOpenSchema?: (schemaData: any) => void;
+    onToggleSchema?: () => void;
   } = $props();
 
   let monacoEditor: any = $state(null);
@@ -164,6 +166,13 @@
   <div class="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
     <div class="flex flex-wrap items-center gap-1 sm:gap-2">
       {#if dashboardService}
+        <button
+          class="cursor-pointer rounded border-none bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600"
+          onclick={onToggleSchema}
+          title="Toggle Database Schema"
+        >
+          📊 Schema
+        </button>
         <button
           class="cursor-pointer rounded border-none bg-purple-500 px-3 py-1.5 text-xs text-white hover:bg-purple-600"
           onclick={openAIModal}
