@@ -7,6 +7,7 @@
   interface Props {
     block: Block;
     dashboardService: IDashboardService;
+    filterParams?: Record<string, any>;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onBlockUpdate?: (block: Block) => void;
     onBlockEdit?: (block: Block) => void;
@@ -17,6 +18,7 @@
   let {
     block,
     dashboardService,
+    filterParams = {},
     onBlockUpdate = () => {},
     onBlockEdit = () => {},
     onBlockDeleteRequest = () => {},
@@ -56,6 +58,17 @@
     }
   });
 
+  // Reload data when filter parameters change
+  $effect(() => {
+    if (filterParams) {
+      loadData().then(() => {
+        if (chart && data) {
+          updateChart();
+        }
+      });
+    }
+  });
+
   async function loadData() {
     try {
       loading = true;
@@ -66,7 +79,7 @@
         dataSource: block.dataSource
       };
 
-      data = await dashboardService.loadBlockData(block.id, block.type, blockConfig);
+      data = await dashboardService.loadBlockData(block.id, block.type, blockConfig, block.dataSource, filterParams);
       loading = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load data';

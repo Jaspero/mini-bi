@@ -10,6 +10,7 @@
     dashboardService,
     editable = true,
     editMode = false,
+    filterParams = {},
     onBlockMoved = () => {},
     onBlockResized = () => {},
     onDashboardUpdated = () => {},
@@ -20,6 +21,7 @@
     dashboardService: IDashboardService;
     editable?: boolean;
     editMode?: boolean; // Controls whether block edit controls are shown
+    filterParams?: Record<string, any>;
     onBlockMoved?: (blockId: string, position: Position) => void;
     onBlockResized?: (blockId: string, size: Size) => void;
     onDashboardUpdated?: (dashboard: Dashboard) => void;
@@ -473,6 +475,7 @@
             <TableBlock
               {block}
               {dashboardService}
+              {filterParams}
               showControls={editMode}
               {onBlockUpdate}
               {onBlockEdit}
@@ -482,6 +485,7 @@
             <GraphBlock
               {block}
               {dashboardService}
+              {filterParams}
               showControls={editMode}
               {onBlockUpdate}
               {onBlockEdit}

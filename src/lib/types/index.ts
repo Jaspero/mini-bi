@@ -296,7 +296,8 @@ export interface IDashboardService {
     blockId: string,
     blockType: BlockType,
     config: BlockConfig,
-    dataSource?: DataSourceConfig
+    dataSource?: DataSourceConfig,
+    filterParams?: Record<string, any>
   ): Promise<BlockData>;
 
   // Query operations

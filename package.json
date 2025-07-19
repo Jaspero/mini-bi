@@ -1,5 +1,5 @@
 {
-  "name": "mini-bi",
+  "name": "@jaspero/mini-bi",
   "version": "0.0.1",
   "scripts": {
     "dev": "vite dev",

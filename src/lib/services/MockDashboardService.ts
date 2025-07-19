@@ -6,6 +6,7 @@ import type {
   BlockData,
   BlockType,
   BlockConfig,
+  DataSourceConfig,
   QueryResult,
   QueryColumn,
   Query,
@@ -309,21 +310,31 @@ export class MockDashboardService implements IDashboardService {
     [
       'sales-query',
       [
-        { month: 'Jan', sales: 4000, target: 4500 },
-        { month: 'Feb', sales: 3000, target: 3500 },
-        { month: 'Mar', sales: 5000, target: 4800 },
-        { month: 'Apr', sales: 4500, target: 4200 },
-        { month: 'May', sales: 6000, target: 5500 },
-        { month: 'Jun', sales: 5500, target: 5800 }
+        { month: 'Jan', sales: 4000, target: 4500, region: 'North America', status: 'active' },
+        { month: 'Feb', sales: 3000, target: 3500, region: 'Europe', status: 'active' },
+        { month: 'Mar', sales: 5000, target: 4800, region: 'North America', status: 'active' },
+        { month: 'Apr', sales: 4500, target: 4200, region: 'Asia Pacific', status: 'active' },
+        { month: 'May', sales: 6000, target: 5500, region: 'North America', status: 'active' },
+        { month: 'Jun', sales: 5500, target: 5800, region: 'Europe', status: 'active' },
+        { month: 'Jul', sales: 7200, target: 6800, region: 'Asia Pacific', status: 'active' },
+        { month: 'Aug', sales: 6800, target: 7000, region: 'Latin America', status: 'active' },
+        { month: 'Sep', sales: 5800, target: 6200, region: 'North America', status: 'paused' },
+        { month: 'Oct', sales: 6200, target: 5900, region: 'Europe', status: 'active' },
+        { month: 'Nov', sales: 7800, target: 7500, region: 'Asia Pacific', status: 'active' },
+        { month: 'Dec', sales: 8200, target: 8000, region: 'North America', status: 'active' }
       ]
     ],
     [
       'campaign-query',
       [
-        { campaign_name: 'Summer Sale', impressions: 125000, clicks: 3200 },
-        { campaign_name: 'Back to School', impressions: 98000, clicks: 2800 },
-        { campaign_name: 'Holiday Promo', impressions: 156000, clicks: 4100 },
-        { campaign_name: 'New Year Deal', impressions: 87000, clicks: 2300 }
+        { campaign_name: 'Summer Sale', impressions: 125000, clicks: 3200, region: 'North America', status: 'active' },
+        { campaign_name: 'Back to School', impressions: 98000, clicks: 2800, region: 'Europe', status: 'active' },
+        { campaign_name: 'Holiday Promo', impressions: 156000, clicks: 4100, region: 'Asia Pacific', status: 'active' },
+        { campaign_name: 'New Year Deal', impressions: 87000, clicks: 2300, region: 'Latin America', status: 'completed' },
+        { campaign_name: 'Spring Collection', impressions: 112000, clicks: 3850, region: 'North America', status: 'active' },
+        { campaign_name: 'Flash Sale', impressions: 75000, clicks: 2100, region: 'Europe', status: 'paused' },
+        { campaign_name: 'Black Friday', impressions: 245000, clicks: 8900, region: 'North America', status: 'active' },
+        { campaign_name: 'Cyber Monday', impressions: 198000, clicks: 6200, region: 'Asia Pacific', status: 'active' }
       ]
     ]
   ]);
@@ -387,21 +398,23 @@ export class MockDashboardService implements IDashboardService {
   async loadBlockData(
     blockId: string,
     blockType: BlockType,
-    config: BlockConfig
+    config: BlockConfig,
+    dataSource?: DataSourceConfig,
+    filterParams?: Record<string, any>
   ): Promise<BlockData> {
     await this.delay(200);
 
     // Check if the block has a dataSource configuration
-    const dataSource = (config as any)?.dataSource;
+    const actualDataSource = dataSource || (config as any)?.dataSource;
 
     // If dataSource is query type, use query execution
-    if (dataSource?.type === 'query' && dataSource?.queryId) {
+    if (actualDataSource?.type === 'query' && actualDataSource?.queryId) {
       try {
-        const queryResult = await this.executeQuery(dataSource.queryId);
+        const queryResult = await this.executeQuery(actualDataSource.queryId, filterParams);
         return this.convertQueryResultToBlockData(queryResult);
       } catch (error) {
         console.warn(
-          `Failed to execute query ${dataSource.queryId}, falling back to mock data:`,
+          `Failed to execute query ${actualDataSource.queryId}, falling back to mock data:`,
           error
         );
         // Fall back to mock data if query fails
@@ -436,14 +449,19 @@ export class MockDashboardService implements IDashboardService {
     }
 
     // Get mock data for this query
-    const mockData = this.queryResults.get(queryId);
+    let mockData = this.queryResults.get(queryId);
     if (!mockData) {
       throw new Error(`No mock data available for query ${queryId}`);
     }
 
+    // Apply filter parameters to mock data
+    if (parameters && Object.keys(parameters).length > 0) {
+      mockData = this.applyFiltersToMockData([...mockData], parameters);
+    }
+
     // Convert to QueryResult format
     const columns: QueryColumn[] =
-      mockData.length > 0
+      mockData && mockData.length > 0
         ? Object.keys(mockData[0]).map((key) => ({
             name: key,
             type: typeof mockData[0][key] === 'number' ? 'number' : 'string',
@@ -451,7 +469,7 @@ export class MockDashboardService implements IDashboardService {
           }))
         : [];
 
-    const rows = mockData.map((row) => columns.map((col) => row[col.name]));
+    const rows = mockData ? mockData.map((row) => columns.map((col) => row[col.name])) : [];
 
     return {
       columns,
@@ -941,5 +959,75 @@ WHERE created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY);`;
         }
       ]
     };
+  }
+
+  /**
+   * Apply filter parameters to mock data
+   * This simulates how filters would affect query results in a real database
+   */
+  private applyFiltersToMockData(data: any[], filters: Record<string, any>): any[] {
+    return data.filter((row) => {
+      for (const [filterKey, filterValue] of Object.entries(filters)) {
+        if (filterValue === null || filterValue === undefined) {
+          continue; // Skip null/undefined filters
+        }
+
+        // Handle different filter types based on the value type and structure
+        if (Array.isArray(filterValue) && filterValue.length === 2) {
+          // Handle range filters (date_range, integer_range, float_range)
+          const [min, max] = filterValue;
+          
+          // Check if this is a date range
+          if (min instanceof Date && max instanceof Date) {
+            const rowValue = new Date(row[filterKey] || row.month || row.campaign_name);
+            if (rowValue >= min && rowValue <= max) {
+              continue;
+            } else {
+              return false;
+            }
+          } 
+          // Handle numeric ranges
+          else if (typeof min === 'number' && typeof max === 'number') {
+            const rowValue = Number(row[filterKey] || row.sales || row.impressions || 0);
+            if (rowValue >= min && rowValue <= max) {
+              continue;
+            } else {
+              return false;
+            }
+          }
+        } 
+        // Handle list filters (multiple selections)
+        else if (Array.isArray(filterValue)) {
+          const rowValue = row[filterKey] || row.region || row.status;
+          if (filterValue.includes(rowValue)) {
+            continue;
+          } else {
+            return false;
+          }
+        }
+        // Handle single value filters
+        else {
+          const rowValue = row[filterKey];
+          
+          // String filters (partial match)
+          if (typeof filterValue === 'string') {
+            const rowString = String(rowValue || '').toLowerCase();
+            const filterString = filterValue.toLowerCase();
+            if (rowString.includes(filterString)) {
+              continue;
+            } else {
+              return false;
+            }
+          }
+          // Exact value filters (boolean, number)
+          else if (rowValue === filterValue) {
+            continue;
+          } else {
+            return false;
+          }
+        }
+      }
+      return true; // Row passes all filters
+    });
   }
 }

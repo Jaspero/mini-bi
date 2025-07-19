@@ -247,8 +247,7 @@
                   </div>
                   <div class="mt-1 flex items-center gap-4 text-sm text-gray-500">
                     <span
-                      >Key: <code class="rounded bg-gray-100 px-1 py-0.5 text-xs"
-                        >{filter.key}</code
+                      >Key: <code class="rounded bg-gray-100 px-1 py-0.5 text-xs">{filter.key}</code
                       ></span
                     >
                     <span>Value: {formatFilterValue(filter)}</span>

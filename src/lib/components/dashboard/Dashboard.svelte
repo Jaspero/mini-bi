@@ -645,6 +645,7 @@
         {dashboardService}
         editable={editable && !editMode}
         editMode={editable && editMode}
+        filterParams={getActiveFilterValues()}
         {onDashboardUpdated}
         {onBlockMoved}
         {onBlockResized}
@@ -720,7 +721,7 @@
         onClose={closeFilterManager}
         dashboardId={dashboardId || ''}
         bind:filters
-        onFiltersChange={onFiltersChange}
+        {onFiltersChange}
       />
     </div>
   </div>
