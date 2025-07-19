@@ -12,7 +12,6 @@
   import DashboardCanvas from './DashboardCanvas.svelte';
   import BlockEditor from './BlockEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
-  import FilterManager from './FilterManager.svelte';
   import FilterSidebar from './FilterSidebar.svelte';
 
   interface Props {
@@ -56,7 +55,6 @@
 
   // Filter management state
   let filters: Filter[] = $state([]);
-  let showFilterManager = $state(false);
   let showFilterSidebar = $state(false);
 
   onMount(async () => {
@@ -130,10 +128,6 @@
   }
 
   // Filter management functions
-  function toggleFilterManager() {
-    showFilterManager = !showFilterManager;
-  }
-
   function toggleFilterSidebar() {
     showFilterSidebar = !showFilterSidebar;
   }
@@ -144,21 +138,19 @@
   }
 
   function onFilterValueChange(filterId: string, value: any) {
-    filters = filters.map(f => 
-      f.id === filterId ? { ...f, currentValue: value } : f
-    );
+    filters = filters.map((f) => (f.id === filterId ? { ...f, currentValue: value } : f));
     // Filters changing values doesn't mark as unsaved since these are runtime values
   }
 
   // Get active filter values for use in queries
   function getActiveFilterValues(): Record<string, any> {
-    const activeFilters = filters.filter(f => f.active);
+    const activeFilters = filters.filter((f) => f.active);
     const filterValues: Record<string, any> = {};
-    
+
     for (const filter of activeFilters) {
       filterValues[filter.key] = filter.currentValue ?? filter.initialValue;
     }
-    
+
     return filterValues;
   }
 
@@ -505,20 +497,12 @@
                     class:!bg-green-100={showFilterSidebar}
                     class:!text-green-700={showFilterSidebar}
                     onclick={() => toggleFilterSidebar()}
-                    title="{showFilterSidebar
-                      ? 'Close'
-                      : 'Show'} Filters ({filters.filter(f => f.active).length} active)"
+                    title="{showFilterSidebar ? 'Close' : 'Show'} Filters ({filters.filter(
+                      (f) => f.active
+                    ).length} active)"
                     aria-label="{showFilterSidebar ? 'Close' : 'Show'} filters"
                   >
                     <span class="material-symbols-outlined text-lg">filter_alt</span>
-                  </button>
-                  <button
-                    class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-amber-600 transition-colors hover:bg-amber-50 hover:text-amber-700"
-                    onclick={() => toggleFilterManager()}
-                    title="Manage Filters"
-                    aria-label="Manage filters"
-                  >
-                    <span class="material-symbols-outlined text-lg">tune</span>
                   </button>
                 </div>
               </div>
@@ -682,18 +666,11 @@
   onCancel={cancelBlockDeletion}
 />
 
-<!-- Filter Management Modal -->
-<FilterManager
-  bind:filters
-  isOpen={showFilterManager}
-  onClose={() => showFilterManager = false}
-  {onFiltersChange}
-/>
-
 <!-- Filter Sidebar -->
 <FilterSidebar
   isOpen={showFilterSidebar}
-  {filters}
-  onClose={() => showFilterSidebar = false}
+  bind:filters
+  onClose={() => (showFilterSidebar = false)}
   {onFilterValueChange}
+  {onFiltersChange}
 />

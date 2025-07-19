@@ -181,12 +181,15 @@
   }
 
   function addParameter() {
-    parameters = [...parameters, {
-      name: '',
-      type: 'string',
-      defaultValue: '',
-      description: ''
-    }];
+    parameters = [
+      ...parameters,
+      {
+        name: '',
+        type: 'string',
+        defaultValue: '',
+        description: ''
+      }
+    ];
   }
 
   function removeParameter(index: number) {
@@ -194,13 +197,11 @@
   }
 
   function updateParameter(index: number, field: keyof QueryParameter, value: any) {
-    parameters = parameters.map((param, i) => 
-      i === index ? { ...param, [field]: value } : param
-    );
+    parameters = parameters.map((param, i) => (i === index ? { ...param, [field]: value } : param));
   }
 
   function getVariableNames(): string[] {
-    return parameters.map(p => p.name).filter(name => name.trim() !== '');
+    return parameters.map((p) => p.name).filter((name) => name.trim() !== '');
   }
 </script>
 
@@ -279,12 +280,20 @@
                   <div class="rounded-md border border-gray-200 bg-gray-50 p-3">
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       <div class="space-y-1">
-                        <label for="variable-name-{index}" class="block text-xs font-medium text-gray-600">Variable Name</label>
+                        <label
+                          for="variable-name-{index}"
+                          class="block text-xs font-medium text-gray-600">Variable Name</label
+                        >
                         <input
                           id="variable-name-{index}"
                           type="text"
                           value={param.name}
-                          oninput={(e) => updateParameter(index, 'name', (e.target as HTMLInputElement)?.value || '')}
+                          oninput={(e) =>
+                            updateParameter(
+                              index,
+                              'name',
+                              (e.target as HTMLInputElement)?.value || ''
+                            )}
                           placeholder="variableName"
                           disabled={loading}
                           class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
@@ -292,11 +301,19 @@
                       </div>
 
                       <div class="space-y-1">
-                        <label for="variable-type-{index}" class="block text-xs font-medium text-gray-600">Type</label>
+                        <label
+                          for="variable-type-{index}"
+                          class="block text-xs font-medium text-gray-600">Type</label
+                        >
                         <select
                           id="variable-type-{index}"
                           value={param.type}
-                          onchange={(e) => updateParameter(index, 'type', (e.target as HTMLSelectElement)?.value || '')}
+                          onchange={(e) =>
+                            updateParameter(
+                              index,
+                              'type',
+                              (e.target as HTMLSelectElement)?.value || ''
+                            )}
                           disabled={loading}
                           class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
                         >
@@ -309,12 +326,20 @@
                       </div>
 
                       <div class="space-y-1">
-                        <label for="default-value-{index}" class="block text-xs font-medium text-gray-600">Default Value</label>
+                        <label
+                          for="default-value-{index}"
+                          class="block text-xs font-medium text-gray-600">Default Value</label
+                        >
                         <input
                           type="text"
                           id="default-value-{index}"
                           value={param.defaultValue || ''}
-                          oninput={(e) => updateParameter(index, 'defaultValue', (e.target as HTMLInputElement)?.value || '')}
+                          oninput={(e) =>
+                            updateParameter(
+                              index,
+                              'defaultValue',
+                              (e.target as HTMLInputElement)?.value || ''
+                            )}
                           placeholder="Default value"
                           disabled={loading}
                           class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
@@ -335,12 +360,20 @@
 
                     <div class="mt-3">
                       <div class="space-y-1">
-                        <label for="description-{index}" class="block text-xs font-medium text-gray-600">Description</label>
+                        <label
+                          for="description-{index}"
+                          class="block text-xs font-medium text-gray-600">Description</label
+                        >
                         <input
                           type="text"
                           id="description-{index}"
                           value={param.description || ''}
-                          oninput={(e) => updateParameter(index, 'description', (e.target as HTMLInputElement)?.value || '')}
+                          oninput={(e) =>
+                            updateParameter(
+                              index,
+                              'description',
+                              (e.target as HTMLInputElement)?.value || ''
+                            )}
                           placeholder="Variable description"
                           disabled={loading}
                           class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
@@ -351,16 +384,17 @@
                 {/each}
               </div>
             {:else}
-              <div class="text-center py-4">
-                <p class="text-sm text-gray-500">No variables defined. Variables can be used in SQL queries with {`{{variableName}}`} syntax.</p>
+              <div class="py-4 text-center">
+                <p class="text-sm text-gray-500">
+                  No variables defined. Variables can be used in SQL queries with {`{{variableName}}`}
+                  syntax.
+                </p>
               </div>
             {/if}
           </div>
 
           <div class="space-y-2">
-            <div class="block text-sm font-medium text-gray-700"
-              >SQL Query *</div
-            >
+            <div class="block text-sm font-medium text-gray-700">SQL Query *</div>
             <div class="h-64">
               <SQLEditor
                 bind:value={sql}

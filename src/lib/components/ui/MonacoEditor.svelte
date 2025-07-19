@@ -114,7 +114,7 @@
         return;
       }
 
-      monaco = await loader.init()
+      monaco = await loader.init();
 
       // Create editor
       editor = monaco.editor.create(editorContainer, {
@@ -188,7 +188,7 @@
             const lineContent = model.getLineContent(position.lineNumber);
             const beforeCursor = lineContent.substring(0, position.column - 1);
             const afterCursor = lineContent.substring(position.column - 1);
-            
+
             const openBrackets = (beforeCursor.match(/\{\{/g) || []).length;
             const closeBrackets = (beforeCursor.match(/\}\}/g) || []).length;
             const isInsideBrackets = openBrackets > closeBrackets;

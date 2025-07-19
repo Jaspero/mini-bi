@@ -35,8 +35,14 @@
   const sqlTemplates = [
     { name: 'Basic SELECT', sql: 'SELECT * FROM table_name WHERE condition;' },
     { name: 'JOIN', sql: 'SELECT a.*, b.* FROM table_a a\nJOIN table_b b ON a.id = b.table_a_id;' },
-    { name: 'GROUP BY', sql: 'SELECT column, COUNT(*) FROM table_name\nGROUP BY column\nORDER BY COUNT(*) DESC;' },
-    { name: 'WITH (CTE)', sql: 'WITH cte AS (\n  SELECT column FROM table_name\n)\nSELECT * FROM cte;' }
+    {
+      name: 'GROUP BY',
+      sql: 'SELECT column, COUNT(*) FROM table_name\nGROUP BY column\nORDER BY COUNT(*) DESC;'
+    },
+    {
+      name: 'WITH (CTE)',
+      sql: 'WITH cte AS (\n  SELECT column FROM table_name\n)\nSELECT * FROM cte;'
+    }
   ];
 
   let editor: any = null;
@@ -155,11 +161,8 @@
 </script>
 
 <div class="flex h-full flex-col">
-  <!-- Header with Actions -->
   <div class="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-    <!-- Left side: AI and templates -->
     <div class="flex flex-wrap items-center gap-1 sm:gap-2">
-      <!-- AI Button -->
       {#if dashboardService}
         <button
           class="cursor-pointer rounded border-none bg-purple-500 px-3 py-1.5 text-xs text-white hover:bg-purple-600"
@@ -239,10 +242,7 @@
 </div>
 
 <!-- AI Modal -->
-<Modal
-  isOpen={isAIModalOpen}
-  title="Generate SQL with AI"
->
+<Modal isOpen={isAIModalOpen} title="Generate SQL with AI">
   <div class="space-y-4">
     <div>
       <label for="ai-prompt" class="block text-sm font-medium text-gray-700">
@@ -252,7 +252,7 @@
         id="ai-prompt"
         bind:value={aiPrompt}
         placeholder="e.g., 'Find all users who registered in the last 30 days and have made at least one purchase'"
-        class="mt-1 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        class="mt-1 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
         rows="4"
       ></textarea>
     </div>

@@ -184,15 +184,7 @@
           value={searchTerm}
         />
       {/if}
-      <BlockActions
-        {block}
-        {data}
-        {loading}
-        {showControls}
-        {onEdit}
-        {onRefresh}
-        {onDelete}
-      />
+      <BlockActions {block} {data} {loading} {showControls} {onEdit} {onRefresh} {onDelete} />
     </div>
   </div>
 

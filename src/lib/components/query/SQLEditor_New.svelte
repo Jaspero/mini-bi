@@ -35,8 +35,14 @@
   const sqlTemplates = [
     { name: 'Basic SELECT', sql: 'SELECT * FROM table_name WHERE condition;' },
     { name: 'JOIN', sql: 'SELECT a.*, b.* FROM table_a a\nJOIN table_b b ON a.id = b.table_a_id;' },
-    { name: 'GROUP BY', sql: 'SELECT column, COUNT(*) FROM table_name\nGROUP BY column\nORDER BY COUNT(*) DESC;' },
-    { name: 'WITH (CTE)', sql: 'WITH cte AS (\n  SELECT column FROM table_name\n)\nSELECT * FROM cte;' }
+    {
+      name: 'GROUP BY',
+      sql: 'SELECT column, COUNT(*) FROM table_name\nGROUP BY column\nORDER BY COUNT(*) DESC;'
+    },
+    {
+      name: 'WITH (CTE)',
+      sql: 'WITH cte AS (\n  SELECT column FROM table_name\n)\nSELECT * FROM cte;'
+    }
   ];
 
   let editor: any = null;
@@ -240,11 +246,7 @@
 </div>
 
 <!-- AI Modal -->
-<Modal
-  isOpen={isAIModalOpen}
-  onClose={closeAIModal}
-  title="Generate SQL with AI"
->
+<Modal isOpen={isAIModalOpen} onClose={closeAIModal} title="Generate SQL with AI">
   <div class="space-y-4">
     <div>
       <label for="ai-prompt" class="block text-sm font-medium text-gray-700">
@@ -254,7 +256,7 @@
         id="ai-prompt"
         bind:value={aiPrompt}
         placeholder="e.g., 'Find all users who registered in the last 30 days and have made at least one purchase'"
-        class="mt-1 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        class="mt-1 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
         rows="4"
       ></textarea>
     </div>

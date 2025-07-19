@@ -56,20 +56,20 @@
 
   function handleExport(event: MouseEvent, format: 'json' | 'csv') {
     event.stopPropagation();
-    
+
     if (!data || !data.data.length) {
       alert('No data to export');
       return;
     }
 
     const filename = `${block.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}`;
-    
+
     if (format === 'json') {
       exportAsJSON(data.data, filename);
     } else {
       exportAsCSV(data.data, filename);
     }
-    
+
     closeDropdown();
   }
 
@@ -86,22 +86,24 @@
 
   function exportAsCSV(data: any[], filename: string) {
     if (!data.length) return;
-    
+
     const headers = Object.keys(data[0]);
     const csvContent = [
       headers.join(','),
-      ...data.map(row => 
-        headers.map(header => {
-          const value = row[header];
-          const stringValue = value === null || value === undefined ? '' : String(value);
-          // Escape quotes and wrap in quotes if contains comma, quote, or newline
-          return /[,"\n]/.test(stringValue) 
-            ? `"${stringValue.replace(/"/g, '""')}"` 
-            : stringValue;
-        }).join(',')
+      ...data.map((row) =>
+        headers
+          .map((header) => {
+            const value = row[header];
+            const stringValue = value === null || value === undefined ? '' : String(value);
+            // Escape quotes and wrap in quotes if contains comma, quote, or newline
+            return /[,"\n]/.test(stringValue)
+              ? `"${stringValue.replace(/"/g, '""')}"`
+              : stringValue;
+          })
+          .join(',')
       )
     ].join('\n');
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     downloadFile(blob, `${filename}.csv`);
   }
@@ -135,7 +137,7 @@
 {#if showControls}
   <div class="relative" bind:this={dropdownRef}>
     <button
-      class="flex touch-manipulation rounded cursor-pointer p-1.5 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-900"
+      class="flex cursor-pointer touch-manipulation rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-900"
       onclick={toggleDropdown}
       aria-label="Block actions"
       aria-expanded={isOpen}
@@ -144,7 +146,9 @@
     </button>
 
     {#if isOpen}
-      <div class="absolute right-0 top-full z-50 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+      <div
+        class="absolute top-full right-0 z-50 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+      >
         <button
           class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
           onclick={handleEdit}
@@ -152,9 +156,9 @@
           <span class="material-symbols-outlined mr-3 text-base">edit</span>
           Edit
         </button>
-        
+
         <button
-          class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
           onclick={handleRefresh}
           disabled={loading}
         >
@@ -164,9 +168,9 @@
 
         {#if data && data.data.length > 0}
           <hr class="my-1 border-gray-200" />
-          
+
           <div class="px-4 py-2">
-            <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Export</div>
+            <div class="text-xs font-medium tracking-wider text-gray-500 uppercase">Export</div>
           </div>
 
           {#if block.type === 'graph'}
@@ -178,7 +182,7 @@
               Export as Image
             </button>
           {/if}
-          
+
           <button
             class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
             onclick={(e) => handleExport(e, 'json')}
@@ -186,7 +190,7 @@
             <span class="material-symbols-outlined mr-3 text-base">download</span>
             Export as JSON
           </button>
-          
+
           <button
             class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
             onclick={(e) => handleExport(e, 'csv')}
@@ -197,7 +201,7 @@
         {/if}
 
         <hr class="my-1 border-gray-200" />
-        
+
         <button
           class="flex w-full items-center px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
           onclick={handleDelete}

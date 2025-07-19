@@ -464,9 +464,7 @@
                 placeholder="https://api.example.com/data"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
-              <p class="text-xs text-gray-500">
-                Enter the full URL of your API endpoint
-              </p>
+              <p class="text-xs text-gray-500">Enter the full URL of your API endpoint</p>
             </div>
 
             <div class="space-y-2">
@@ -482,9 +480,7 @@
                 <option value="GET">GET</option>
                 <option value="POST">POST</option>
               </select>
-              <p class="text-xs text-gray-500">
-                Select the HTTP method to use for the API request
-              </p>
+              <p class="text-xs text-gray-500">Select the HTTP method to use for the API request</p>
             </div>
 
             <div class="space-y-2">
@@ -500,7 +496,8 @@
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
               <p class="text-xs text-gray-500">
-                Optional: Bearer token for API authentication. Will be sent as "Authorization: Bearer {apiToken}"
+                Optional: Bearer token for API authentication. Will be sent as "Authorization:
+                Bearer {apiToken}"
               </p>
             </div>
           </div>
@@ -513,7 +510,7 @@
           <h3 class="text-lg font-medium text-gray-900">Table Configuration</h3>
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <label class="block text-sm font-medium text-gray-700">Columns</label>
+              <div class="block text-sm font-medium text-gray-700">Columns</div>
               <button
                 type="button"
                 class="text-sm text-blue-600 hover:text-blue-500"
@@ -727,7 +724,9 @@
                           onclick={() => {
                             if (editedBlock) {
                               const config = editedBlock.config as any;
-                              config.columns = config.columns.filter((_: any, i: number) => i !== index);
+                              config.columns = config.columns.filter(
+                                (_: any, i: number) => i !== index
+                              );
                               editedBlock = { ...editedBlock };
                             }
                           }}
@@ -744,7 +743,7 @@
 
           <!-- Pagination Configuration -->
           <div class="space-y-3">
-            <label class="block text-sm font-medium text-gray-700">Pagination</label>
+            <div class="block text-sm font-medium text-gray-700">Pagination</div>
             <div
               class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4"
             >
@@ -758,8 +757,9 @@
               </label>
               {#if editedBlock.config.pagination?.enabled}
                 <div class="flex items-center space-x-2">
-                  <label class="text-sm text-gray-600">Page size:</label>
+                  <label for="page-size" class="text-sm text-gray-600">Page size:</label>
                   <input
+                    id="page-size"
                     type="number"
                     bind:value={editedBlock.config.pagination.pageSize}
                     min="1"
@@ -773,7 +773,7 @@
 
           <!-- Sorting Configuration -->
           <div class="space-y-3">
-            <label class="block text-sm font-medium text-gray-700">Sorting</label>
+            <div class="block text-sm font-medium text-gray-700">Sorting</div>
             <div
               class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4"
             >
@@ -789,8 +789,9 @@
                 <div
                   class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2"
                 >
-                  <label class="text-sm text-gray-600">Default sort:</label>
+                  <label for="default-sort" class="text-sm text-gray-600">Default sort:</label>
                   <select
+                    id="default-sort"
                     bind:value={editedBlock.config.sorting.defaultSort.column}
                     class="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   >
@@ -813,7 +814,7 @@
 
           <!-- Filtering Configuration -->
           <div class="space-y-3">
-            <label class="block text-sm font-medium text-gray-700">Filtering</label>
+            <div class="block text-sm font-medium text-gray-700">Filtering</div>
             <div
               class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4"
             >
@@ -827,8 +828,9 @@
               </label>
               {#if editedBlock.config.filtering?.enabled}
                 <div class="flex items-center space-x-2">
-                  <label class="text-sm text-gray-600">Filter type:</label>
+                  <label for="filter-type" class="text-sm text-gray-600">Filter type:</label>
                   <select
+                    id="filter-type"
                     bind:value={editedBlock.config.filtering.type}
                     class="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   >

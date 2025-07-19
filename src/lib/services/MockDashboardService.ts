@@ -676,7 +676,7 @@ export class MockDashboardService implements IDashboardService {
 
     // Mock AI responses based on common patterns
     const lowerDescription = description.toLowerCase();
-    
+
     if (lowerDescription.includes('user') && lowerDescription.includes('order')) {
       return `SELECT u.username, COUNT(o.id) as total_orders, SUM(o.total_amount) as total_spent
 FROM users u
@@ -684,7 +684,7 @@ LEFT JOIN orders o ON u.id = o.user_id
 GROUP BY u.id, u.username
 ORDER BY total_spent DESC;`;
     }
-    
+
     if (lowerDescription.includes('product') && lowerDescription.includes('sales')) {
       return `SELECT p.name, SUM(oi.quantity) as total_sold, SUM(oi.total_price) as revenue
 FROM products p
@@ -692,14 +692,14 @@ LEFT JOIN order_items oi ON p.id = oi.product_id
 GROUP BY p.id, p.name
 ORDER BY revenue DESC;`;
     }
-    
+
     if (lowerDescription.includes('monthly') && lowerDescription.includes('sales')) {
       return `SELECT month, sales, target
 FROM monthly_sales
 WHERE year = YEAR(CURRENT_DATE)
 ORDER BY id;`;
     }
-    
+
     if (lowerDescription.includes('campaign') && lowerDescription.includes('performance')) {
       return `SELECT campaign_name, impressions, clicks, conversions, spend,
        ROUND((clicks / impressions) * 100, 2) as click_rate,
@@ -707,7 +707,7 @@ ORDER BY id;`;
 FROM campaign_stats
 ORDER BY spend DESC;`;
     }
-    
+
     if (lowerDescription.includes('top') && lowerDescription.includes('customer')) {
       return `SELECT u.username, u.email, COUNT(o.id) as order_count, SUM(o.total_amount) as total_spent
 FROM users u
@@ -716,7 +716,7 @@ GROUP BY u.id, u.username, u.email
 ORDER BY total_spent DESC
 LIMIT 10;`;
     }
-    
+
     if (lowerDescription.includes('recent') && lowerDescription.includes('order')) {
       return `SELECT o.id, u.username, o.total_amount, o.status, o.order_date
 FROM orders o
@@ -724,7 +724,7 @@ JOIN users u ON o.user_id = u.id
 ORDER BY o.order_date DESC
 LIMIT 20;`;
     }
-    
+
     if (lowerDescription.includes('category') && lowerDescription.includes('revenue')) {
       return `SELECT c.name as category, SUM(oi.total_price) as revenue
 FROM categories c
@@ -733,7 +733,7 @@ JOIN order_items oi ON p.id = oi.product_id
 GROUP BY c.id, c.name
 ORDER BY revenue DESC;`;
     }
-    
+
     // Default response for unrecognized patterns
     return `SELECT COUNT(*) as total_records
 FROM users

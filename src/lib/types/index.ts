@@ -343,7 +343,16 @@ export interface Filter {
   id: string;
   key: string;
   name: string;
-  type: 'string' | 'date' | 'date_range' | 'list' | 'integer' | 'float' | 'integer_range' | 'float_range' | 'boolean';
+  type:
+    | 'string'
+    | 'date'
+    | 'date_range'
+    | 'list'
+    | 'integer'
+    | 'float'
+    | 'integer_range'
+    | 'float_range'
+    | 'boolean';
   active: boolean;
   initialValue: any;
   currentValue?: any;

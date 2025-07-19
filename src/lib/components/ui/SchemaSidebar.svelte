@@ -36,7 +36,6 @@
 </script>
 
 <div class="flex h-full flex-col">
-  <!-- SQL Templates Section -->
   <div class="mb-6">
     <h3 class="mb-3 text-sm font-semibold tracking-wide text-gray-700 uppercase">SQL Templates</h3>
     <div class="flex flex-col gap-2">
@@ -61,7 +60,6 @@
     <div class="space-y-3">
       {#each mockSchema.tables as table}
         <div class="overflow-hidden rounded-lg border border-gray-200">
-          <!-- Table Header -->
           <div
             class="flex cursor-pointer items-center gap-3 border-b border-gray-200 bg-gray-50 p-3 transition-colors hover:bg-gray-100"
             onclick={() => selectTable(table)}
@@ -104,7 +102,6 @@
             </span>
           </div>
 
-          <!-- Table Columns -->
           {#if selectedTable === table}
             <div class="divide-y divide-gray-100">
               {#each table.columns as column}

@@ -430,7 +430,10 @@
   }
 </script>
 
-<div class="dashboard-canvas relative h-full w-full overflow-auto bg-slate-50" bind:this={canvasElement}>
+<div
+  class="dashboard-canvas relative h-full w-full overflow-auto bg-slate-50"
+  bind:this={canvasElement}
+>
   <div
     class="relative m-2 min-h-full min-w-full sm:m-5"
     style="width: {canvasWidth}px; height: {canvasHeight}px;"

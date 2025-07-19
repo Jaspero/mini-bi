@@ -93,13 +93,13 @@
 
     try {
       const generatedSQL = await dashboardService.generateSQLFromText(aiPrompt.trim());
-      
+
       if (monacoEditor) {
         monacoEditor.setValue(generatedSQL);
       }
       value = generatedSQL;
       onChange(value);
-      
+
       // Close modal and reset state
       isAIModalOpen = false;
       aiPrompt = '';
@@ -186,7 +186,9 @@
   class="relative flex h-[500px] max-h-[80vh] min-h-[300px] resize-y overflow-hidden rounded-md border border-gray-300"
 >
   <div class="flex flex-1 flex-col overflow-hidden">
-    <div class="flex flex-col gap-2 border-b border-gray-300 bg-gray-50 p-2 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      class="flex flex-col gap-2 border-b border-gray-300 bg-gray-50 p-2 sm:flex-row sm:items-center sm:justify-between"
+    >
       <div class="flex flex-wrap items-center gap-2">
         {#if schema}
           <button
@@ -211,7 +213,9 @@
         <select
           class="cursor-pointer rounded border border-gray-300 px-2 py-1 text-xs"
           onchange={(e) => {
-            const selectedTemplate = sqlTemplates.find((t) => t.name === (e.target as HTMLSelectElement).value);
+            const selectedTemplate = sqlTemplates.find(
+              (t) => t.name === (e.target as HTMLSelectElement).value
+            );
             if (selectedTemplate) {
               insertTemplate(selectedTemplate.sql);
             }
@@ -314,15 +318,26 @@
       </button>
       <button
         type="button"
-        class="rounded-md border border-transparent bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+        class="rounded-md border border-transparent bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none"
         onclick={generateSQLFromAI}
         disabled={aiGenerating || !aiPrompt.trim()}
       >
         {#if aiGenerating}
           <span class="flex items-center">
             <svg class="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
             Generating...
           </span>

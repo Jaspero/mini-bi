@@ -103,13 +103,7 @@
       <h3 class="m-0 truncate text-sm font-semibold text-gray-900 sm:text-base">{block.title}</h3>
     </div>
     <div class="flex flex-shrink-0 items-center gap-1">
-      <BlockActions
-        {block}
-        {showControls}
-        {onEdit}
-        {onRefresh}
-        {onDelete}
-      />
+      <BlockActions {block} {showControls} {onEdit} {onRefresh} {onDelete} />
     </div>
   </div>
   <div class="text-content flex flex-1 flex-col leading-relaxed" style={getStyleString()}>
