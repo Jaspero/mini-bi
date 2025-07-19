@@ -234,6 +234,7 @@
       {disabled}
       {variables}
       placeholder="Enter your SQL query here..."
+      keyBindings={monacoKeyBindings}
     />
   </div>
 </div>
@@ -241,6 +242,7 @@
 <!-- AI Modal -->
 <Modal
   isOpen={isAIModalOpen}
+  onClose={closeAIModal}
   title="Generate SQL with AI"
 >
   <div class="space-y-4">

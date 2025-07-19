@@ -727,7 +727,7 @@
                           onclick={() => {
                             if (editedBlock) {
                               const config = editedBlock.config as any;
-                              config.columns = config.columns.filter((_, i) => i !== index);
+                              config.columns = config.columns.filter((_: any, i: number) => i !== index);
                               editedBlock = { ...editedBlock };
                             }
                           }}

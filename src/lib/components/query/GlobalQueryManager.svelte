@@ -261,7 +261,7 @@
           <!-- Parameters Section -->
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <label class="block text-sm font-medium text-gray-700">Variables</label>
+              <div class="block text-sm font-medium text-gray-700">Variables</div>
               <button
                 type="button"
                 class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -279,11 +279,12 @@
                   <div class="rounded-md border border-gray-200 bg-gray-50 p-3">
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       <div class="space-y-1">
-                        <label class="block text-xs font-medium text-gray-600">Variable Name</label>
+                        <label for="variable-name-{index}" class="block text-xs font-medium text-gray-600">Variable Name</label>
                         <input
+                          id="variable-name-{index}"
                           type="text"
                           value={param.name}
-                          oninput={(e) => updateParameter(index, 'name', e.target.value)}
+                          oninput={(e) => updateParameter(index, 'name', (e.target as HTMLInputElement)?.value || '')}
                           placeholder="variableName"
                           disabled={loading}
                           class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
@@ -291,10 +292,11 @@
                       </div>
 
                       <div class="space-y-1">
-                        <label class="block text-xs font-medium text-gray-600">Type</label>
+                        <label for="variable-type-{index}" class="block text-xs font-medium text-gray-600">Type</label>
                         <select
+                          id="variable-type-{index}"
                           value={param.type}
-                          onchange={(e) => updateParameter(index, 'type', e.target.value)}
+                          onchange={(e) => updateParameter(index, 'type', (e.target as HTMLSelectElement)?.value || '')}
                           disabled={loading}
                           class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
                         >
@@ -307,11 +309,12 @@
                       </div>
 
                       <div class="space-y-1">
-                        <label class="block text-xs font-medium text-gray-600">Default Value</label>
+                        <label for="default-value-{index}" class="block text-xs font-medium text-gray-600">Default Value</label>
                         <input
                           type="text"
+                          id="default-value-{index}"
                           value={param.defaultValue || ''}
-                          oninput={(e) => updateParameter(index, 'defaultValue', e.target.value)}
+                          oninput={(e) => updateParameter(index, 'defaultValue', (e.target as HTMLInputElement)?.value || '')}
                           placeholder="Default value"
                           disabled={loading}
                           class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
@@ -332,11 +335,12 @@
 
                     <div class="mt-3">
                       <div class="space-y-1">
-                        <label class="block text-xs font-medium text-gray-600">Description</label>
+                        <label for="description-{index}" class="block text-xs font-medium text-gray-600">Description</label>
                         <input
                           type="text"
+                          id="description-{index}"
                           value={param.description || ''}
-                          oninput={(e) => updateParameter(index, 'description', e.target.value)}
+                          oninput={(e) => updateParameter(index, 'description', (e.target as HTMLInputElement)?.value || '')}
                           placeholder="Variable description"
                           disabled={loading}
                           class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
@@ -354,8 +358,8 @@
           </div>
 
           <div class="space-y-2">
-            <label for="query-sql" class="block text-sm font-medium text-gray-700"
-              >SQL Query *</label
+            <div class="block text-sm font-medium text-gray-700"
+              >SQL Query *</div
             >
             <div class="h-64">
               <SQLEditor

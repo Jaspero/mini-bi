@@ -24,6 +24,7 @@ export interface Dashboard {
   layout: DashboardLayout;
   blocks: Block[];
   variables?: Record<string, any>;
+  filters?: Filter[];
 }
 
 export interface DashboardLayout {
@@ -54,6 +55,8 @@ export interface Block {
 export interface BlockConfig {
   title?: string;
   refreshInterval?: number; // in seconds
+  // Allow any additional properties for type-specific configs
+  [key: string]: any;
 }
 
 // Table specific configurations
@@ -259,6 +262,7 @@ export interface CreateDashboardRequest {
   layout: DashboardLayout;
   blocks?: Block[];
   variables?: Record<string, any>;
+  filters?: Filter[];
 }
 
 export interface UpdateDashboardRequest {
@@ -267,6 +271,7 @@ export interface UpdateDashboardRequest {
   layout?: DashboardLayout;
   blocks?: Block[];
   variables?: Record<string, any>;
+  filters?: Filter[];
 }
 
 export interface BlockData {
@@ -331,4 +336,30 @@ export interface BlockResizeEvent extends DashboardEvent {
   type: 'block-resized';
   oldSize: Size;
   newSize: Size;
+}
+
+// Filter System
+export interface Filter {
+  id: string;
+  key: string;
+  name: string;
+  type: 'string' | 'date' | 'date_range' | 'list' | 'integer' | 'float' | 'integer_range' | 'float_range' | 'boolean';
+  active: boolean;
+  initialValue: any;
+  currentValue?: any;
+  options?: FilterOption[]; // For list type filters
+  min?: number; // For range type filters
+  max?: number; // For range type filters
+  placeholder?: string;
+  description?: string;
+}
+
+export interface FilterOption {
+  label: string;
+  value: any;
+}
+
+export interface FilterValue {
+  filterId: string;
+  value: any;
 }

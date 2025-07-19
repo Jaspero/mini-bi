@@ -22,9 +22,21 @@
     showControls = false
   }: Props = $props();
 
-  let textConfig: TextBlockConfig = $state();
+  let textConfig: TextBlockConfig = $state({
+    content: '',
+    variables: {},
+    styling: {
+      fontSize: 14,
+      fontFamily: 'Arial, sans-serif',
+      color: '#000000',
+      padding: 8,
+      textAlign: 'left',
+      fontWeight: 'normal',
+      fontStyle: 'normal'
+    }
+  });
+  let element: HTMLDivElement | undefined = $state();
   let processedContent = $state('');
-  let element: HTMLDivElement = $state();
 
   function updateContent() {
     if (textConfig) {

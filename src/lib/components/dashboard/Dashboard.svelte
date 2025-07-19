@@ -6,11 +6,14 @@
     Block,
     IDashboardService,
     BlockConfig,
-    Query
+    Query,
+    Filter
   } from '../../types/index.ts';
   import DashboardCanvas from './DashboardCanvas.svelte';
   import BlockEditor from './BlockEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
+  import FilterManager from './FilterManager.svelte';
+  import FilterSidebar from './FilterSidebar.svelte';
 
   interface Props {
     dashboardId?: string | null;
@@ -50,6 +53,11 @@
   // Block deletion confirmation modal state
   let showBlockDeleteModal = $state(false);
   let blockToDelete: Block | null = $state(null);
+
+  // Filter management state
+  let filters: Filter[] = $state([]);
+  let showFilterManager = $state(false);
+  let showFilterSidebar = $state(false);
 
   onMount(async () => {
     if (dashboardId) {
@@ -92,6 +100,7 @@
       }
 
       dashboard = foundDashboard;
+      filters = foundDashboard.filters || [];
       loading = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load dashboard';
@@ -115,8 +124,42 @@
         canvasHeight: { type: 'fixed', value: 1000 }
       },
       blocks: [],
-      variables: {}
+      variables: {},
+      filters: []
     };
+  }
+
+  // Filter management functions
+  function toggleFilterManager() {
+    showFilterManager = !showFilterManager;
+  }
+
+  function toggleFilterSidebar() {
+    showFilterSidebar = !showFilterSidebar;
+  }
+
+  function onFiltersChange(newFilters: Filter[]) {
+    filters = newFilters;
+    hasUnsavedChanges = true;
+  }
+
+  function onFilterValueChange(filterId: string, value: any) {
+    filters = filters.map(f => 
+      f.id === filterId ? { ...f, currentValue: value } : f
+    );
+    // Filters changing values doesn't mark as unsaved since these are runtime values
+  }
+
+  // Get active filter values for use in queries
+  function getActiveFilterValues(): Record<string, any> {
+    const activeFilters = filters.filter(f => f.active);
+    const filterValues: Record<string, any> = {};
+    
+    for (const filter of activeFilters) {
+      filterValues[filter.key] = filter.currentValue ?? filter.initialValue;
+    }
+    
+    return filterValues;
   }
 
   async function saveDashboard() {
@@ -132,7 +175,8 @@
           description: dashboard.description,
           layout: dashboard.layout,
           blocks: dashboard.blocks,
-          variables: dashboard.variables
+          variables: dashboard.variables,
+          filters: filters
         });
       } else {
         savedDashboard = await dashboardService.createDashboard({
@@ -140,7 +184,8 @@
           description: dashboard.description,
           layout: dashboard.layout,
           blocks: dashboard.blocks,
-          variables: dashboard.variables
+          variables: dashboard.variables,
+          filters: filters
         });
       }
 
@@ -455,6 +500,26 @@
                   >
                     <span class="material-symbols-outlined text-lg">database</span>
                   </button>
+                  <button
+                    class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-green-600 transition-colors hover:bg-green-50 hover:text-green-700"
+                    class:!bg-green-100={showFilterSidebar}
+                    class:!text-green-700={showFilterSidebar}
+                    onclick={() => toggleFilterSidebar()}
+                    title="{showFilterSidebar
+                      ? 'Close'
+                      : 'Show'} Filters ({filters.filter(f => f.active).length} active)"
+                    aria-label="{showFilterSidebar ? 'Close' : 'Show'} filters"
+                  >
+                    <span class="material-symbols-outlined text-lg">filter_alt</span>
+                  </button>
+                  <button
+                    class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-amber-600 transition-colors hover:bg-amber-50 hover:text-amber-700"
+                    onclick={() => toggleFilterManager()}
+                    title="Manage Filters"
+                    aria-label="Manage filters"
+                  >
+                    <span class="material-symbols-outlined text-lg">tune</span>
+                  </button>
                 </div>
               </div>
               {#if dashboard.description}
@@ -615,4 +680,20 @@
   cancelText="Cancel"
   onConfirm={confirmBlockDeletion}
   onCancel={cancelBlockDeletion}
+/>
+
+<!-- Filter Management Modal -->
+<FilterManager
+  bind:filters
+  isOpen={showFilterManager}
+  onClose={() => showFilterManager = false}
+  {onFiltersChange}
+/>
+
+<!-- Filter Sidebar -->
+<FilterSidebar
+  isOpen={showFilterSidebar}
+  {filters}
+  onClose={() => showFilterSidebar = false}
+  {onFilterValueChange}
 />

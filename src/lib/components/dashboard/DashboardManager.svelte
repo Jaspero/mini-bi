@@ -65,7 +65,7 @@
         onDashboardSelected(dashboard);
       }
     } else {
-      onDashboardSelected(null);
+      onDashboardSelected(null as any);
     }
   }
 

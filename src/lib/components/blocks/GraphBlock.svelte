@@ -23,8 +23,16 @@
     showControls = false
   }: Props = $props();
 
-  let graphConfig: GraphBlockConfig = $state();
-  let chartContainer: HTMLDivElement = $state();
+  let graphConfig: GraphBlockConfig = $state({
+    chartType: 'line',
+    series: [],
+    xAxis: { type: 'category' },
+    yAxis: { type: 'value' },
+    legend: { show: true, position: 'top', align: 'center' },
+    colors: [],
+    animations: { enabled: true, duration: 750, easing: 'cubicInOut' }
+  });
+  let chartContainer: HTMLDivElement | undefined = $state();
   let chart: echarts.ECharts | null = $state(null);
   let loading = $state(true);
   let error = $state('');
@@ -138,7 +146,7 @@
           series: series.map((s) => ({
             name: s.name,
             type: chartType === 'area' ? 'line' : chartType,
-            data: data.data.map((item) => item[s.dataKey]),
+            data: data?.data.map((item) => item[s.dataKey]) || [],
             areaStyle: chartType === 'area' ? {} : undefined,
             smooth: chartType === 'line' || chartType === 'area'
           }))

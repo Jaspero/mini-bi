@@ -21,7 +21,12 @@
     showControls = false
   }: Props = $props();
 
-  let tableConfig: TableBlockConfig = $state();
+  let tableConfig: TableBlockConfig = $state({
+    columns: [],
+    pagination: { enabled: false, pageSize: 10 },
+    sorting: { enabled: false },
+    filtering: { enabled: false, type: 'text' }
+  });
   let loading = $state(true);
   let error = $state('');
   let data: BlockData | null = $state(null);
@@ -203,7 +208,7 @@
       <p class="mb-4 text-base">Error: {error}</p>
       <button
         class="rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
-        onclick={refresh}>Retry</button
+        onclick={onRefresh}>Retry</button
       >
     </div>
   {:else if data && tableConfig}

@@ -124,7 +124,33 @@ export class MockDashboardService implements IDashboardService {
       variables: {
         companyName: 'Acme Corp',
         currentQuarter: 'Q2 2024'
-      }
+      },
+      filters: [
+        {
+          id: 'date-range-filter',
+          key: 'date_range',
+          name: 'Date Range',
+          type: 'date_range',
+          active: true,
+          initialValue: [new Date('2024-01-01'), new Date('2024-12-31')],
+          description: 'Filter data by date range'
+        },
+        {
+          id: 'region-filter',
+          key: 'region',
+          name: 'Region',
+          type: 'list',
+          active: true,
+          initialValue: ['North America'],
+          options: [
+            { label: 'North America', value: 'North America' },
+            { label: 'Europe', value: 'Europe' },
+            { label: 'Asia Pacific', value: 'Asia Pacific' },
+            { label: 'Latin America', value: 'Latin America' }
+          ],
+          description: 'Filter by sales region'
+        }
+      ]
     },
     {
       id: '2',
@@ -198,6 +224,35 @@ export class MockDashboardService implements IDashboardService {
               fontStyle: 'normal'
             }
           } as any
+        }
+      ],
+      variables: {
+        campaignBudget: '$50,000',
+        targetAudience: '18-34 years'
+      },
+      filters: [
+        {
+          id: 'campaign-status-filter',
+          key: 'status',
+          name: 'Campaign Status',
+          type: 'list',
+          active: true,
+          initialValue: ['active'],
+          options: [
+            { label: 'Active', value: 'active' },
+            { label: 'Paused', value: 'paused' },
+            { label: 'Completed', value: 'completed' }
+          ],
+          description: 'Filter campaigns by status'
+        },
+        {
+          id: 'budget-filter',
+          key: 'min_budget',
+          name: 'Minimum Budget',
+          type: 'integer',
+          active: false,
+          initialValue: 1000,
+          description: 'Filter campaigns with minimum budget'
         }
       ]
     }
@@ -289,7 +344,8 @@ export class MockDashboardService implements IDashboardService {
       lastModified: new Date(),
       layout: request.layout,
       blocks: request.blocks || [],
-      variables: request.variables || {}
+      variables: request.variables || {},
+      filters: request.filters || []
     };
 
     this.dashboards.push(newDashboard);
