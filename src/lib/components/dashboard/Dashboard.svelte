@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import html2canvas from 'html2canvas-pro';
   import type {
     Dashboard,
     Block,
@@ -44,6 +45,7 @@
   let showBlockEditor = $state(false);
   let editMode = $state(true);
   let showAddBlockDropdown = $state(false);
+  let isExporting = $state(false);
 
   // Block deletion confirmation modal state
   let showBlockDeleteModal = $state(false);
@@ -351,6 +353,48 @@
       }
     }
   }
+
+  async function exportDashboardAsImage() {
+    if (!dashboard) return;
+
+    try {
+      isExporting = true;
+
+      // Find the dashboard canvas element
+      const canvasElement = document.querySelector('.dashboard-canvas') as HTMLElement;
+
+      if (!canvasElement) {
+        throw new Error('Dashboard canvas not found');
+      }
+
+      const canvas = await html2canvas(canvasElement, {
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
+        background: '#f9fafb',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        width: canvasElement.scrollWidth,
+        height: canvasElement.scrollHeight
+      });
+
+      // Create download link
+      const link = document.createElement('a');
+      link.download = `${dashboard.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_dashboard.png`;
+      link.href = canvas.toDataURL('image/png', 1);
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      isExporting = false;
+    } catch (err) {
+      console.error('Failed to export dashboard:', err);
+      error = err instanceof Error ? err.message : 'Failed to export dashboard';
+      isExporting = false;
+    }
+  }
 </script>
 
 <div class="min-h-screen bg-gray-50">
@@ -497,6 +541,23 @@
                 aria-label="Refresh dashboard"
               >
                 <span class="material-symbols-outlined text-lg sm:text-xl">refresh</span>
+              </button>
+
+              <button
+                class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-orange-600 transition-colors hover:bg-orange-50 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10"
+                class:animate-pulse={isExporting}
+                disabled={isExporting}
+                onclick={exportDashboardAsImage}
+                title={isExporting ? 'Exporting...' : 'Export dashboard as image'}
+                aria-label={isExporting ? 'Exporting dashboard' : 'Export dashboard as image'}
+              >
+                {#if isExporting}
+                  <div
+                    class="h-4 w-4 animate-spin rounded-full border-b-2 border-current sm:h-5 sm:w-5"
+                  ></div>
+                {:else}
+                  <span class="material-symbols-outlined text-lg sm:text-xl">download</span>
+                {/if}
               </button>
 
               <button

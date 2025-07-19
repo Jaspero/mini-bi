@@ -266,6 +266,36 @@
   function onDelete() {
     onBlockDeleteRequest(block);
   }
+
+  function onExportImage() {
+    if (!chart) {
+      console.error('Chart not initialized');
+      return;
+    }
+
+    try {
+      // Get the chart as a data URL (PNG format by default)
+      const dataURL = chart.getDataURL({
+        type: 'png',
+        pixelRatio: 2, // Higher resolution
+        backgroundColor: '#ffffff'
+      });
+
+      // Create download link
+      const link = document.createElement('a');
+      const filename = `${block.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_chart_${new Date().toISOString().split('T')[0]}.png`;
+      link.download = filename;
+      link.href = dataURL;
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Failed to export chart as image:', err);
+      alert('Failed to export chart as image');
+    }
+  }
 </script>
 
 <div class="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-sm">
@@ -284,6 +314,7 @@
         {onEdit}
         {onRefresh}
         {onDelete}
+        {onExportImage}
       />
     </div>
   </div>

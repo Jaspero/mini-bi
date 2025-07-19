@@ -10,6 +10,7 @@
     onEdit?: (block: Block) => void;
     onRefresh?: () => void;
     onDelete?: (block: Block) => void;
+    onExportImage?: () => void;
   }
 
   let {
@@ -19,7 +20,8 @@
     showControls = false,
     onEdit = () => {},
     onRefresh = () => {},
-    onDelete = () => {}
+    onDelete = () => {},
+    onExportImage = () => {}
   }: Props = $props();
 
   let isOpen = $state(false);
@@ -68,6 +70,12 @@
       exportAsCSV(data.data, filename);
     }
     
+    closeDropdown();
+  }
+
+  function handleExportImage(event: MouseEvent) {
+    event.stopPropagation();
+    onExportImage();
     closeDropdown();
   }
 
@@ -160,6 +168,16 @@
           <div class="px-4 py-2">
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Export</div>
           </div>
+
+          {#if block.type === 'graph'}
+            <button
+              class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+              onclick={handleExportImage}
+            >
+              <span class="material-symbols-outlined mr-3 text-base">image</span>
+              Export as Image
+            </button>
+          {/if}
           
           <button
             class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
