@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import * as echarts from 'echarts';
+  import BlockActions from '../ui/BlockActions.svelte';
   import type { Block, GraphBlockConfig, BlockData, IDashboardService } from '../../types/index.ts';
 
   interface Props {
@@ -251,21 +252,18 @@
     );
   }
 
-  async function refresh(event: MouseEvent) {
-    event.stopPropagation();
+  async function onRefresh() {
     await loadData();
     if (chart && data) {
       updateChart();
     }
   }
 
-  function handleEdit(event: MouseEvent) {
-    event.stopPropagation();
+  function onEdit() {
     onBlockEdit(block);
   }
 
-  function handleDelete(event: MouseEvent) {
-    event.stopPropagation();
+  function onDelete() {
     onBlockDeleteRequest(block);
   }
 </script>
@@ -278,31 +276,15 @@
       <h3 class="m-0 truncate text-sm font-semibold text-gray-900 sm:text-base">{block.title}</h3>
     </div>
     <div class="flex flex-shrink-0 items-center gap-1">
-      <button
-        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
-        class:hidden={!showControls}
-        onclick={handleEdit}
-        aria-label="Edit graph"
-      >
-        <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
-      </button>
-      <button
-        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
-        class:hidden={!showControls}
-        onclick={refresh}
-        disabled={loading}
-        aria-label="Refresh chart data"
-      >
-        <span class="material-symbols-outlined text-sm sm:text-base">refresh</span>
-      </button>
-      <button
-        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
-        class:hidden={!showControls}
-        onclick={handleDelete}
-        aria-label="Delete graph"
-      >
-        <span class="material-symbols-outlined text-sm sm:text-base">delete</span>
-      </button>
+      <BlockActions
+        {block}
+        {data}
+        {loading}
+        {showControls}
+        {onEdit}
+        {onRefresh}
+        {onDelete}
+      />
     </div>
   </div>
 
@@ -318,7 +300,7 @@
       <p class="m-0">Error: {error}</p>
       <button
         class="mt-3 cursor-pointer rounded border-0 bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
-        onclick={refresh}
+        onclick={onRefresh}
       >
         Retry
       </button>

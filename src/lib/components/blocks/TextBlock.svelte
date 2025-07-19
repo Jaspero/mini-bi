@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import BlockActions from '../ui/BlockActions.svelte';
   import type { Block, TextBlockConfig } from '../../types/index.ts';
   import { processTemplate, sanitizeHtml, type TemplateContext } from '../../utils/template.ts';
 
@@ -66,19 +67,15 @@
     updateContent();
   });
 
-  function handleEdit(event: MouseEvent) {
-    event.stopPropagation();
+  function onEdit() {
     onBlockEdit(block);
   }
 
-  function handleDelete(event: MouseEvent) {
-    event.stopPropagation();
+  function onDelete() {
     onBlockDeleteRequest(block);
   }
 
-  function handleRefresh(event: MouseEvent) {
-    event.stopPropagation();
-    // For text blocks, refreshing means re-processing the template
+  function onRefresh() {
     updateContent();
   }
 </script>
@@ -94,30 +91,13 @@
       <h3 class="m-0 truncate text-sm font-semibold text-gray-900 sm:text-base">{block.title}</h3>
     </div>
     <div class="flex flex-shrink-0 items-center gap-1">
-      <button
-        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
-        class:hidden={!showControls}
-        onclick={handleEdit}
-        aria-label="Edit text"
-      >
-        <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
-      </button>
-      <button
-        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600"
-        class:hidden={!showControls}
-        onclick={handleRefresh}
-        aria-label="Refresh text content"
-      >
-        <span class="material-symbols-outlined text-sm sm:text-base">refresh</span>
-      </button>
-      <button
-        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
-        class:hidden={!showControls}
-        onclick={handleDelete}
-        aria-label="Delete text"
-      >
-        <span class="material-symbols-outlined text-sm sm:text-base">delete</span>
-      </button>
+      <BlockActions
+        {block}
+        {showControls}
+        {onEdit}
+        {onRefresh}
+        {onDelete}
+      />
     </div>
   </div>
   <div class="text-content flex flex-1 flex-col leading-relaxed" style={getStyleString()}>

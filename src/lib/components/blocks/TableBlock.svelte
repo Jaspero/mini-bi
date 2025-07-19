@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import BlockActions from '../ui/BlockActions.svelte';
   import type { Block, TableBlockConfig, BlockData, IDashboardService } from '../../types/index.ts';
 
   interface Props {
@@ -131,18 +132,15 @@
     }
   }
 
-  async function refresh(event: MouseEvent) {
-    event.stopPropagation();
+  async function onRefresh() {
     await loadData();
   }
 
-  function handleEdit(event: MouseEvent) {
-    event.stopPropagation();
+  function onEdit() {
     onBlockEdit(block);
   }
 
-  function handleDelete(event: MouseEvent) {
-    event.stopPropagation();
+  function onDelete() {
     onBlockDeleteRequest(block);
   }
 
@@ -181,31 +179,15 @@
           value={searchTerm}
         />
       {/if}
-      <button
-        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
-        class:hidden={!showControls}
-        onclick={handleEdit}
-        aria-label="Edit table"
-      >
-        <span class="material-symbols-outlined text-sm sm:text-base">edit</span>
-      </button>
-      <button
-        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
-        class:hidden={!showControls}
-        onclick={refresh}
-        disabled={loading}
-        aria-label="Refresh table data"
-      >
-        <span class="material-symbols-outlined text-sm sm:text-base">refresh</span>
-      </button>
-      <button
-        class="flex touch-manipulation rounded p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
-        class:hidden={!showControls}
-        onclick={handleDelete}
-        aria-label="Delete table"
-      >
-        <span class="material-symbols-outlined text-sm sm:text-base">delete</span>
-      </button>
+      <BlockActions
+        {block}
+        {data}
+        {loading}
+        {showControls}
+        {onEdit}
+        {onRefresh}
+        {onDelete}
+      />
     </div>
   </div>
 
