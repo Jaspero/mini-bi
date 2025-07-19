@@ -1,6 +1,5 @@
 <script lang="ts">
   import Sidebar from '../ui/Sidebar.svelte';
-  import FilterManager from './FilterManager.svelte';
   import type { Filter } from '../../types/index.ts';
 
   let {
@@ -8,20 +7,14 @@
     filters = $bindable([]),
     onClose = () => {},
     onFilterValueChange = () => {},
-    onFiltersChange = () => {}
+    onToggleFilterManager = () => {}
   }: {
     isOpen: boolean;
     filters: Filter[];
     onClose: () => void;
     onFilterValueChange: (filterId: string, value: any) => void;
-    onFiltersChange: (filters: Filter[]) => void;
+    onToggleFilterManager: () => void;
   } = $props();
-
-  let showFilterManager = $state(false);
-
-  function toggleFilterManager() {
-    showFilterManager = !showFilterManager;
-  }
 
   function updateFilterValue(filter: Filter, value: any) {
     onFilterValueChange(filter.id, value);
@@ -83,7 +76,7 @@
         <h3 class="text-sm font-semibold tracking-wide text-gray-700 uppercase">Active Filters</h3>
         <button
           class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-          onclick={toggleFilterManager}
+          onclick={onToggleFilterManager}
         >
           <span class="material-symbols-outlined text-sm">tune</span>
           Manage
@@ -324,10 +317,3 @@
     </div>
   {/snippet}
 </Sidebar>
-
-<FilterManager
-  bind:filters
-  isOpen={showFilterManager}
-  onClose={() => (showFilterManager = false)}
-  {onFiltersChange}
-/>

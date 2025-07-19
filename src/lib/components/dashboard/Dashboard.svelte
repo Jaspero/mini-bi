@@ -13,6 +13,7 @@
   import BlockEditor from './BlockEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
   import FilterSidebar from './FilterSidebar.svelte';
+  import FilterManager from './FilterManager.svelte';
 
   interface Props {
     dashboardId?: string | null;
@@ -56,6 +57,7 @@
   // Filter management state
   let filters: Filter[] = $state([]);
   let showFilterSidebar = $state(false);
+  let showFilterManager = $state(false);
 
   onMount(async () => {
     if (dashboardId) {
@@ -130,6 +132,14 @@
   // Filter management functions
   function toggleFilterSidebar() {
     showFilterSidebar = !showFilterSidebar;
+  }
+
+  function toggleFilterManager() {
+    showFilterManager = !showFilterManager;
+  }
+
+  function closeFilterManager() {
+    showFilterManager = false;
   }
 
   function onFiltersChange(newFilters: Filter[]) {
@@ -672,5 +682,46 @@
   bind:filters
   onClose={() => (showFilterSidebar = false)}
   {onFilterValueChange}
-  {onFiltersChange}
+  onToggleFilterManager={toggleFilterManager}
 />
+
+<!-- Filter Manager Sidebar -->
+{#if showFilterManager}
+  <div
+    class="fixed inset-0 z-30 bg-black/30 transition-opacity"
+    onclick={closeFilterManager}
+    onkeydown={(e) => e.key === 'Escape' && closeFilterManager()}
+    role="button"
+    tabindex="-1"
+  ></div>
+
+  <div
+    class="fixed top-0 flex h-full w-full flex-col bg-white shadow-2xl transition-all duration-300 sm:w-[500px]"
+    class:z-40={true}
+    style="right: {showFilterSidebar
+      ? typeof window !== 'undefined' && window.innerWidth < 640
+        ? '0'
+        : '24rem'
+      : '0'}"
+  >
+    <div class="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
+      <h2 class="text-lg font-semibold text-gray-900">Filter Management</h2>
+      <button
+        class="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
+        onclick={closeFilterManager}
+        aria-label="Close filter manager"
+      >
+        <span class="material-symbols-outlined text-xl">close</span>
+      </button>
+    </div>
+    <div class="h-full flex-1 overflow-y-auto p-4">
+      <FilterManager
+        isOpen={true}
+        onClose={closeFilterManager}
+        dashboardId={dashboardId || ''}
+        bind:filters
+        onFiltersChange={onFiltersChange}
+      />
+    </div>
+  </div>
+{/if}

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Sidebar from '../ui/Sidebar.svelte';
   import Modal from '../ui/Modal.svelte';
   import type { Filter } from '../../types/index.ts';
 
@@ -7,12 +6,14 @@
     filters = $bindable([]),
     isOpen = false,
     onClose = () => {},
-    onFiltersChange = () => {}
+    onFiltersChange = () => {},
+    dashboardId = ''
   }: {
     filters: Filter[];
     isOpen: boolean;
     onClose: () => void;
     onFiltersChange: (filters: Filter[]) => void;
+    dashboardId?: string;
   } = $props();
 
   let editingFilter: Filter | null = $state(null);
@@ -180,108 +181,104 @@
   }
 </script>
 
-<Sidebar {isOpen} title="Filter Management" width="w-[500px]" {onClose}>
-  {#snippet children()}
-    <div class="space-y-6">
-      <!-- Filter List -->
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-medium text-gray-900">Filters</h3>
-          <button
-            class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-            onclick={createNewFilter}
+<div class="space-y-6">
+  <!-- Filter List -->
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-medium text-gray-900">Filters</h3>
+      <button
+        class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+        onclick={createNewFilter}
+      >
+        <span class="material-symbols-outlined text-sm">add</span>
+        Add Filter
+      </button>
+    </div>
+
+    {#if filters.length === 0}
+      <div class="py-8 text-center">
+        <svg
+          class="mx-auto h-12 w-12 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"
+          ></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No filters</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by creating a new filter.</p>
+      </div>
+    {:else}
+      <div class="space-y-3">
+        {#each filters as filter (filter.id)}
+          <div
+            class="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4"
           >
-            <span class="material-symbols-outlined text-sm">add</span>
-            Add Filter
-          </button>
-        </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-3">
+                <button class="flex-shrink-0" onclick={() => toggleFilterActive(filter.id)}>
+                  <div
+                    class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {filter.active
+                      ? 'bg-blue-600'
+                      : 'bg-gray-200'}"
+                  >
+                    <span class="sr-only">Toggle filter</span>
+                    <span
+                      class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out {filter.active
+                        ? 'translate-x-4'
+                        : 'translate-x-0'}"
+                    ></span>
+                  </div>
+                </button>
 
-        {#if filters.length === 0}
-          <div class="py-8 text-center">
-            <svg
-              class="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"
-              ></path>
-            </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">No filters</h3>
-            <p class="mt-1 text-sm text-gray-500">Get started by creating a new filter.</p>
-          </div>
-        {:else}
-          <div class="space-y-3">
-            {#each filters as filter (filter.id)}
-              <div
-                class="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4"
-              >
                 <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-3">
-                    <button class="flex-shrink-0" onclick={() => toggleFilterActive(filter.id)}>
-                      <div
-                        class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {filter.active
-                          ? 'bg-blue-600'
-                          : 'bg-gray-200'}"
-                      >
-                        <span class="sr-only">Toggle filter</span>
-                        <span
-                          class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out {filter.active
-                            ? 'translate-x-4'
-                            : 'translate-x-0'}"
-                        ></span>
-                      </div>
-                    </button>
-
-                    <div class="min-w-0 flex-1">
-                      <div class="flex items-center gap-2">
-                        <h4 class="truncate text-sm font-medium text-gray-900">{filter.name}</h4>
-                        <span
-                          class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800"
-                        >
-                          {filter.type}
-                        </span>
-                      </div>
-                      <div class="mt-1 flex items-center gap-4 text-sm text-gray-500">
-                        <span
-                          >Key: <code class="rounded bg-gray-100 px-1 py-0.5 text-xs"
-                            >{filter.key}</code
-                          ></span
-                        >
-                        <span>Value: {formatFilterValue(filter)}</span>
-                      </div>
-                    </div>
+                  <div class="flex items-center gap-2">
+                    <h4 class="truncate text-sm font-medium text-gray-900">{filter.name}</h4>
+                    <span
+                      class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800"
+                    >
+                      {filter.type}
+                    </span>
+                  </div>
+                  <div class="mt-1 flex items-center gap-4 text-sm text-gray-500">
+                    <span
+                      >Key: <code class="rounded bg-gray-100 px-1 py-0.5 text-xs"
+                        >{filter.key}</code
+                      ></span
+                    >
+                    <span>Value: {formatFilterValue(filter)}</span>
                   </div>
                 </div>
-
-                <div class="flex items-center gap-2">
-                  <button
-                    class="text-gray-400 hover:text-gray-600"
-                    onclick={() => editFilter(filter)}
-                    title="Edit filter"
-                  >
-                    <span class="material-symbols-outlined text-sm">edit</span>
-                  </button>
-                  <button
-                    class="text-red-400 hover:text-red-600"
-                    onclick={() => deleteFilter(filter.id)}
-                    title="Delete filter"
-                  >
-                    <span class="material-symbols-outlined text-sm">delete</span>
-                  </button>
-                </div>
               </div>
-            {/each}
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                class="text-gray-400 hover:text-gray-600"
+                onclick={() => editFilter(filter)}
+                title="Edit filter"
+              >
+                <span class="material-symbols-outlined text-sm">edit</span>
+              </button>
+              <button
+                class="text-red-400 hover:text-red-600"
+                onclick={() => deleteFilter(filter.id)}
+                title="Delete filter"
+              >
+                <span class="material-symbols-outlined text-sm">delete</span>
+              </button>
+            </div>
           </div>
-        {/if}
+        {/each}
       </div>
-    </div>
-  {/snippet}
-</Sidebar>
+    {/if}
+  </div>
+</div>
 
 <!-- Filter Editor Modal -->
 <Modal
@@ -446,6 +443,7 @@
                 type="button"
                 onclick={() => removeFilterOption(index)}
                 class="text-red-600 hover:text-red-500"
+                aria-label="Remove option"
               >
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
