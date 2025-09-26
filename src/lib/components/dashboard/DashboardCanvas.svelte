@@ -432,10 +432,7 @@
   }
 </script>
 
-<div
-  class="dashboard-canvas relative h-full w-full overflow-auto bg-slate-50"
-  bind:this={canvasElement}
->
+<div class="dashboard-canvas relative h-full w-full overflow-auto" bind:this={canvasElement}>
   <div
     class="relative m-2 min-h-full min-w-full sm:m-5"
     style="width: {canvasWidth}px; height: {canvasHeight}px;"
@@ -444,7 +441,7 @@
     <div
       class="pointer-events-none absolute top-0 left-0 h-full w-full opacity-50"
       style="
-      background-image: linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
+      background-image: linear-gradient(to right, var(--color-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--color-grid-line) 1px, transparent 1px);
       background-size: {gridSize}px {gridSize}px;
     "
     ></div>
@@ -579,3 +576,9 @@
     {/each}
   </div>
 </div>
+
+<style>
+  .dashboard-canvas {
+    background: var(--color-canvas-bg);
+  }
+</style>

@@ -182,7 +182,7 @@
   });
 </script>
 
-<div class="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-sm">
+<div class="bi-block flex h-full w-full flex-col overflow-hidden">
   <div
     class="flex h-[50px] items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-2 py-2 sm:gap-4 sm:px-4 sm:py-3"
   >
@@ -194,7 +194,9 @@
         <input
           type="text"
           placeholder="Search..."
-          class="mr-1 w-20 rounded-md border border-gray-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:w-auto sm:px-3 sm:text-sm"
+          class="mr-1 w-20 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs focus:border-blue-500 focus:ring-2
+                 focus:ring-blue-500 focus:outline-none sm:w-auto sm:px-3 sm:text-sm
+                 dark:placeholder-gray-400"
           oninput={handleSearch}
           value={searchTerm}
         />
@@ -315,3 +317,27 @@
     {/if}
   {/if}
 </div>
+
+<style>
+  :global(.table-neutral-bg) {
+    background: var(--color-surface);
+  }
+  :global(.table-neutral-bg-alt) {
+    background: var(--color-bg-alt);
+  }
+  :global(.table-border) {
+    border-color: var(--color-border);
+  }
+  :global(.table-border-strong) {
+    border-color: var(--color-border-strong);
+  }
+  :global(.table-text-muted) {
+    color: var(--color-text-muted);
+  }
+  :global(.table-text) {
+    color: var(--color-text);
+  }
+  :global(.table-hover:hover) {
+    background: var(--color-bg-alt);
+  }
+</style>

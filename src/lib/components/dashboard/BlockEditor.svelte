@@ -542,6 +542,8 @@
                       ? 'opacity-50'
                       : ''} {dragOverIndex === index ? 'border-blue-400 bg-blue-50' : ''}"
                     draggable="true"
+                    role="group"
+                    aria-label={`Column ${index + 1} configuration`}
                     ondragstart={(e) => handleDragStart(e, index)}
                     ondragover={(e) => handleDragOver(e, index)}
                     ondragleave={handleDragLeave}
@@ -564,6 +566,7 @@
                         <!-- Move Up Button -->
                         <button
                           type="button"
+                          aria-label={`Move column ${index + 1} up`}
                           disabled={index === 0}
                           class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
                           onclick={() => {
@@ -597,6 +600,7 @@
                         <!-- Move Down Button -->
                         <button
                           type="button"
+                          aria-label={`Move column ${index + 1} down`}
                           disabled={index === editedBlock.config.columns.length - 1}
                           class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
                           onclick={() => {
@@ -631,6 +635,9 @@
                         <div
                           class="cursor-grab rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600 active:cursor-grabbing"
                           title="Drag to reorder"
+                          role="button"
+                          tabindex="0"
+                          aria-label={`Drag handle for column ${index + 1}`}
                           onmousedown={(e) => (e.currentTarget.style.cursor = 'grabbing')}
                           onmouseup={(e) => (e.currentTarget.style.cursor = 'grab')}
                         >
@@ -654,8 +661,12 @@
                     <!-- Column Configuration Fields -->
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center sm:gap-2">
                       <div class="sm:col-span-3">
-                        <label class="block text-xs font-medium text-gray-600 sm:hidden">Key</label>
+                        <label
+                          class="block text-xs font-medium text-gray-600 sm:hidden"
+                          for={`col-key-${index}`}>Key</label
+                        >
                         <input
+                          id={`col-key-${index}`}
                           type="text"
                           placeholder="Column key"
                           bind:value={column.key}
@@ -663,10 +674,12 @@
                         />
                       </div>
                       <div class="sm:col-span-3">
-                        <label class="block text-xs font-medium text-gray-600 sm:hidden"
-                          >Header</label
+                        <label
+                          class="block text-xs font-medium text-gray-600 sm:hidden"
+                          for={`col-header-${index}`}>Header</label
                         >
                         <input
+                          id={`col-header-${index}`}
                           type="text"
                           placeholder="Header"
                           bind:value={column.header}
@@ -674,9 +687,12 @@
                         />
                       </div>
                       <div class="sm:col-span-2">
-                        <label class="block text-xs font-medium text-gray-600 sm:hidden">Type</label
+                        <label
+                          class="block text-xs font-medium text-gray-600 sm:hidden"
+                          for={`col-type-${index}`}>Type</label
                         >
                         <select
+                          id={`col-type-${index}`}
                           bind:value={column.type}
                           class="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                         >
@@ -687,10 +703,12 @@
                         </select>
                       </div>
                       <div class="sm:col-span-1">
-                        <label class="block text-xs font-medium text-gray-600 sm:hidden"
-                          >Width</label
+                        <label
+                          class="block text-xs font-medium text-gray-600 sm:hidden"
+                          for={`col-width-${index}`}>Width</label
                         >
                         <input
+                          id={`col-width-${index}`}
                           type="number"
                           placeholder="Width"
                           bind:value={column.width}
@@ -698,8 +716,9 @@
                         />
                       </div>
                       <div class="sm:col-span-1">
-                        <label class="flex items-center">
+                        <label class="flex items-center" for={`col-sort-${index}`}>
                           <input
+                            id={`col-sort-${index}`}
                             type="checkbox"
                             bind:checked={column.sortable}
                             class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -708,31 +727,15 @@
                         </label>
                       </div>
                       <div class="sm:col-span-1">
-                        <label class="flex items-center">
+                        <label class="flex items-center" for={`col-filter-${index}`}>
                           <input
+                            id={`col-filter-${index}`}
                             type="checkbox"
                             bind:checked={column.filterable}
                             class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                           <span class="ml-1 text-xs text-gray-600">Filter</span>
                         </label>
-                      </div>
-                      <div class="sm:col-span-1">
-                        <button
-                          type="button"
-                          class="w-full rounded bg-red-100 px-2 py-1 text-xs text-red-600 transition-colors hover:bg-red-200 sm:w-auto"
-                          onclick={() => {
-                            if (editedBlock) {
-                              const config = editedBlock.config as any;
-                              config.columns = config.columns.filter(
-                                (_: any, i: number) => i !== index
-                              );
-                              editedBlock = { ...editedBlock };
-                            }
-                          }}
-                        >
-                          Remove
-                        </button>
                       </div>
                     </div>
                   </div>

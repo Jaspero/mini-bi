@@ -14,6 +14,7 @@ A comprehensive, lightweight business intelligence library built with Svelte 5. 
 - 🔄 **Real-time Updates**: Automatic data refresh and filter application
 - 🛠️ **TypeScript Support**: Full type safety and IntelliSense support
 - 🎪 **Extensible**: Easy to extend with custom block types and data sources
+- 🌗 **Dark Mode**: Built-in light/dark theme with system preference detection and toggle
 
 ## 🚀 Quick Start
 
@@ -51,11 +52,8 @@ export default {
   theme: {
     extend: {}
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography')
-  ]
-}
+  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')]
+};
 ```
 
 2. **Import styles in your app**:
@@ -73,17 +71,13 @@ export default {
 <!-- App.svelte -->
 <script>
   import { DashboardComponent, MockDashboardService } from '@jaspero/mini-bi';
-  
+
   const dashboardService = new MockDashboardService();
   let selectedDashboardId = '1'; // Use existing sample dashboard
 </script>
 
 <main class="h-screen">
-  <DashboardComponent 
-    {dashboardService}
-    {selectedDashboardId}
-    editable={true}
-  />
+  <DashboardComponent {dashboardService} {selectedDashboardId} editable={true} />
 </main>
 ```
 
@@ -201,25 +195,25 @@ const dashboard: Dashboard = {
 <!-- CustomBlock.svelte -->
 <script lang="ts">
   import type { Block, BlockData, IDashboardService } from '@jaspero/mini-bi';
-  
+
   interface Props {
     block: Block;
     dashboardService: IDashboardService;
     filterParams?: Record<string, any>;
     showControls?: boolean;
   }
-  
+
   let { block, dashboardService, filterParams = {}, showControls = false }: Props = $props();
-  
+
   let data: BlockData | null = $state(null);
   let loading = $state(false);
-  
+
   async function loadData() {
     loading = true;
     try {
       data = await dashboardService.loadBlockData(
-        block.id, 
-        block.type, 
+        block.id,
+        block.type,
         block.config,
         block.dataSource,
         filterParams
@@ -230,11 +224,11 @@ const dashboard: Dashboard = {
       loading = false;
     }
   }
-  
+
   $effect(() => {
     loadData();
   });
-  
+
   $effect(() => {
     if (filterParams) {
       loadData();
@@ -242,10 +236,10 @@ const dashboard: Dashboard = {
   });
 </script>
 
-<div class="h-full w-full bg-white border border-gray-200 rounded-lg p-4">
+<div class="h-full w-full rounded-lg border border-gray-200 bg-white p-4">
   {#if loading}
-    <div class="flex items-center justify-center h-full">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <div class="flex h-full items-center justify-center">
+      <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
     </div>
   {:else if data}
     <!-- Your custom visualization here -->
@@ -300,7 +294,7 @@ const filters: Filter[] = [
 <!-- Dashboard Manager -->
 <script>
   import { DashboardManager, MockDashboardService } from '@jaspero/mini-bi';
-  
+
   const service = new MockDashboardService();
 </script>
 
@@ -409,17 +403,19 @@ const tableConfig: TableBlockConfig = {
 The library uses Tailwind CSS classes. You can customize the appearance by:
 
 1. **Override CSS classes**:
+
 ```css
 .mini-bi-dashboard {
-  @apply bg-gray-50 border-gray-300;
+  @apply border-gray-300 bg-gray-50;
 }
 
 .mini-bi-block {
-  @apply shadow-lg rounded-xl;
+  @apply rounded-xl shadow-lg;
 }
 ```
 
 2. **Custom CSS variables**:
+
 ```css
 :root {
   --mini-bi-primary: #3b82f6;

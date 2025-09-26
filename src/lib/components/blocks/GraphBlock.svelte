@@ -43,6 +43,15 @@
   onMount(async () => {
     await loadData();
     initChart();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('themechange', () => {
+        if (chart) {
+          // force update with new background/text colors
+          updateChart();
+        }
+      });
+    }
   });
 
   onDestroy(() => {
@@ -124,6 +133,8 @@
       color: colors,
       animation: animations?.enabled ?? true,
       animationDuration: animations?.duration ?? 1000,
+      backgroundColor: getCssVar('--color-surface', '#ffffff'),
+      textStyle: { color: getCssVar('--color-text', '#111827') },
       grid: {
         left: '10%',
         right: '10%',
@@ -131,18 +142,40 @@
         top: legend?.show ? '15%' : '10%',
         containLabel: true
       },
+      xAxis:
+        xAxis?.type === 'category'
+          ? {
+              type: 'category',
+              name: xAxis.name,
+              axisLine: { lineStyle: { color: getCssVar('--color-border-strong', '#d1d5db') } },
+              axisLabel: { color: getCssVar('--color-text-muted', '#4b5563') },
+              splitLine: { show: false }
+            }
+          : undefined,
+      yAxis:
+        yAxis?.type === 'value'
+          ? {
+              type: 'value',
+              name: yAxis.name,
+              axisLine: { lineStyle: { color: getCssVar('--color-border-strong', '#d1d5db') } },
+              axisLabel: { color: getCssVar('--color-text-muted', '#4b5563') },
+              splitLine: {
+                show: true,
+                lineStyle: { color: getCssVar('--color-grid-line', '#e5e7eb') }
+              }
+            }
+          : undefined,
       legend: legend?.show
         ? {
             show: true,
             type: 'plain',
             orient: 'horizontal',
             left: legend.align,
-            top:
-              legend.position === 'top' ? 'top' : legend.position === 'bottom' ? 'bottom' : 'top',
-            right: legend.position === 'right' ? 'right' : undefined,
-            bottom: legend.position === 'bottom' ? 'bottom' : undefined
+            top: legend.position === 'top' ? 0 : 'auto',
+            bottom: legend.position === 'bottom' ? 0 : 'auto',
+            textStyle: { color: getCssVar('--color-text-muted', '#4b5563') }
           }
-        : { show: false }
+        : undefined
     };
 
     switch (chartType) {
@@ -301,11 +334,11 @@
     }
 
     try {
-      // Get the chart as a data URL (PNG format by default)
+      const bg = getCssVar('--color-surface', '#ffffff');
       const dataURL = chart.getDataURL({
         type: 'png',
-        pixelRatio: 2, // Higher resolution
-        backgroundColor: '#ffffff'
+        pixelRatio: 2,
+        backgroundColor: bg
       });
 
       // Create download link
@@ -323,9 +356,16 @@
       alert('Failed to export chart as image');
     }
   }
+
+  // Derive background color from CSS variable at runtime
+  const getCssVar = (name: string, fallback: string) => {
+    if (typeof window === 'undefined') return fallback;
+    const val = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return val || fallback;
+  };
 </script>
 
-<div class="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-sm">
+<div class="bi-block flex h-full w-full flex-col overflow-hidden">
   <div
     class="flex h-[50px] items-center justify-between border-b border-gray-200 bg-gray-50 px-2 py-2 sm:px-4 sm:py-3"
   >
@@ -364,6 +404,13 @@
       </button>
     </div>
   {:else}
-    <div class="min-h-0 w-full flex-1" bind:this={chartContainer}></div>
+    <div class="chart-surface min-h-0 w-full flex-1" bind:this={chartContainer}></div>
   {/if}
 </div>
+
+<!-- placeholder to ensure component picks up global vars if needed -->
+<style>
+  .chart-surface {
+    background: var(--color-block-surface);
+  }
+</style>

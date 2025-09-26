@@ -230,6 +230,19 @@
     }
   }
 
+  function applyMonacoTheme(current: 'light' | 'dark') {
+    if (monaco && useMonaco) {
+      monaco.editor.setTheme(current === 'dark' ? 'vs-dark' : 'vs');
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('themechange', (e: any) => {
+      const t = e.detail?.theme;
+      if (t === 'light' || t === 'dark') applyMonacoTheme(t);
+    });
+  }
+
   onMount(() => {
     if (textareaElement) {
       textareaElement.focus();
@@ -248,6 +261,10 @@
     if (editorContainer) {
       observer.observe(editorContainer);
     }
+
+    // initial theme sync
+    const attr = document.documentElement.getAttribute('data-theme');
+    if (attr === 'dark' || attr === 'light') applyMonacoTheme(attr);
 
     return () => {
       observer.disconnect();
@@ -317,7 +334,9 @@
 </div>
 
 <!-- Status and controls -->
-<div class="flex items-center justify-between gap-2 border-t border-gray-300 bg-gray-50 p-2">
+<div
+  class="editor-status flex items-center justify-between gap-2 border-t border-gray-300 bg-gray-50 p-2"
+>
   <div class="flex items-center gap-2">
     <span class="text-xs text-gray-500">
       {useMonaco
@@ -351,3 +370,24 @@
     {/if}
   </div>
 </div>
+
+<style>
+  textarea {
+    background: var(--color-editor-bg);
+    color: var(--color-text);
+  }
+  textarea::placeholder {
+    color: var(--color-text-muted);
+  }
+  .editor-status {
+    background: var(--color-bg-alt);
+    border-color: var(--color-border);
+    color: var(--color-text-muted);
+  }
+  .editor-status button {
+    background: var(--color-primary);
+  }
+  .editor-status button:hover {
+    background: var(--color-primary-hover);
+  }
+</style>

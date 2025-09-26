@@ -355,7 +355,12 @@
             position: 'top',
             align: 'center'
           },
-          colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b'],
+          colors: [
+            'var(--color-primary)',
+            'var(--color-danger)',
+            'var(--color-accent)',
+            'var(--color-warning)'
+          ],
           animations: {
             enabled: true,
             duration: 750,
@@ -369,7 +374,7 @@
           styling: {
             fontSize: 14,
             fontFamily: 'Arial, sans-serif',
-            color: '#374151',
+            color: 'var(--color-text)',
             padding: 16,
             textAlign: 'left',
             fontWeight: 'normal',
@@ -417,13 +422,14 @@
       const canvas = await html2canvas(canvasElement, {
         scrollX: -window.scrollX,
         scrollY: -window.scrollY,
-        background: '#f9fafb',
+        background:
+          getComputedStyle(document.documentElement).getPropertyValue('--color-bg') || '#f9fafb',
         scale: 2,
         useCORS: true,
         allowTaint: true,
         width: canvasElement.scrollWidth,
         height: canvasElement.scrollHeight
-      });
+      } as any);
 
       // Create download link
       const link = document.createElement('a');
@@ -442,6 +448,13 @@
       isExporting = false;
     }
   }
+
+  const themeColors = [
+    'var(--color-primary)',
+    'var(--color-danger)',
+    'var(--color-accent)',
+    'var(--color-warning)'
+  ];
 </script>
 
 <div class="min-h-screen bg-gray-50">
@@ -726,3 +739,7 @@
     </div>
   </div>
 {/if}
+
+<style>
+  /* Removed unused .dashboard-surface selector */
+</style>

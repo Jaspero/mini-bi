@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import BlockActions from '../ui/BlockActions.svelte';
   import type { Block, TextBlockConfig } from '../../types/index';
   import { processTemplate, sanitizeHtml, type TemplateContext } from '../../utils/template';
@@ -50,33 +50,42 @@
     }
   }
 
-  function getStyleString(): string {
-    if (!textConfig?.styling) return '';
-
-    const styles = textConfig.styling;
-    return `
-      font-size: ${styles.fontSize}px;
-      font-family: ${styles.fontFamily};
-      color: ${styles.color};
-      ${styles.backgroundColor ? `background-color: ${styles.backgroundColor};` : ''}
-      padding: ${styles.padding}px;
-      text-align: ${styles.textAlign};
-      font-weight: ${styles.fontWeight};
-      font-style: ${styles.fontStyle};
-      width: 100%;
-      height: 100%;
-      box-sizing: border-box;
-      overflow: auto;
-    `;
+  function normalizeStyling() {
+    if (textConfig?.styling) {
+      const c = (textConfig.styling.color || '').toLowerCase().trim();
+      const needsMap =
+        !c ||
+        ['#000', '#000000', '#111', '#111827', '#222', '#222222', '#1f2937', '#374151'].includes(c);
+      if (needsMap) textConfig.styling.color = 'var(--color-text)';
+    }
   }
 
   onMount(() => {
+    normalizeStyling();
     updateContent();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('themechange', handleThemeChange);
+    }
   });
+
+  function handleThemeChange() {
+    // Force refresh of inline styles pulling from CSS variables
+    if (textConfig?.styling && textConfig.styling.color?.startsWith('var(')) {
+      // trigger reactive re-render by cloning
+      textConfig = { ...textConfig } as any;
+    }
+  }
 
   $effect(() => {
     textConfig = block.config as TextBlockConfig;
+    normalizeStyling();
     updateContent();
+  });
+
+  onDestroy(() => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('themechange', handleThemeChange);
+    }
   });
 
   function onEdit() {
@@ -90,12 +99,32 @@
   function onRefresh() {
     updateContent();
   }
+
+  function getStyleString(): string {
+    if (!textConfig?.styling) return '';
+
+    const styles = textConfig.styling;
+    const colorVar = styles.color?.startsWith('var(');
+    return `
+      font-size: ${styles.fontSize}px;
+      font-family: ${styles.fontFamily};
+      ${colorVar ? '' : `color: ${styles.color || 'var(--color-text)'};`}
+      ${styles.backgroundColor ? `background-color: ${styles.backgroundColor};` : ''}
+      padding: ${styles.padding}px;
+      text-align: ${styles.textAlign};
+      font-weight: ${styles.fontWeight};
+      font-style: ${styles.fontStyle};
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      overflow: auto;
+    `;
+  }
+
+  /* Removed duplicate onMount/$effect and handlers (already defined earlier with theming logic) */
 </script>
 
-<div
-  class="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-sm"
-  bind:this={element}
->
+<div class="bi-block flex h-full w-full flex-col overflow-hidden" bind:this={element}>
   <div
     class="flex h-[50px] items-center justify-between border-b border-gray-200 bg-gray-50 px-2 py-2 sm:px-4 sm:py-3"
   >
@@ -137,12 +166,12 @@
   }
 
   .text-content :global(a) {
-    color: #3b82f6;
+    color: var(--color-primary);
     text-decoration: underline;
   }
 
   .text-content :global(a:hover) {
-    color: #1d4ed8;
+    color: var(--color-primary-hover);
   }
 
   .text-content :global(ul),
@@ -158,13 +187,13 @@
   .text-content :global(blockquote) {
     margin: 1em 0;
     padding: 1em;
-    background: #f3f4f6;
-    border-left: 4px solid #d1d5db;
+    background: var(--color-code-block-bg);
+    border-left: 4px solid var(--color-border-strong);
     font-style: italic;
   }
 
   .text-content :global(code) {
-    background: #f3f4f6;
+    background: var(--color-code-block-bg);
     padding: 0.2em 0.4em;
     border-radius: 3px;
     font-family: 'Monaco', 'Consolas', monospace;
@@ -172,7 +201,7 @@
   }
 
   .text-content :global(pre) {
-    background: #f3f4f6;
+    background: var(--color-code-block-bg);
     padding: 1em;
     border-radius: 6px;
     overflow-x: auto;
@@ -181,7 +210,7 @@
 
   .text-content :global(hr) {
     border: none;
-    border-top: 1px solid #d1d5db;
+    border-top: 1px solid var(--color-border-strong);
     margin: 2em 0;
   }
 </style>

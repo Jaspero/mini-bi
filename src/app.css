@@ -2,6 +2,247 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
+/*--------------------------------------*
+ | Theme Variables                      |
+ *--------------------------------------*/
+
+:root {
+  /* semantic color tokens */
+  --color-bg: #ffffff;
+  --color-bg-alt: #f9fafb;
+  --color-surface: #ffffff;
+  --color-canvas-bg: #f3f4f6; /* lighter than main surface to host blocks */
+  --color-block-surface: #ffffff; /* individual block card */
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+  --color-text: #111827;
+  --color-text-muted: #4b5563;
+  --color-text-inverted: #ffffff;
+  --color-primary: #3b82f6; /* blue-500 */
+  --color-primary-hover: #1d4ed8; /* blue-700 */
+  --color-accent: #10b981; /* emerald-500 */
+  --color-danger: #ef4444; /* red-500 */
+  --color-warning: #f59e0b; /* amber-500 */
+  --color-grid-line: #e5e7eb;
+  --color-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 1px rgba(0, 0, 0, 0.05);
+
+  --color-editor-bg: #ffffff;
+  --color-editor-border: #e5e7eb;
+  --color-code-block-bg: #f3f4f6;
+  --color-inline-code-bg: #f3f4f6;
+
+  /* form elements */
+  --color-input-bg: #ffffff;
+  --color-input-bg-alt: #f9fafb;
+  --color-input-border: #d1d5db;
+  --color-input-border-focus: #3b82f6;
+  --color-input-placeholder: #6b7280;
+
+  --transition-theme: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme='dark'] {
+  --color-bg: #0f172a; /* slate-900 */
+  --color-bg-alt: #1e293b; /* slate-800 */
+  --color-surface: #1e293b; /* slate-800 */
+  --color-canvas-bg: #0d1320; /* slightly darker than surface */
+  --color-block-surface: #1e2736; /* raise blocks slightly */
+  --color-border: #334155; /* slate-700 */
+  --color-border-strong: #475569; /* slate-600 */
+  --color-text: #f1f5f9; /* slate-100 */
+  --color-text-muted: #94a3b8; /* slate-400 */
+  --color-text-inverted: #0f172a;
+  --color-primary: #60a5fa; /* blue-400 */
+  --color-primary-hover: #3b82f6; /* blue-500 */
+  --color-accent: #34d399; /* emerald-400 */
+  --color-danger: #f87171; /* red-400 */
+  --color-warning: #fbbf24; /* amber-400 */
+  --color-grid-line: #334155;
+  --color-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.4), 0 1px 3px 1px rgba(0, 0, 0, 0.3);
+
+  --color-editor-bg: #0f172a;
+  --color-editor-border: #334155;
+  --color-code-block-bg: #1e293b;
+  --color-inline-code-bg: #1e293b;
+
+  /* form elements */
+  --color-input-bg: #1e2736;
+  --color-input-bg-alt: #1e293b;
+  --color-input-border: #334155;
+  --color-input-border-focus: #60a5fa;
+  --color-input-placeholder: #64748b;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Tailwind utility overrides mapped to theme tokens */
+:root,
+[data-theme='dark'] {
+  /* Background shades */
+  --twc-bg-white: var(--color-surface);
+  --twc-bg-gray-50: var(--color-bg-alt);
+  --twc-bg-gray-100: var(--color-bg-alt);
+  --twc-bg-gray-200: var(--color-border);
+  --twc-bg-gray-300: var(--color-border-strong);
+  /* Text */
+  --twc-text-gray-900: var(--color-text);
+  --twc-text-gray-700: var(--color-text);
+  --twc-text-gray-600: var(--color-text-muted);
+  --twc-text-gray-500: var(--color-text-muted);
+  --twc-text-gray-400: var(--color-text-muted);
+  /* Border */
+  --twc-border-gray-200: var(--color-border);
+  --twc-border-gray-300: var(--color-border);
+  --twc-border-gray-400: var(--color-border-strong);
+}
+
+/* Apply overrides by hooking into generated classes (non-destructive) */
+[class*='bg-white'] {
+  background-color: var(--twc-bg-white) !important;
+}
+[class*='bg-gray-50'] {
+  background-color: var(--twc-bg-gray-50) !important;
+}
+[class*='bg-gray-100'] {
+  background-color: var(--twc-bg-gray-100) !important;
+}
+[class*='bg-gray-200'] {
+  background-color: var(--twc-bg-gray-200) !important;
+}
+[class*='bg-gray-300'] {
+  background-color: var(--twc-bg-gray-300) !important;
+}
+
+[class*='text-gray-900'] {
+  color: var(--twc-text-gray-900) !important;
+}
+[class*='text-gray-700'] {
+  color: var(--twc-text-gray-700) !important;
+}
+[class*='text-gray-600'] {
+  color: var(--twc-text-gray-600) !important;
+}
+[class*='text-gray-500'] {
+  color: var(--twc-text-gray-500) !important;
+}
+[class*='text-gray-400'] {
+  color: var(--twc-text-gray-400) !important;
+}
+
+[class*='border-gray-200'] {
+  border-color: var(--twc-border-gray-200) !important;
+}
+[class*='border-gray-300'] {
+  border-color: var(--twc-border-gray-300) !important;
+}
+[class*='border-gray-400'] {
+  border-color: var(--twc-border-gray-400) !important;
+}
+
+/* Primary buttons recolor (heuristic) */
+button.bg-blue-600 {
+  background: var(--color-primary) !important;
+}
+button.bg-blue-600:hover {
+  background: var(--color-primary-hover) !important;
+}
+
+/* Removed smooth theme transitions for instant toggle */
+body *,
+body *::before,
+body *::after {
+  transition: none !important;
+}
+
+/* Block styling */
+.bi-block {
+  background: var(--color-block-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  box-shadow: var(--color-shadow);
+}
+.bi-block-header {
+  border-bottom: 1px solid var(--color-border);
+}
+[data-theme='dark'] .bi-block {
+  box-shadow: var(--color-shadow);
+}
+
+/* Utility bridging tokens to Tailwind (optional future use) */
+.theme-surface {
+  background: var(--color-surface);
+}
+.theme-border {
+  border-color: var(--color-border);
+}
+.theme-border-strong {
+  border-color: var(--color-border-strong);
+}
+.theme-muted {
+  color: var(--color-text-muted);
+}
+.theme-primary {
+  color: var(--color-primary);
+}
+.theme-bg-alt {
+  background: var(--color-bg-alt);
+}
+
+/* Code / prose styling overrides */
+pre,
+code {
+  background: var(--color-inline-code-bg);
+}
+pre {
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+}
+
+/* Inputs */
+input[type='text'],
+input[type='search'],
+input[type='number'],
+select,
+textarea {
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  border-color: var(--color-input-border);
+}
+input[type='text']::placeholder,
+input[type='search']::placeholder,
+textarea::placeholder {
+  color: var(--color-input-placeholder);
+}
+input[type='text']:focus,
+input[type='search']:focus,
+input[type='number']:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-input-border-focus);
+  box-shadow: 0 0 0 1px var(--color-input-border-focus);
+}
+
+/* Scrollbars (WebKit) */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--color-bg-alt);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 6px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+
 /* Mobile specific improvements */
 @media (max-width: 640px) {
   /* Improve touch targets */
