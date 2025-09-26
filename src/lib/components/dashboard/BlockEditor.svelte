@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import type { Block, Query } from '../../types/index.ts';
+  import type { Block, Query } from '../../types/index';
   import Modal from '../ui/Modal.svelte';
   import MonacoEditor from '../ui/MonacoEditor.svelte';
 

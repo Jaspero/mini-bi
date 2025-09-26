@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Dashboard, IDashboardService, CreateDashboardRequest } from '../../types/index.ts';
-  import { validateDashboard } from '../../utils/validation.ts';
+  import type { Dashboard, IDashboardService, CreateDashboardRequest } from '../../types/index';
+  import { validateDashboard } from '../../utils/validation';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 
   interface Props {

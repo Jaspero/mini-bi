@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Query, IDashboardService, QueryParameter } from '../../types/index.ts';
+  import type { Query, IDashboardService, QueryParameter } from '../../types/index';
   import SQLEditor from './SQLEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 

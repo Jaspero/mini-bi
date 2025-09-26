@@ -1,6 +1,6 @@
 <script lang="ts">
   import Modal from '../ui/Modal.svelte';
-  import type { Filter } from '../../types/index.ts';
+  import type { Filter } from '../../types/index';
 
   let {
     filters = $bindable([]),

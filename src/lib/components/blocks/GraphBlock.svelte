@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import * as echarts from 'echarts';
   import BlockActions from '../ui/BlockActions.svelte';
-  import type { Block, GraphBlockConfig, BlockData, IDashboardService } from '../../types/index.ts';
+  import type { Block, GraphBlockConfig, BlockData, IDashboardService } from '../../types/index';
 
   interface Props {
     block: Block;
@@ -79,7 +79,13 @@
         dataSource: block.dataSource
       };
 
-      data = await dashboardService.loadBlockData(block.id, block.type, blockConfig, block.dataSource, filterParams);
+      data = await dashboardService.loadBlockData(
+        block.id,
+        block.type,
+        blockConfig,
+        block.dataSource,
+        filterParams
+      );
       loading = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load data';

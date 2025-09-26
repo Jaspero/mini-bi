@@ -8,7 +8,7 @@
     BlockConfig,
     Query,
     Filter
-  } from '../../types/index.ts';
+  } from '../../types/index';
   import DashboardCanvas from './DashboardCanvas.svelte';
   import BlockEditor from './BlockEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Dashboard, Block, Position, Size, IDashboardService } from '../../types/index.ts';
+  import type { Dashboard, Block, Position, Size, IDashboardService } from '../../types/index';
   import TableBlock from '../blocks/TableBlock.svelte';
   import GraphBlock from '../blocks/GraphBlock.svelte';
   import TextBlock from '../blocks/TextBlock.svelte';

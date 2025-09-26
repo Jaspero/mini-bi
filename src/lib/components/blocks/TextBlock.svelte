@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import BlockActions from '../ui/BlockActions.svelte';
-  import type { Block, TextBlockConfig } from '../../types/index.ts';
-  import { processTemplate, sanitizeHtml, type TemplateContext } from '../../utils/template.ts';
+  import type { Block, TextBlockConfig } from '../../types/index';
+  import { processTemplate, sanitizeHtml, type TemplateContext } from '../../utils/template';
 
   interface Props {
     block: Block;

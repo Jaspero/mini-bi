@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import MonacoEditor from '../ui/MonacoEditor.svelte';
   import Modal from '../ui/Modal.svelte';
-  import type { DatabaseSchema } from '../../types/index.ts';
+  import type { DatabaseSchema } from '../../types/index';
 
   let {
     value = $bindable(''),

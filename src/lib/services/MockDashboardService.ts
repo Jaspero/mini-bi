@@ -11,7 +11,7 @@ import type {
   QueryColumn,
   Query,
   DatabaseSchema
-} from '../types/index.ts';
+} from '../types/index';
 
 export class MockDashboardService implements IDashboardService {
   private dashboards: Dashboard[] = [
@@ -327,14 +327,62 @@ export class MockDashboardService implements IDashboardService {
     [
       'campaign-query',
       [
-        { campaign_name: 'Summer Sale', impressions: 125000, clicks: 3200, region: 'North America', status: 'active' },
-        { campaign_name: 'Back to School', impressions: 98000, clicks: 2800, region: 'Europe', status: 'active' },
-        { campaign_name: 'Holiday Promo', impressions: 156000, clicks: 4100, region: 'Asia Pacific', status: 'active' },
-        { campaign_name: 'New Year Deal', impressions: 87000, clicks: 2300, region: 'Latin America', status: 'completed' },
-        { campaign_name: 'Spring Collection', impressions: 112000, clicks: 3850, region: 'North America', status: 'active' },
-        { campaign_name: 'Flash Sale', impressions: 75000, clicks: 2100, region: 'Europe', status: 'paused' },
-        { campaign_name: 'Black Friday', impressions: 245000, clicks: 8900, region: 'North America', status: 'active' },
-        { campaign_name: 'Cyber Monday', impressions: 198000, clicks: 6200, region: 'Asia Pacific', status: 'active' }
+        {
+          campaign_name: 'Summer Sale',
+          impressions: 125000,
+          clicks: 3200,
+          region: 'North America',
+          status: 'active'
+        },
+        {
+          campaign_name: 'Back to School',
+          impressions: 98000,
+          clicks: 2800,
+          region: 'Europe',
+          status: 'active'
+        },
+        {
+          campaign_name: 'Holiday Promo',
+          impressions: 156000,
+          clicks: 4100,
+          region: 'Asia Pacific',
+          status: 'active'
+        },
+        {
+          campaign_name: 'New Year Deal',
+          impressions: 87000,
+          clicks: 2300,
+          region: 'Latin America',
+          status: 'completed'
+        },
+        {
+          campaign_name: 'Spring Collection',
+          impressions: 112000,
+          clicks: 3850,
+          region: 'North America',
+          status: 'active'
+        },
+        {
+          campaign_name: 'Flash Sale',
+          impressions: 75000,
+          clicks: 2100,
+          region: 'Europe',
+          status: 'paused'
+        },
+        {
+          campaign_name: 'Black Friday',
+          impressions: 245000,
+          clicks: 8900,
+          region: 'North America',
+          status: 'active'
+        },
+        {
+          campaign_name: 'Cyber Monday',
+          impressions: 198000,
+          clicks: 6200,
+          region: 'Asia Pacific',
+          status: 'active'
+        }
       ]
     ]
   ]);
@@ -976,7 +1024,7 @@ WHERE created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY);`;
         if (Array.isArray(filterValue) && filterValue.length === 2) {
           // Handle range filters (date_range, integer_range, float_range)
           const [min, max] = filterValue;
-          
+
           // Check if this is a date range
           if (min instanceof Date && max instanceof Date) {
             const rowValue = new Date(row[filterKey] || row.month || row.campaign_name);
@@ -985,7 +1033,7 @@ WHERE created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY);`;
             } else {
               return false;
             }
-          } 
+          }
           // Handle numeric ranges
           else if (typeof min === 'number' && typeof max === 'number') {
             const rowValue = Number(row[filterKey] || row.sales || row.impressions || 0);
@@ -995,7 +1043,7 @@ WHERE created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY);`;
               return false;
             }
           }
-        } 
+        }
         // Handle list filters (multiple selections)
         else if (Array.isArray(filterValue)) {
           const rowValue = row[filterKey] || row.region || row.status;
@@ -1008,7 +1056,7 @@ WHERE created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY);`;
         // Handle single value filters
         else {
           const rowValue = row[filterKey];
-          
+
           // String filters (partial match)
           if (typeof filterValue === 'string') {
             const rowString = String(rowValue || '').toLowerCase();

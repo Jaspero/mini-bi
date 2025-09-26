@@ -1,6 +1,6 @@
 <script lang="ts">
   import Sidebar from '../ui/Sidebar.svelte';
-  import type { Filter } from '../../types/index.ts';
+  import type { Filter } from '../../types/index';
 
   let {
     isOpen = false,

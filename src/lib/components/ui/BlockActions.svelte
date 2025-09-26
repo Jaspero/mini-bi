@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import type { Block, BlockData } from '../../types/index.ts';
+  import type { Block, BlockData } from '../../types/index';
 
   interface Props {
     block: Block;
