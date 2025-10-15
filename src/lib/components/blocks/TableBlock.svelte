@@ -320,24 +320,24 @@
 
 <style>
   :global(.table-neutral-bg) {
-    background: var(--color-surface);
+    background: var(--minibi-color-surface);
   }
   :global(.table-neutral-bg-alt) {
-    background: var(--color-bg-alt);
+    background: var(--minibi-color-bg-alt);
   }
   :global(.table-border) {
-    border-color: var(--color-border);
+    border-color: var(--minibi-color-border);
   }
   :global(.table-border-strong) {
-    border-color: var(--color-border-strong);
+    border-color: var(--minibi-color-border-strong);
   }
   :global(.table-text-muted) {
-    color: var(--color-text-muted);
+    color: var(--minibi-color-text-muted);
   }
   :global(.table-text) {
-    color: var(--color-text);
+    color: var(--minibi-color-text);
   }
   :global(.table-hover:hover) {
-    background: var(--color-bg-alt);
+    background: var(--minibi-color-bg-alt);
   }
 </style>

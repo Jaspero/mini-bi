@@ -441,7 +441,7 @@
     <div
       class="pointer-events-none absolute top-0 left-0 h-full w-full opacity-50"
       style="
-      background-image: linear-gradient(to right, var(--color-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--color-grid-line) 1px, transparent 1px);
+      background-image: linear-gradient(to right, var(--minibi-color-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--minibi-color-grid-line) 1px, transparent 1px);
       background-size: {gridSize}px {gridSize}px;
     "
     ></div>
@@ -579,6 +579,6 @@
 
 <style>
   .dashboard-canvas {
-    background: var(--color-canvas-bg);
+    background: var(--minibi-color-canvas-bg);
   }
 </style>

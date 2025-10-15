@@ -50,7 +50,7 @@
 </script>
 
 <button
-  class="theme-border inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--color-bg-alt)]"
+  class="theme-border inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--minibi-color-bg-alt)]"
   onclick={toggle}
   aria-label="Toggle dark mode"
 >
@@ -62,10 +62,10 @@
 
 <style>
   button {
-    background: var(--color-surface);
-    color: var(--color-text);
+    background: var(--minibi-color-surface);
+    color: var(--minibi-color-text);
   }
   button:hover {
-    background: var(--color-bg-alt);
+    background: var(--minibi-color-bg-alt);
   }
 </style>

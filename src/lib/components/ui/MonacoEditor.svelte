@@ -373,21 +373,21 @@
 
 <style>
   textarea {
-    background: var(--color-editor-bg);
-    color: var(--color-text);
+    background: var(--minibi-color-editor-bg);
+    color: var(--minibi-color-text);
   }
   textarea::placeholder {
-    color: var(--color-text-muted);
+    color: var(--minibi-color-text-muted);
   }
   .editor-status {
-    background: var(--color-bg-alt);
-    border-color: var(--color-border);
-    color: var(--color-text-muted);
+    background: var(--minibi-color-bg-alt);
+    border-color: var(--minibi-color-border);
+    color: var(--minibi-color-text-muted);
   }
   .editor-status button {
-    background: var(--color-primary);
+    background: var(--minibi-color-primary);
   }
   .editor-status button:hover {
-    background: var(--color-primary-hover);
+    background: var(--minibi-color-primary-hover);
   }
 </style>

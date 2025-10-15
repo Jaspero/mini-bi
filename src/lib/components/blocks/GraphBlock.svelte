@@ -133,8 +133,8 @@
       color: colors,
       animation: animations?.enabled ?? true,
       animationDuration: animations?.duration ?? 1000,
-      backgroundColor: getCssVar('--color-surface', '#ffffff'),
-      textStyle: { color: getCssVar('--color-text', '#111827') },
+      backgroundColor: getCssVar('--minibi-color-surface', '#ffffff'),
+      textStyle: { color: getCssVar('--minibi-color-text', '#111827') },
       grid: {
         left: '10%',
         right: '10%',
@@ -147,8 +147,10 @@
           ? {
               type: 'category',
               name: xAxis.name,
-              axisLine: { lineStyle: { color: getCssVar('--color-border-strong', '#d1d5db') } },
-              axisLabel: { color: getCssVar('--color-text-muted', '#4b5563') },
+              axisLine: {
+                lineStyle: { color: getCssVar('--minibi-color-border-strong', '#d1d5db') }
+              },
+              axisLabel: { color: getCssVar('--minibi-color-text-muted', '#4b5563') },
               splitLine: { show: false }
             }
           : undefined,
@@ -157,11 +159,13 @@
           ? {
               type: 'value',
               name: yAxis.name,
-              axisLine: { lineStyle: { color: getCssVar('--color-border-strong', '#d1d5db') } },
-              axisLabel: { color: getCssVar('--color-text-muted', '#4b5563') },
+              axisLine: {
+                lineStyle: { color: getCssVar('--minibi-color-border-strong', '#d1d5db') }
+              },
+              axisLabel: { color: getCssVar('--minibi-color-text-muted', '#4b5563') },
               splitLine: {
                 show: true,
-                lineStyle: { color: getCssVar('--color-grid-line', '#e5e7eb') }
+                lineStyle: { color: getCssVar('--minibi-color-grid-line', '#e5e7eb') }
               }
             }
           : undefined,
@@ -173,7 +177,7 @@
             left: legend.align,
             top: legend.position === 'top' ? 0 : 'auto',
             bottom: legend.position === 'bottom' ? 0 : 'auto',
-            textStyle: { color: getCssVar('--color-text-muted', '#4b5563') }
+            textStyle: { color: getCssVar('--minibi-color-text-muted', '#4b5563') }
           }
         : undefined
     };
@@ -334,7 +338,7 @@
     }
 
     try {
-      const bg = getCssVar('--color-surface', '#ffffff');
+      const bg = getCssVar('--minibi-color-surface', '#ffffff');
       const dataURL = chart.getDataURL({
         type: 'png',
         pixelRatio: 2,
@@ -411,6 +415,6 @@
 <!-- placeholder to ensure component picks up global vars if needed -->
 <style>
   .chart-surface {
-    background: var(--color-block-surface);
+    background: var(--minibi-color-block-surface);
   }
 </style>

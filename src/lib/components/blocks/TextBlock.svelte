@@ -56,7 +56,7 @@
       const needsMap =
         !c ||
         ['#000', '#000000', '#111', '#111827', '#222', '#222222', '#1f2937', '#374151'].includes(c);
-      if (needsMap) textConfig.styling.color = 'var(--color-text)';
+      if (needsMap) textConfig.styling.color = 'var(--minibi-color-text)';
     }
   }
 
@@ -108,7 +108,7 @@
     return `
       font-size: ${styles.fontSize}px;
       font-family: ${styles.fontFamily};
-      ${colorVar ? '' : `color: ${styles.color || 'var(--color-text)'};`}
+      ${colorVar ? '' : `color: ${styles.color || 'var(--minibi-color-text)'};`}
       ${styles.backgroundColor ? `background-color: ${styles.backgroundColor};` : ''}
       padding: ${styles.padding}px;
       text-align: ${styles.textAlign};
@@ -166,12 +166,12 @@
   }
 
   .text-content :global(a) {
-    color: var(--color-primary);
+    color: var(--minibi-color-primary);
     text-decoration: underline;
   }
 
   .text-content :global(a:hover) {
-    color: var(--color-primary-hover);
+    color: var(--minibi-color-primary-hover);
   }
 
   .text-content :global(ul),
@@ -187,13 +187,13 @@
   .text-content :global(blockquote) {
     margin: 1em 0;
     padding: 1em;
-    background: var(--color-code-block-bg);
-    border-left: 4px solid var(--color-border-strong);
+    background: var(--minibi-color-code-block-bg);
+    border-left: 4px solid var(--minibi-color-border-strong);
     font-style: italic;
   }
 
   .text-content :global(code) {
-    background: var(--color-code-block-bg);
+    background: var(--minibi-color-code-block-bg);
     padding: 0.2em 0.4em;
     border-radius: 3px;
     font-family: 'Monaco', 'Consolas', monospace;
@@ -201,7 +201,7 @@
   }
 
   .text-content :global(pre) {
-    background: var(--color-code-block-bg);
+    background: var(--minibi-color-code-block-bg);
     padding: 1em;
     border-radius: 6px;
     overflow-x: auto;
@@ -210,7 +210,7 @@
 
   .text-content :global(hr) {
     border: none;
-    border-top: 1px solid var(--color-border-strong);
+    border-top: 1px solid var(--minibi-color-border-strong);
     margin: 2em 0;
   }
 </style>

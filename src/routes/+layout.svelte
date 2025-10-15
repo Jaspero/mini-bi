@@ -17,7 +17,7 @@
 
 <div class="flex min-h-screen flex-col">
   <header
-    class="theme-border flex items-center justify-end gap-2 border-b bg-[var(--color-surface)] p-2 sm:p-3"
+    class="theme-border flex items-center justify-end gap-2 border-b bg-[var(--minibi-color-surface)] p-2 sm:p-3"
   >
     <ThemeToggle />
   </header>
@@ -35,6 +35,6 @@
 
 <style>
   header {
-    box-shadow: var(--color-shadow);
+    box-shadow: var(--minibi-color-shadow);
   }
 </style>

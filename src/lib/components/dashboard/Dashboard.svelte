@@ -356,10 +356,10 @@
             align: 'center'
           },
           colors: [
-            'var(--color-primary)',
-            'var(--color-danger)',
-            'var(--color-accent)',
-            'var(--color-warning)'
+            'var(--minibi-color-primary)',
+            'var(--minibi-color-danger)',
+            'var(--minibi-color-accent)',
+            'var(--minibi-color-warning)'
           ],
           animations: {
             enabled: true,
@@ -374,7 +374,7 @@
           styling: {
             fontSize: 14,
             fontFamily: 'Arial, sans-serif',
-            color: 'var(--color-text)',
+            color: 'var(--minibi-color-text)',
             padding: 16,
             textAlign: 'left',
             fontWeight: 'normal',
@@ -423,7 +423,8 @@
         scrollX: -window.scrollX,
         scrollY: -window.scrollY,
         background:
-          getComputedStyle(document.documentElement).getPropertyValue('--color-bg') || '#f9fafb',
+          getComputedStyle(document.documentElement).getPropertyValue('--minibi-color-bg') ||
+          '#f9fafb',
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -450,10 +451,10 @@
   }
 
   const themeColors = [
-    'var(--color-primary)',
-    'var(--color-danger)',
-    'var(--color-accent)',
-    'var(--color-warning)'
+    'var(--minibi-color-primary)',
+    'var(--minibi-color-danger)',
+    'var(--minibi-color-accent)',
+    'var(--minibi-color-warning)'
   ];
 </script>
 
