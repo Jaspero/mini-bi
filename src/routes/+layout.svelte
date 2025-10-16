@@ -15,7 +15,7 @@
   }
 </script>
 
-<div class="flex min-h-screen flex-col">
+<div class="minibi-scope flex min-h-screen flex-col">
   <header
     class="theme-border flex items-center justify-end gap-2 border-b bg-[var(--minibi-color-surface)] p-2 sm:p-3"
   >

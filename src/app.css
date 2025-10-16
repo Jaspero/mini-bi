@@ -100,61 +100,61 @@ body {
   --minibi-twc-border-gray-400: var(--minibi-color-border-strong);
 }
 
-/* Apply overrides by hooking into generated classes (non-destructive) */
-[class*='bg-white'] {
+/* Apply overrides ONLY within .minibi-scope to avoid conflicts with other projects */
+.minibi-scope [class*='bg-white'] {
   background-color: var(--minibi-twc-bg-white) !important;
 }
-[class*='bg-gray-50'] {
+.minibi-scope [class*='bg-gray-50'] {
   background-color: var(--minibi-twc-bg-gray-50) !important;
 }
-[class*='bg-gray-100'] {
+.minibi-scope [class*='bg-gray-100'] {
   background-color: var(--minibi-twc-bg-gray-100) !important;
 }
-[class*='bg-gray-200'] {
+.minibi-scope [class*='bg-gray-200'] {
   background-color: var(--minibi-twc-bg-gray-200) !important;
 }
-[class*='bg-gray-300'] {
+.minibi-scope [class*='bg-gray-300'] {
   background-color: var(--minibi-twc-bg-gray-300) !important;
 }
 
-[class*='text-gray-900'] {
+.minibi-scope [class*='text-gray-900'] {
   color: var(--minibi-twc-text-gray-900) !important;
 }
-[class*='text-gray-700'] {
+.minibi-scope [class*='text-gray-700'] {
   color: var(--minibi-twc-text-gray-700) !important;
 }
-[class*='text-gray-600'] {
+.minibi-scope [class*='text-gray-600'] {
   color: var(--minibi-twc-text-gray-600) !important;
 }
-[class*='text-gray-500'] {
+.minibi-scope [class*='text-gray-500'] {
   color: var(--minibi-twc-text-gray-500) !important;
 }
-[class*='text-gray-400'] {
+.minibi-scope [class*='text-gray-400'] {
   color: var(--minibi-twc-text-gray-400) !important;
 }
 
-[class*='border-gray-200'] {
+.minibi-scope [class*='border-gray-200'] {
   border-color: var(--minibi-twc-border-gray-200) !important;
 }
-[class*='border-gray-300'] {
+.minibi-scope [class*='border-gray-300'] {
   border-color: var(--minibi-twc-border-gray-300) !important;
 }
-[class*='border-gray-400'] {
+.minibi-scope [class*='border-gray-400'] {
   border-color: var(--minibi-twc-border-gray-400) !important;
 }
 
-/* Primary buttons recolor (heuristic) */
-button.bg-blue-600 {
+/* Primary buttons recolor (heuristic) - scoped */
+.minibi-scope button.bg-blue-600 {
   background: var(--minibi-color-primary) !important;
 }
-button.bg-blue-600:hover {
+.minibi-scope button.bg-blue-600:hover {
   background: var(--minibi-color-primary-hover) !important;
 }
 
-/* Removed smooth theme transitions for instant toggle */
-body *,
-body *::before,
-body *::after {
+/* Removed smooth theme transitions for instant toggle - scoped to minibi */
+.minibi-scope *,
+.minibi-scope *::before,
+.minibi-scope *::after {
   transition: none !important;
 }
 
@@ -173,73 +173,73 @@ body *::after {
 }
 
 /* Utility bridging tokens to Tailwind (optional future use) */
-.theme-surface {
+.minibi-scope .theme-surface {
   background: var(--minibi-color-surface);
 }
-.theme-border {
+.minibi-scope .theme-border {
   border-color: var(--minibi-color-border);
 }
-.theme-border-strong {
+.minibi-scope.theme-border-strong {
   border-color: var(--minibi-color-border-strong);
 }
-.theme-muted {
+.minibi-scope .theme-muted {
   color: var(--minibi-color-text-muted);
 }
-.theme-primary {
+.minibi-scope .theme-primary {
   color: var(--minibi-color-primary);
 }
-.theme-bg-alt {
+.minibi-scope.theme-bg-alt {
   background: var(--minibi-color-bg-alt);
 }
 
-/* Code / prose styling overrides */
-pre,
-code {
+/* Code / prose styling overrides - scoped */
+.minibi-scope pre,
+.minibi-scope code {
   background: var(--minibi-color-inline-code-bg);
 }
-pre {
+.minibi-scope pre {
   padding: 0.75rem 1rem;
   border-radius: 0.375rem;
 }
 
-/* Inputs */
-input[type='text'],
-input[type='search'],
-input[type='number'],
-select,
-textarea {
+/* Inputs - scoped */
+.minibi-scope input[type='text'],
+.minibi-scope input[type='search'],
+.minibi-scope input[type='number'],
+.minibi-scope select,
+.minibi-scope textarea {
   background: var(--minibi-color-input-bg);
   color: var(--minibi-color-text);
   border-color: var(--minibi-color-input-border);
 }
-input[type='text']::placeholder,
-input[type='search']::placeholder,
-textarea::placeholder {
+.minibi-scope input[type='text']::placeholder,
+.minibi-scope input[type='search']::placeholder,
+.minibi-scope textarea::placeholder {
   color: var(--minibi-color-input-placeholder);
 }
-input[type='text']:focus,
-input[type='search']:focus,
-input[type='number']:focus,
-select:focus,
-textarea:focus {
+.minibi-scope input[type='text']:focus,
+.minibi-scope input[type='search']:focus,
+.minibi-scope input[type='number']:focus,
+.minibi-scope select:focus,
+.minibi-scope textarea:focus {
   outline: none;
   border-color: var(--minibi-color-input-border-focus);
   box-shadow: 0 0 0 1px var(--minibi-color-input-border-focus);
 }
 
-/* Scrollbars (WebKit) */
-*::-webkit-scrollbar {
+/* Scrollbars (WebKit) - scoped */
+.minibi-scope *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-*::-webkit-scrollbar-track {
+.minibi-scope *::-webkit-scrollbar-track {
   background: var(--minibi-color-bg-alt);
 }
-*::-webkit-scrollbar-thumb {
+.minibi-scope *::-webkit-scrollbar-thumb {
   background: var(--minibi-color-border);
   border-radius: 6px;
 }
-*::-webkit-scrollbar-thumb:hover {
+.minibi-scope *::-webkit-scrollbar-thumb:hover {
   background: var(--minibi-color-border-strong);
 }
 
