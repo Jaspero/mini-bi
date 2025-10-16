@@ -411,24 +411,29 @@
   }
 
   function updateBlockPosition(blockId: string, position: Position) {
-    dashboard.blocks = dashboard.blocks.map((block) =>
-      block.id === blockId ? { ...block, position } : block
-    );
-    onBlockMoved(blockId, position);
-    onDashboardUpdated(dashboard);
+    const block = dashboard.blocks.find((b) => b.id === blockId);
+    if (block) {
+      block.position = position;
+      onBlockMoved(blockId, position);
+      onDashboardUpdated(dashboard);
+    }
   }
 
   function updateBlockSize(blockId: string, size: Size) {
-    dashboard.blocks = dashboard.blocks.map((block) =>
-      block.id === blockId ? { ...block, size } : block
-    );
-    onBlockResized(blockId, size);
-    onDashboardUpdated(dashboard);
+    const block = dashboard.blocks.find((b) => b.id === blockId);
+    if (block) {
+      block.size = size;
+      onBlockResized(blockId, size);
+      onDashboardUpdated(dashboard);
+    }
   }
 
   function onBlockUpdate(block: Block) {
-    dashboard.blocks = dashboard.blocks.map((b) => (b.id === block.id ? block : b));
-    onDashboardUpdated(dashboard);
+    const index = dashboard.blocks.findIndex((b) => b.id === block.id);
+    if (index !== -1) {
+      dashboard.blocks[index] = block;
+      onDashboardUpdated(dashboard);
+    }
   }
 </script>
 
