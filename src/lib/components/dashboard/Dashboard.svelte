@@ -14,6 +14,7 @@
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
   import FilterSidebar from './FilterSidebar.svelte';
   import FilterManager from './FilterManager.svelte';
+  import DashboardSkeleton from '../ui/DashboardSkeleton.svelte';
 
   interface Props {
     dashboardId?: string | null;
@@ -460,14 +461,7 @@
 
 <div class="min-h-screen bg-gray-50">
   {#if loading}
-    <div class="flex min-h-screen items-center justify-center">
-      <div class="text-center">
-        <div
-          class="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500"
-        ></div>
-        <p class="text-gray-600">Loading dashboard...</p>
-      </div>
-    </div>
+    <DashboardSkeleton />
   {:else if error}
     <div class="flex min-h-screen items-center justify-center">
       <div class="max-w-md rounded-lg bg-white p-8 text-center shadow-lg">

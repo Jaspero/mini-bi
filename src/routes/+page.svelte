@@ -3,6 +3,7 @@
   import {
     DashboardComponent,
     DashboardManager,
+    DashboardSkeleton,
     GlobalQueryManager,
     MockDashboardService,
     SchemaSidebar,
@@ -28,6 +29,7 @@
     if (availableDashboards.length > 0) {
       selectedDashboardId = availableDashboards[0].id;
     }
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     loading = false;
   });
 
@@ -227,6 +229,8 @@
       </div>
     </div>
   {/if}
+{:else}
+  <DashboardSkeleton />
 {/if}
 
 <style>
