@@ -318,9 +318,7 @@
 
   async function onRefresh() {
     await loadData();
-    if (chart && data) {
-      updateChart();
-    }
+    initChart();
   }
 
   function onEdit() {
