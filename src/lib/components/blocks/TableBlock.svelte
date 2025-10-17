@@ -17,7 +17,6 @@
     block,
     dashboardService,
     filterParams = {},
-    onBlockUpdate = () => {},
     onBlockEdit = () => {},
     onBlockDeleteRequest = () => {},
     showControls = false
@@ -38,6 +37,7 @@
   let currentPage = $state(1);
   let pageSize = $state(10);
   let searchTerm = $state('');
+  let isHovered = $state(false);
 
   let totalPages = $derived(Math.ceil(filteredData.length / pageSize));
   let paginatedData = $derived(
@@ -182,7 +182,12 @@
   });
 </script>
 
-<div class="bi-block flex h-full w-full flex-col overflow-hidden">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+  class="bi-block flex h-full w-full flex-col overflow-hidden"
+  onmouseenter={() => (isHovered = true)}
+  onmouseleave={() => (isHovered = false)}
+>
   <div
     class="flex h-[50px] items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-2 py-2 sm:gap-4 sm:px-4 sm:py-3"
   >
@@ -201,7 +206,15 @@
           value={searchTerm}
         />
       {/if}
-      <BlockActions {block} {data} {loading} {showControls} {onEdit} {onRefresh} {onDelete} />
+      <BlockActions
+        {block}
+        {data}
+        {loading}
+        showControls={showControls || isHovered}
+        {onEdit}
+        {onRefresh}
+        {onDelete}
+      />
     </div>
   </div>
 
@@ -290,7 +303,6 @@
 
           {#each Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             const start = Math.max(1, currentPage - 2);
-            const end = Math.min(totalPages, start + 4);
             return start + i;
           }).filter((page) => page <= totalPages) as page}
             <button

@@ -37,6 +37,7 @@
   });
   let element: HTMLDivElement | undefined = $state();
   let processedContent = $state('');
+  let isHovered = $state(false);
 
   function updateContent() {
     if (textConfig) {
@@ -124,7 +125,13 @@
   /* Removed duplicate onMount/$effect and handlers (already defined earlier with theming logic) */
 </script>
 
-<div class="bi-block flex h-full w-full flex-col overflow-hidden" bind:this={element}>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+  class="bi-block flex h-full w-full flex-col overflow-hidden"
+  bind:this={element}
+  onmouseenter={() => (isHovered = true)}
+  onmouseleave={() => (isHovered = false)}
+>
   <div
     class="flex h-[50px] items-center justify-between border-b border-gray-200 bg-gray-50 px-2 py-2 sm:px-4 sm:py-3"
   >
@@ -132,7 +139,13 @@
       <h3 class="m-0 truncate text-sm font-semibold text-gray-900 sm:text-base">{block.title}</h3>
     </div>
     <div class="flex flex-shrink-0 items-center gap-1">
-      <BlockActions {block} {showControls} {onEdit} {onRefresh} {onDelete} />
+      <BlockActions
+        {block}
+        showControls={showControls || isHovered}
+        {onEdit}
+        {onRefresh}
+        {onDelete}
+      />
     </div>
   </div>
   <div class="text-content flex flex-1 flex-col leading-relaxed" style={getStyleString()}>

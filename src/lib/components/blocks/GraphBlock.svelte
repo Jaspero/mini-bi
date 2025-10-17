@@ -39,6 +39,7 @@
   let loading = $state(true);
   let error = $state('');
   let data: BlockData | null = $state(null);
+  let isHovered = $state(false);
 
   let resizeObserver: ResizeObserver | null = null;
 
@@ -385,7 +386,12 @@
   };
 </script>
 
-<div class="bi-block flex h-full w-full flex-col overflow-hidden">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+  class="bi-block flex h-full w-full flex-col overflow-hidden"
+  onmouseenter={() => (isHovered = true)}
+  onmouseleave={() => (isHovered = false)}
+>
   <div
     class="flex h-[50px] items-center justify-between border-b border-gray-200 bg-gray-50 px-2 py-2 sm:px-4 sm:py-3"
   >
@@ -397,7 +403,7 @@
         {block}
         {data}
         {loading}
-        {showControls}
+        showControls={showControls || isHovered}
         {onEdit}
         {onRefresh}
         {onDelete}
