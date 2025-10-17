@@ -68,7 +68,7 @@
             pageSize: 10
           },
           sorting: {
-            enabled: true
+            enabled: false
           },
           filtering: {
             enabled: false,
@@ -783,7 +783,19 @@
               <label class="flex items-center">
                 <input
                   type="checkbox"
-                  bind:checked={editedBlock.config.sorting.enabled}
+                  checked={editedBlock.config.sorting.enabled}
+                  onchange={(e) => {
+                    if (editedBlock) {
+                      const isEnabled = e.currentTarget.checked;
+                      if (isEnabled && !editedBlock.config.sorting.defaultSort) {
+                        editedBlock.config.sorting.defaultSort = {
+                          column: editedBlock.config.columns?.[0]?.key || '',
+                          direction: 'asc'
+                        };
+                      }
+                      editedBlock.config.sorting.enabled = isEnabled;
+                    }
+                  }}
                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span class="ml-2 text-sm text-gray-600">Enable sorting</span>

@@ -313,7 +313,7 @@
             pageSize: 10
           },
           sorting: {
-            enabled: true
+            enabled: false
           },
           filtering: {
             enabled: false,
