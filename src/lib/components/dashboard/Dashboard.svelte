@@ -677,7 +677,10 @@
 <FilterSidebar
   isOpen={showFilterSidebar}
   bind:filters
-  onClose={() => (showFilterSidebar = false)}
+  onClose={() => {
+    showFilterSidebar = false;
+    showFilterManager = false;
+  }}
   {onFilterValueChange}
   onToggleFilterManager={toggleFilterManager}
 />
