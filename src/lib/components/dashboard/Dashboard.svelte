@@ -61,15 +61,6 @@
   let showFilterManager = $state(false);
 
   onMount(async () => {
-    if (dashboardId) {
-      await loadDashboard();
-    } else {
-      // Create a new dashboard
-      dashboard = createNewDashboard();
-      loading = false;
-    }
-
-    // Add global click listener for dropdown
     window.addEventListener('click', handleClickOutside);
   });
 
