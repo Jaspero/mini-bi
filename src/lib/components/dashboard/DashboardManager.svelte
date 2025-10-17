@@ -186,7 +186,7 @@
       <div class="mb-4 flex flex-shrink-0 items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-900">New Dashboard</h3>
         <button
-          class="p-2 text-gray-500 transition-colors hover:text-gray-700"
+          class="flex items-center justify-center p-2 text-gray-500 transition-colors hover:text-gray-700"
           onclick={hideCreateForm}
         >
           <span class="material-symbols-outlined">close</span>

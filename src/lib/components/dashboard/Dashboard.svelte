@@ -707,7 +707,7 @@
     <div class="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
       <h2 class="text-lg font-semibold text-gray-900">Filter Management</h2>
       <button
-        class="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
+        class="flex items-center justify-center rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
         onclick={closeFilterManager}
         aria-label="Close filter manager"
       >

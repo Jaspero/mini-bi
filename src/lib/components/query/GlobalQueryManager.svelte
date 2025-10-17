@@ -228,7 +228,10 @@
         <h3 class="text-lg font-semibold text-gray-900">
           {selectedQuery ? 'Edit Query' : 'New Query'}
         </h3>
-        <button class="p-2 text-gray-500 transition-colors hover:text-gray-700" onclick={resetForm}>
+        <button
+          class="flex items-center justify-center p-2 text-gray-500 transition-colors hover:text-gray-700"
+          onclick={resetForm}
+        >
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
