@@ -283,10 +283,14 @@ export interface BlockData {
   };
 }
 
-// Service interface
+export interface DashboardListItem {
+  id: string;
+  name: string;
+}
+
 export interface IDashboardService {
-  // Dashboard CRUD operations
-  loadDashboards(): Promise<Dashboard[]>;
+  loadDashboards(): Promise<DashboardListItem[]>;
+  loadDashboard(id: string): Promise<Dashboard>;
   createDashboard(dashboard: CreateDashboardRequest): Promise<Dashboard>;
   updateDashboard(id: string, dashboard: UpdateDashboardRequest): Promise<Dashboard>;
   deleteDashboard(id: string): Promise<void>;

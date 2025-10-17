@@ -1,6 +1,7 @@
 import type {
   IDashboardService,
   Dashboard,
+  DashboardListItem,
   CreateDashboardRequest,
   UpdateDashboardRequest,
   BlockData,
@@ -387,9 +388,18 @@ export class MockDashboardService implements IDashboardService {
     ]
   ]);
 
-  async loadDashboards(): Promise<Dashboard[]> {
+  async loadDashboards(): Promise<DashboardListItem[]> {
     await this.delay(500);
-    return [...this.dashboards];
+    return this.dashboards.map((d) => ({ id: d.id, name: d.name }));
+  }
+
+  async loadDashboard(id: string): Promise<Dashboard> {
+    await this.delay(300);
+    const dashboard = this.dashboards.find((d) => d.id === id);
+    if (!dashboard) {
+      throw new Error(`Dashboard with id ${id} not found`);
+    }
+    return { ...dashboard };
   }
 
   async createDashboard(request: CreateDashboardRequest): Promise<Dashboard> {

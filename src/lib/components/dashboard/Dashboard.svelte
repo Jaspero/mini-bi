@@ -93,12 +93,7 @@
       loading = true;
       error = '';
 
-      const dashboards = await dashboardService.loadDashboards();
-      const foundDashboard = dashboards.find((d) => d.id === dashboardId);
-
-      if (!foundDashboard) {
-        throw new Error(`Dashboard with ID ${dashboardId} not found`);
-      }
+      const foundDashboard = await dashboardService.loadDashboard(dashboardId);
 
       dashboard = foundDashboard;
       filters = foundDashboard.filters || [];

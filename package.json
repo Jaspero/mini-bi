@@ -2,7 +2,7 @@
   "name": "@jaspero/mini-bi",
   "version": "0.0.1",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "vite dev --mode dev",
     "build": "vite build && npm run prepack",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",

@@ -20,6 +20,7 @@ export { MockDashboardService } from './services/MockDashboardService.js';
 // Types
 export type {
   Dashboard,
+  DashboardListItem,
   Block,
   BlockType,
   ChartType,

@@ -1,14 +1,18 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Dashboard, IDashboardService, CreateDashboardRequest } from '../../types/index';
+  import type {
+    DashboardListItem,
+    IDashboardService,
+    CreateDashboardRequest
+  } from '../../types/index';
   import { validateDashboard } from '../../utils/validation';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
 
   interface Props {
     dashboardService: IDashboardService;
     currentDashboardId?: string | null;
-    onDashboardSelected?: (dashboard: Dashboard) => void;
-    onDashboardCreated?: (dashboard: Dashboard) => void;
+    onDashboardSelected?: (dashboardId: string | null) => void;
+    onDashboardCreated?: (dashboard: DashboardListItem) => void;
     onDashboardDeleted?: (dashboardId: string) => void;
     onClose?: () => void;
   }
@@ -22,7 +26,7 @@
     onClose = () => {}
   }: Props = $props();
 
-  let dashboards: Dashboard[] = $state([]);
+  let dashboards: DashboardListItem[] = $state([]);
   let loading = $state(true);
   let showCreateForm = $state(false);
   let creating = $state(false);
@@ -30,7 +34,7 @@
   let error = $state('');
 
   let showConfirmModal = $state(false);
-  let dashboardToDelete: Dashboard | null = $state(null);
+  let dashboardToDelete: DashboardListItem | null = $state(null);
 
   let newDashboardName = $state('');
   let newDashboardDescription = $state('');
@@ -59,14 +63,7 @@
   }
 
   function selectDashboard(dashboardId: string | null) {
-    if (dashboardId) {
-      const dashboard = dashboards.find((d) => d.id === dashboardId);
-      if (dashboard) {
-        onDashboardSelected(dashboard);
-      }
-    } else {
-      onDashboardSelected(null as any);
-    }
+    onDashboardSelected(dashboardId);
   }
 
   function showCreateDashboard() {
@@ -129,10 +126,11 @@
       creating = true;
       error = '';
       const newDashboard = await dashboardService.createDashboard(request);
-      dashboards = [...dashboards, newDashboard];
+      const dashboardListItem: DashboardListItem = { id: newDashboard.id, name: newDashboard.name };
+      dashboards = [...dashboards, dashboardListItem];
       showCreateForm = false;
-      onDashboardCreated(newDashboard);
-      onDashboardSelected(newDashboard);
+      onDashboardCreated(dashboardListItem);
+      onDashboardSelected(newDashboard.id);
       creating = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to create dashboard';
@@ -140,7 +138,7 @@
     }
   }
 
-  async function deleteDashboard(dashboard: Dashboard, event: Event) {
+  async function deleteDashboard(dashboard: DashboardListItem, event: Event) {
     event.stopPropagation();
     dashboardToDelete = dashboard;
     showConfirmModal = true;
@@ -177,10 +175,6 @@
   function cancelDeleteDashboard() {
     dashboardToDelete = null;
     showConfirmModal = false;
-  }
-
-  function formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString();
   }
 </script>
 
@@ -425,7 +419,7 @@
                 role="button"
                 tabindex="0"
               >
-                <div class="mb-2 flex items-start justify-between">
+                <div class="flex items-start justify-between">
                   <h4 class="mr-2 flex-1 truncate text-sm font-medium text-gray-900">
                     {dashboard.name}
                   </h4>
@@ -441,15 +435,6 @@
                   >
                     <span class="material-symbols-outlined text-sm">delete</span>
                   </button>
-                </div>
-
-                {#if dashboard.description}
-                  <p class="mb-2 line-clamp-2 text-xs text-gray-500">{dashboard.description}</p>
-                {/if}
-
-                <div class="flex justify-between text-xs text-gray-400">
-                  <span>{dashboard.blocks.length} blocks</span>
-                  <span>{formatDate(dashboard.lastModified)}</span>
                 </div>
               </div>
             {/each}

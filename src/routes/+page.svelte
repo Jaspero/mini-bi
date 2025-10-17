@@ -8,13 +8,13 @@
     MockDashboardService,
     SchemaSidebar,
     Sidebar,
-    type Dashboard,
+    type DashboardListItem,
     type Query
   } from '$lib';
 
   let dashboardService = new MockDashboardService();
   let selectedDashboardId: string | null = $state(null);
-  let availableDashboards: Dashboard[] = $state([]);
+  let availableDashboards: DashboardListItem[] = $state([]);
   let globalQueries: Query[] = $state([]);
   let loading = $state(true);
   let showDashboardSidebar = $state(false);
@@ -33,17 +33,21 @@
     loading = false;
   });
 
-  function handleDashboardSelected(dashboard: Dashboard | null) {
-    selectedDashboardId = dashboard?.id || null;
+  function handleDashboardSelected(dashboardId: string | null) {
+    selectedDashboardId = dashboardId;
     showDashboardSidebar = false;
   }
 
-  function handleDashboardCreated(dashboard: Dashboard) {
+  function handleDashboardCreated(dashboard: DashboardListItem) {
     availableDashboards = [...availableDashboards, dashboard];
+    selectedDashboardId = dashboard.id;
   }
 
   function handleDashboardDeleted(dashboardId: string) {
     availableDashboards = availableDashboards.filter((d) => d.id !== dashboardId);
+    if (selectedDashboardId === dashboardId) {
+      selectedDashboardId = availableDashboards.length > 0 ? availableDashboards[0].id : null;
+    }
   }
 
   function handleQueryCreated(query: Query) {
