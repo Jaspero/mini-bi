@@ -615,14 +615,16 @@
 
               <button
                 class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700 sm:h-10 sm:w-10"
-                class:!bg-purple-100={editMode}
-                class:!text-purple-700={editMode}
+                class:bg-purple-100={editMode}
+                class:text-purple-700={editMode}
                 onclick={toggleEditMode}
                 title={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
                 aria-label={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
               >
-                {#if editMode}
-                  <span class="material-symbols-outlined text-lg sm:text-xl">open_with</span>
+                {#if !editMode}
+                  <span class="material-symbols-outlined text-lg sm:text-xl"
+                    >arrow_selector_tool</span
+                  >
                 {:else}
                   <span class="material-symbols-outlined text-lg sm:text-xl">edit</span>
                 {/if}

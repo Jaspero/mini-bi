@@ -137,7 +137,22 @@
 
   // Touch event handlers for mobile support
   function handleBlockTouchStart(event: TouchEvent, block: Block) {
-    if (!editable || editMode) return;
+    if (!editMode) return;
+
+    // Don't start dragging if clicking on interactive elements
+    const target = event.target as HTMLElement;
+    const tagName = target.tagName.toLowerCase();
+    const isInteractive =
+      tagName === 'button' ||
+      tagName === 'input' ||
+      tagName === 'select' ||
+      tagName === 'textarea' ||
+      tagName === 'a' ||
+      target.closest('button, input, select, textarea, a') !== null ||
+      target.getAttribute('role') === 'button' ||
+      target.classList.contains('material-symbols-outlined'); // Icon elements
+
+    if (isInteractive) return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -157,7 +172,7 @@
   }
 
   function handleResizeTouchStart(event: TouchEvent, block: Block, mode: string) {
-    if (!editable || editMode) return;
+    if (!editMode) return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -290,7 +305,22 @@
   }
 
   function handleBlockMouseDown(event: MouseEvent, block: Block) {
-    if (!editable || editMode) return; // Don't allow dragging in edit mode
+    if (!editMode) return; // Only allow dragging in edit mode
+
+    // Don't start dragging if clicking on interactive elements
+    const target = event.target as HTMLElement;
+    const tagName = target.tagName.toLowerCase();
+    const isInteractive =
+      tagName === 'button' ||
+      tagName === 'input' ||
+      tagName === 'select' ||
+      tagName === 'textarea' ||
+      tagName === 'a' ||
+      target.closest('button, input, select, textarea, a') !== null ||
+      target.getAttribute('role') === 'button' ||
+      target.classList.contains('material-symbols-outlined'); // Icon elements
+
+    if (isInteractive) return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -307,7 +337,7 @@
   }
 
   function handleResizeMouseDown(event: MouseEvent, block: Block, mode: string) {
-    if (!editable || editMode) return; // Don't allow resizing in edit mode
+    if (!editMode) return; // Only allow resizing in edit mode
 
     event.preventDefault();
     event.stopPropagation();
@@ -454,12 +484,12 @@
     <!-- Blocks -->
     {#each dashboard.blocks as block (block.id)}
       <div
-        class="group cursor-move touch-manipulation transition-shadow duration-200 ease-in-out select-none hover:shadow-xl {draggedBlock ===
+        class="group {editMode
+          ? 'cursor-move'
+          : 'cursor-default'} touch-manipulation transition-shadow duration-200 ease-in-out select-none hover:shadow-xl {draggedBlock ===
         block
           ? '[transform:rotate(2deg)] shadow-2xl'
-          : ''} {resizingBlock === block ? 'shadow-lg shadow-blue-400' : ''} {editMode
-          ? 'cursor-default'
-          : ''}"
+          : ''} {resizingBlock === block ? 'shadow-lg shadow-blue-400' : ''}"
         style={getBlockStyle(block)}
         onmousedown={(e) => handleBlockMouseDown(e, block)}
         ontouchstart={(e) => handleBlockTouchStart(e, block)}
@@ -505,8 +535,8 @@
           {/if}
         </div>
 
-        <!-- Resize handles (only show when not in edit mode and editable) -->
-        {#if editable && !editMode}
+        <!-- Resize handles (only show when in edit mode) -->
+        {#if editMode}
           <div class="pointer-events-none absolute top-0 right-0 bottom-0 left-0">
             <!-- Corner handles - larger touch targets on mobile -->
             <div
