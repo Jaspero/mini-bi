@@ -10,14 +10,16 @@
     onQueryUpdated = () => {},
     onQueryDeleted = () => {},
     onOpenSchema = () => {},
-    onToggleSchema = () => {}
+    onToggleSchema = () => {},
+    onCloseSchema = () => {}
   }: {
     dashboardService: IDashboardService;
     onQueryCreated?: (query: Query) => void;
     onQueryUpdated?: (query: Query) => void;
     onQueryDeleted?: (queryId: string) => void;
-    onOpenSchema?: () => void;
+    onOpenSchema?: (data: any) => void;
     onToggleSchema?: () => void;
+    onCloseSchema?: () => void;
   } = $props();
 
   let queries: Query[] = $state([]);
@@ -74,6 +76,7 @@
     showQueryEditor = false;
     selectedQuery = null;
     error = '';
+    onCloseSchema();
   }
 
   async function saveQuery() {

@@ -82,10 +82,12 @@
 
   function closeDashboardSidebar() {
     showDashboardSidebar = false;
+    showSchemaSidebar = false;
   }
 
   function closeQuerySidebar() {
     showQuerySidebar = false;
+    showSchemaSidebar = false;
   }
 
   function closeSchemaSidebar() {
@@ -98,28 +100,24 @@
 
   function handleOpenSchema(data: any) {
     schemaData = data;
-    showSchemaSidebar = true;
   }
 
   function handleToggleSchema() {
     toggleSchemaSidebar();
   }
 
-  function handleSchemaInsertText(event: CustomEvent<{ text: string }>) {
+  function handleSchemaInsertText(text: string) {
     if (schemaData && schemaData.insertText) {
-      schemaData.insertText(event.detail.text);
+      schemaData.insertText(text);
     }
   }
 
-  // function handleSchemaInsertTemplate(event: CustomEvent<{ template: string }>) {
-  //   if (schemaData && schemaData.insertTemplate) {
-  //     schemaData.insertTemplate(event.detail.template);
-  //   }
-  // }
-
-  function handleSchemaSetEditorValue(event: CustomEvent<{ value: string }>) {
-    if (schemaData && schemaData.insertSelectAll) {
-      schemaData.insertSelectAll(event.detail.value.replace('SELECT * FROM ', ''));
+  function handleSchemaSetEditorValue(value: string) {
+    const isSimpleTableSelect = /^SELECT \* FROM \w+$/.test(value);
+    if (isSimpleTableSelect && schemaData && schemaData.insertSelectAll) {
+      schemaData.insertSelectAll(value.replace('SELECT * FROM ', ''));
+    } else if (schemaData && schemaData.insertTemplate) {
+      schemaData.insertTemplate(value);
     }
   }
 
@@ -187,6 +185,7 @@
       onQueryDeleted={handleQueryDeleted}
       onOpenSchema={handleOpenSchema}
       onToggleSchema={handleToggleSchema}
+      onCloseSchema={closeSchemaSidebar}
     />
   </Sidebar>
 

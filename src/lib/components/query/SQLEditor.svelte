@@ -98,6 +98,12 @@
     onChange(value);
   }
 
+  function insertText(text: string) {
+    if (editor && editor.insertText) {
+      editor.insertText(text);
+    }
+  }
+
   async function generateSQLFromAI() {
     if (!dashboardService || !aiPrompt.trim()) return;
 
@@ -156,84 +162,33 @@
               type: col.type
             }))
           }))
-        }
+        },
+        insertTemplate: insertTemplate,
+        insertSelectAll: insertSelectAll,
+        insertText: insertText
       });
     }
   });
 </script>
 
 <div class="flex h-full flex-col">
-  <div class="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-    <div class="flex flex-wrap items-center gap-1 sm:gap-2">
-      {#if dashboardService}
-        <button
-          class="cursor-pointer rounded border-none bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600"
-          onclick={onToggleSchema}
-          title="Toggle Database Schema"
-        >
-          📊 Schema
-        </button>
-        <button
-          class="cursor-pointer rounded border-none bg-purple-500 px-3 py-1.5 text-xs text-white hover:bg-purple-600"
-          onclick={openAIModal}
-          title="Generate SQL with AI"
-        >
-          ✨ AI
-        </button>
-      {/if}
-
-      <!-- Template Dropdown -->
-      <select
-        class="cursor-pointer rounded border border-gray-300 px-2 py-1 text-xs"
-        onchange={(e) => {
-          const target = e.target as HTMLSelectElement;
-          const selectedTemplate = sqlTemplates.find((t) => t.name === target.value);
-          if (selectedTemplate) {
-            insertTemplate(selectedTemplate.sql);
-          }
-          target.value = '';
-        }}
+  <div class="mb-2 flex items-center gap-2">
+    {#if dashboardService}
+      <button
+        class="cursor-pointer rounded border-none bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600"
+        onclick={onToggleSchema}
+        title="Toggle Database Schema"
       >
-        <option value="">Templates</option>
-        {#each sqlTemplates as template}
-          <option value={template.name}>{template.name}</option>
-        {/each}
-      </select>
-    </div>
-
-    <!-- Right side: Schema actions -->
-    <div class="flex flex-wrap items-center gap-1 sm:gap-2">
-      {#if dashboardService}
-        <span class="hidden text-xs text-gray-500 sm:inline">Actions:</span>
-        {#if schemaLoading}
-          <span class="text-xs text-gray-400">Loading schema...</span>
-        {:else if schemaError}
-          <span class="text-xs text-red-500">Schema error</span>
-          <button
-            class="cursor-pointer rounded border-none bg-yellow-500 px-2 py-1 text-xs text-white hover:bg-yellow-600"
-            onclick={loadSchema}
-          >
-            Retry
-          </button>
-        {:else if schema}
-          {#each schema.tables.filter((table: any) => table.showInActions).slice(0, 3) as table}
-            <button
-              class="cursor-pointer rounded border-none bg-green-500 px-2 py-1 text-xs text-white hover:bg-green-600"
-              onclick={() => insertSelectAll(table.name)}
-              title="SELECT * FROM {table.name}"
-            >
-              <span class="hidden sm:inline">{table.name}</span>
-              <span class="sm:hidden">{table.name.substring(0, 3)}</span>
-            </button>
-          {/each}
-          {#if schema.tables.filter((table: any) => table.showInActions).length > 4}
-            <span class="text-xs text-gray-400"
-              >+{schema.tables.filter((table: any) => table.showInActions).length - 4} more</span
-            >
-          {/if}
-        {/if}
-      {/if}
-    </div>
+        📊 Schema
+      </button>
+      <button
+        class="cursor-pointer rounded border-none bg-purple-500 px-3 py-1.5 text-xs text-white hover:bg-purple-600"
+        onclick={openAIModal}
+        title="Generate SQL with AI"
+      >
+        ✨ AI
+      </button>
+    {/if}
   </div>
 
   <!-- Monaco Editor -->
