@@ -473,13 +473,15 @@
     style="width: {canvasWidth}px; height: {canvasHeight}px;"
   >
     <!-- Grid background -->
-    <div
-      class="pointer-events-none absolute top-0 left-0 h-full w-full opacity-50"
-      style="
-      background-image: linear-gradient(to right, var(--minibi-color-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--minibi-color-grid-line) 1px, transparent 1px);
-      background-size: {gridSize}px {gridSize}px;
-    "
-    ></div>
+    {#if editMode}
+      <div
+        class="pointer-events-none absolute top-0 left-0 h-full w-full opacity-50"
+        style="
+        background-image: linear-gradient(to right, var(--minibi-color-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--minibi-color-grid-line) 1px, transparent 1px);
+        background-size: {gridSize}px {gridSize}px;
+      "
+      ></div>
+    {/if}
 
     <!-- Blocks -->
     {#each dashboard.blocks as block (block.id)}
