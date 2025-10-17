@@ -47,7 +47,7 @@
   let hasUnsavedChanges = $state(false);
   let editingBlock: Block | null = $state(null);
   let showBlockEditor = $state(false);
-  let editMode = $state(true);
+  let editMode = $state(false);
   let showAddBlockDropdown = $state(false);
   let isExporting = $state(false);
 
