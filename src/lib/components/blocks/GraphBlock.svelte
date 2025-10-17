@@ -40,6 +40,7 @@
   let error = $state('');
   let data: BlockData | null = $state(null);
   let isHovered = $state(false);
+  let isRefreshing = $state(false);
 
   let resizeObserver: ResizeObserver | null = null;
 
@@ -101,7 +102,7 @@
 
   $effect(() => {
     if (filterParams) {
-      loadData();
+      reloadData();
     }
   });
 
@@ -126,6 +127,30 @@
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load data';
       loading = false;
+    }
+  }
+
+  async function reloadData() {
+    try {
+      isRefreshing = true;
+      error = '';
+
+      const blockConfig = {
+        ...block.config,
+        dataSource: block.dataSource
+      };
+
+      data = await dashboardService.loadBlockData(
+        block.id,
+        block.type,
+        blockConfig,
+        block.dataSource,
+        filterParams
+      );
+      isRefreshing = false;
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Failed to load data';
+      isRefreshing = false;
     }
   }
 
@@ -337,7 +362,7 @@
       resizeObserver.disconnect();
       resizeObserver = null;
     }
-    await loadData();
+    await reloadData();
   }
 
   function onEdit() {
@@ -430,7 +455,16 @@
       </button>
     </div>
   {:else}
-    <div class="chart-surface min-h-0 w-full flex-1" bind:this={chartContainer}></div>
+    <div class="relative min-h-0 w-full flex-1">
+      <div class="chart-surface h-full w-full" bind:this={chartContainer}></div>
+      {#if isRefreshing}
+        <div class="absolute inset-0 flex items-center justify-center bg-white/70">
+          <div
+            class="h-8 w-8 animate-spin rounded-full border-3 border-gray-200 border-t-blue-600"
+          ></div>
+        </div>
+      {/if}
+    </div>
   {/if}
 </div>
 
