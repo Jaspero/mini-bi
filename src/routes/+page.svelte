@@ -46,7 +46,7 @@
   function handleDashboardDeleted(dashboardId: string) {
     availableDashboards = availableDashboards.filter((d) => d.id !== dashboardId);
     if (selectedDashboardId === dashboardId) {
-      selectedDashboardId = availableDashboards.length > 0 ? availableDashboards[0].id : null;
+      selectedDashboardId = availableDashboards.length ? availableDashboards[0].id : null;
     }
   }
 

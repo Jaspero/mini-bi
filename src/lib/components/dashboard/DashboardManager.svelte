@@ -155,11 +155,6 @@
       deleting = true;
       await dashboardService.deleteDashboard(dashboardId);
       dashboards = dashboards.filter((d) => d.id !== dashboardId);
-
-      if (currentDashboardId === dashboardId) {
-        selectDashboard(null);
-      }
-
       onDashboardDeleted(dashboardId);
       deleting = false;
       dashboardToDelete = null;
