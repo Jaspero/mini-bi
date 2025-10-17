@@ -40,41 +40,67 @@
   let error = $state('');
   let data: BlockData | null = $state(null);
 
+  let resizeObserver: ResizeObserver | null = null;
+
   onMount(async () => {
     await loadData();
-    initChart();
 
     if (typeof window !== 'undefined') {
-      window.addEventListener('themechange', () => {
-        if (chart) {
-          // force update with new background/text colors
-          updateChart();
-        }
-      });
+      window.addEventListener('themechange', handleThemeChange);
     }
   });
 
   onDestroy(() => {
     if (chart) {
       chart.dispose();
+      chart = null;
+    }
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = null;
+    }
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('themechange', handleThemeChange);
+    }
+  });
+
+  function handleThemeChange() {
+    if (chart && data) {
+      updateChart();
+    }
+  }
+
+  $effect(() => {
+    if (chartContainer && data && !loading) {
+      if (!chart || chart.isDisposed()) {
+        if (resizeObserver) {
+          resizeObserver.disconnect();
+        }
+
+        chart = echarts.init(chartContainer);
+
+        resizeObserver = new ResizeObserver(() => {
+          chart?.resize();
+        });
+        resizeObserver.observe(chartContainer);
+      }
+      updateChart();
     }
   });
 
   $effect(() => {
     graphConfig = block.config as GraphBlockConfig;
-    if (chart && data) {
+  });
+
+  $effect(() => {
+    if (graphConfig && chart && data && !loading && !chart.isDisposed()) {
       updateChart();
     }
   });
 
-  // Reload data when filter parameters change
   $effect(() => {
     if (filterParams) {
-      loadData().then(() => {
-        if (chart && data) {
-          updateChart();
-        }
-      });
+      loadData();
     }
   });
 
@@ -100,21 +126,6 @@
       error = err instanceof Error ? err.message : 'Failed to load data';
       loading = false;
     }
-  }
-
-  function initChart() {
-    if (!chartContainer || !data) return;
-
-    chart = echarts.init(chartContainer);
-    updateChart();
-
-    // Handle resize
-    const resizeObserver = new ResizeObserver(() => {
-      if (chart) {
-        chart.resize();
-      }
-    });
-    resizeObserver.observe(chartContainer);
   }
 
   function updateChart() {
@@ -317,8 +328,15 @@
   }
 
   async function onRefresh() {
+    if (chart && !chart.isDisposed()) {
+      chart.dispose();
+      chart = null;
+    }
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = null;
+    }
     await loadData();
-    initChart();
   }
 
   function onEdit() {
