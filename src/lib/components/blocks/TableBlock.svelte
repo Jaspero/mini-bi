@@ -33,7 +33,7 @@
   let data: BlockData | null = $state(null);
   let filteredData: any[] = $state([]);
   let sortColumn = $state('');
-  let sortDirection: 'asc' | 'desc' = $state('asc');
+  let sortDirection: 'asc' | 'desc' | null = $state(null);
   let currentPage = $state(1);
   let pageSize = $state(10);
   let searchTerm = $state('');
@@ -84,15 +84,23 @@
 
     let result = [...data.data];
 
-    if (searchTerm.trim()) {
-      result = result.filter((row) =>
-        Object.values(row).some((value) =>
-          String(value).toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
+    if (searchTerm.trim() && tableConfig?.filtering?.enabled) {
+      const filterableColumns = tableConfig.columns
+        .filter((col) => col.filterable)
+        .map((col) => col.key);
+
+      if (filterableColumns.length > 0) {
+        result = result.filter((row) =>
+          filterableColumns.some((key) =>
+            String(row[key] ?? '')
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())
+          )
+        );
+      }
     }
 
-    if (sortColumn) {
+    if (sortColumn && sortDirection) {
       result.sort((a, b) => {
         const aVal = a[sortColumn];
         const bVal = b[sortColumn];
@@ -113,7 +121,14 @@
     if (!tableConfig?.sorting?.enabled) return;
 
     if (sortColumn === column) {
-      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      if (sortDirection === 'asc') {
+        sortDirection = 'desc';
+      } else if (sortDirection === 'desc') {
+        sortDirection = null;
+        sortColumn = '';
+      } else {
+        sortDirection = 'asc';
+      }
     } else {
       sortColumn = column;
       sortDirection = 'asc';
@@ -172,11 +187,14 @@
     if (tableConfig?.sorting?.defaultSort) {
       sortColumn = tableConfig.sorting.defaultSort.column;
       sortDirection = tableConfig.sorting.defaultSort.direction;
+    } else {
+      sortColumn = '';
+      sortDirection = null;
     }
   });
 
   $effect(() => {
-    if (data) {
+    if (data || sortColumn || sortDirection || searchTerm) {
       updateFilteredData();
     }
   });
@@ -251,8 +269,10 @@
                   <span class="truncate">{column.header}</span>
                   {#if column.sortable && tableConfig.sorting?.enabled}
                     <span class="ml-1 flex-shrink-0 text-gray-400 sm:ml-2">
-                      {#if sortColumn === column.key}
-                        {sortDirection === 'asc' ? '↑' : '↓'}
+                      {#if sortColumn === column.key && sortDirection === 'asc'}
+                        ↑
+                      {:else if sortColumn === column.key && sortDirection === 'desc'}
+                        ↓
                       {:else}
                         ↕
                       {/if}

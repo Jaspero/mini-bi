@@ -702,7 +702,7 @@
                           <option value="boolean">Boolean</option>
                         </select>
                       </div>
-                      <div class="sm:col-span-1">
+                      <div class="sm:col-span-2">
                         <label
                           class="block text-xs font-medium text-gray-600 sm:hidden"
                           for={`col-width-${index}`}>Width</label
@@ -841,21 +841,6 @@
                 />
                 <span class="ml-2 text-sm text-gray-600">Enable filtering</span>
               </label>
-              {#if editedBlock.config.filtering?.enabled}
-                <div class="flex items-center space-x-2">
-                  <label for="filter-type" class="text-sm text-gray-600">Filter type:</label>
-                  <select
-                    id="filter-type"
-                    bind:value={editedBlock.config.filtering.type}
-                    class="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="text">Text</option>
-                    <option value="select">Select</option>
-                    <option value="date">Date</option>
-                    <option value="number">Number</option>
-                  </select>
-                </div>
-              {/if}
             </div>
           </div>
         </div>
