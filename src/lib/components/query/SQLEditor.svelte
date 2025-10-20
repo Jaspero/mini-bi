@@ -217,39 +217,103 @@
   </div>
 </div>
 
-<!-- AI Modal -->
-<Modal isOpen={isAIModalOpen} title="Generate SQL with AI">
-  <div class="space-y-4">
-    <div>
-      <label for="ai-prompt" class="block text-sm font-medium text-gray-700">
+<Modal isOpen={isAIModalOpen} title="Generate SQL with AI" close={closeAIModal} size="large">
+  <div class="p-6">
+    <div class="mb-6">
+      <label
+        for="ai-prompt"
+        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
         Describe what you want to query
       </label>
       <textarea
         id="ai-prompt"
         bind:value={aiPrompt}
         placeholder="e.g., 'Find all users who registered in the last 30 days and have made at least one purchase'"
-        class="mt-1 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-        rows="4"
+        class="w-full rounded-lg border border-gray-300 bg-white p-4 text-sm text-gray-900 shadow-sm transition-colors focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:border-purple-400 dark:focus:ring-purple-400"
+        rows="6"
+        disabled={aiGenerating}
       ></textarea>
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        💡 Tip: Be specific about the tables, columns, and conditions you want to include in your
+        query.
+      </p>
     </div>
 
-    <div class="flex justify-end gap-2">
-      <button
-        type="button"
-        onclick={closeAIModal}
-        class="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-        disabled={aiGenerating}
-      >
-        Cancel
-      </button>
-      <button
-        type="button"
-        onclick={generateSQLFromAI}
-        disabled={!aiPrompt.trim() || aiGenerating}
-        class="rounded-md bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700 disabled:opacity-50"
-      >
-        {aiGenerating ? 'Generating...' : 'Generate SQL'}
-      </button>
+    <div
+      class="flex items-center justify-between gap-3 border-t border-gray-200 pt-6 dark:border-gray-700"
+    >
+      <div class="text-xs text-gray-500 dark:text-gray-400">
+        {#if aiGenerating}
+          <span class="flex items-center gap-2">
+            <svg
+              class="h-4 w-4 animate-spin"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Generating your SQL query...
+          </span>
+        {/if}
+      </div>
+      <div class="flex gap-3">
+        <button
+          type="button"
+          onclick={closeAIModal}
+          class="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-300 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+          disabled={aiGenerating}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onclick={generateSQLFromAI}
+          disabled={!aiPrompt.trim() || aiGenerating}
+          class="rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:from-purple-700 hover:to-purple-800 focus:ring-2 focus:ring-purple-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {#if aiGenerating}
+            <span class="flex items-center gap-2">
+              <svg
+                class="h-4 w-4 animate-spin"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Generating...
+            </span>
+          {:else}
+            <span class="flex items-center gap-2"> ✨ Generate SQL </span>
+          {/if}
+        </button>
+      </div>
     </div>
   </div>
 </Modal>
