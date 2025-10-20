@@ -225,6 +225,7 @@
           <SchemaSidebar
             mockSchema={schemaData.mockSchema}
             sqlTemplates={schemaData.sqlTemplates}
+            loading={schemaData.loading}
             onInsertText={handleSchemaInsertText}
             onSetEditorValue={handleSchemaSetEditorValue}
           />

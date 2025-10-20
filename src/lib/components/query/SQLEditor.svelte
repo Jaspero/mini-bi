@@ -140,6 +140,17 @@
     if (!value) {
       value = 'SELECT * FROM users;';
     }
+
+    onOpenSchema({
+      schema: null,
+      sqlTemplates,
+      loading: true,
+      mockSchema: { tables: [] },
+      insertTemplate: insertTemplate,
+      insertSelectAll: insertSelectAll,
+      insertText: insertText
+    });
+
     await loadSchema();
   });
 
@@ -154,6 +165,7 @@
       onOpenSchema({
         schema: schema,
         sqlTemplates,
+        loading: schemaLoading,
         mockSchema: {
           tables: schema.tables.map((table: any) => ({
             name: table.name,
