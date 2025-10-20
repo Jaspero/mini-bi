@@ -79,6 +79,37 @@
     }
   }
 
+  async function refreshData() {
+    try {
+      loading = true;
+      error = '';
+
+      const dataSource = block.dataSource || (block.config as any)?.dataSource;
+
+      if (dataSource?.type === 'query' && dataSource?.queryId) {
+        await dashboardService.refreshQueryCache(dataSource.queryId, filterParams);
+      }
+
+      const blockConfig = {
+        ...block.config,
+        dataSource: block.dataSource
+      };
+
+      data = await dashboardService.loadBlockData(
+        block.id,
+        block.type,
+        blockConfig,
+        block.dataSource,
+        filterParams
+      );
+
+      loading = false;
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Failed to load data';
+      loading = false;
+    }
+  }
+
   function updateFilteredData() {
     if (!data) return;
 
@@ -168,7 +199,7 @@
   }
 
   async function onRefresh() {
-    await loadData();
+    await refreshData();
   }
 
   function onEdit() {
@@ -217,8 +248,8 @@
         <input
           type="text"
           placeholder="Search..."
-          class="mr-1 w-20 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs focus:border-blue-500 focus:ring-2
-                 focus:ring-blue-500 focus:outline-none sm:w-auto sm:px-3 sm:text-sm
+          class="mr-1 w-20 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none
+                 focus:ring-2 focus:ring-blue-500 sm:w-auto sm:px-3 sm:text-sm
                  dark:placeholder-gray-400"
           oninput={handleSearch}
           value={searchTerm}
@@ -258,7 +289,7 @@
           <tr>
             {#each tableConfig.columns as column}
               <th
-                class="border-b border-gray-200 px-2 py-2 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-4 sm:py-3 {column.sortable &&
+                class="border-b border-gray-200 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 sm:px-4 sm:py-3 {column.sortable &&
                 tableConfig.sorting?.enabled
                   ? 'cursor-pointer touch-manipulation select-none hover:bg-gray-100'
                   : ''} {sortColumn === column.key ? 'bg-gray-100' : ''}"
@@ -288,7 +319,7 @@
             <tr class="hover:bg-gray-50 {rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
               {#each tableConfig.columns as column}
                 <td
-                  class="px-2 py-2 text-xs whitespace-nowrap text-gray-900 sm:px-4 sm:py-3 sm:text-sm"
+                  class="whitespace-nowrap px-2 py-2 text-xs text-gray-900 sm:px-4 sm:py-3 sm:text-sm"
                 >
                   <div class="max-w-[100px] truncate sm:max-w-none">
                     {formatCellValue(row[column.key], column)}

@@ -14,7 +14,30 @@ import type {
   DatabaseSchema
 } from '../types/index';
 
+interface QueryCacheEntry {
+  queryId: string;
+  parameters: Record<string, any>;
+  result: QueryResult;
+  cachedAt: Date;
+}
+
 export class MockDashboardService implements IDashboardService {
+  private queryCache: Map<string, QueryCacheEntry> = new Map();
+
+  constructor() {
+    this.initializeCache();
+  }
+
+  private async initializeCache() {
+    try {
+      for (const queryId of ['sales-query', 'campaign-query']) {
+        await this.refreshQueryCache(queryId, {});
+      }
+    } catch (error) {
+      console.warn('Failed to initialize query cache:', error);
+    }
+  }
+
   private dashboards: Dashboard[] = [
     {
       id: '1',
@@ -462,24 +485,29 @@ export class MockDashboardService implements IDashboardService {
   ): Promise<BlockData> {
     await this.delay(200);
 
-    // Check if the block has a dataSource configuration
     const actualDataSource = dataSource || (config as any)?.dataSource;
 
-    // If dataSource is query type, use query execution
     if (actualDataSource?.type === 'query' && actualDataSource?.queryId) {
       try {
-        const queryResult = await this.executeQuery(actualDataSource.queryId, filterParams);
-        return this.convertQueryResultToBlockData(queryResult);
+        const cachedResult = await this.getCachedQueryResult(
+          actualDataSource.queryId,
+          filterParams
+        );
+
+        if (cachedResult) {
+          return this.convertQueryResultToBlockData(cachedResult);
+        }
+
+        const freshResult = await this.refreshQueryCache(actualDataSource.queryId, filterParams);
+        return this.convertQueryResultToBlockData(freshResult);
       } catch (error) {
         console.warn(
-          `Failed to execute query ${actualDataSource.queryId}, falling back to mock data:`,
+          `Failed to load query ${actualDataSource.queryId}, falling back to mock data:`,
           error
         );
-        // Fall back to mock data if query fails
       }
     }
 
-    // Default behavior: generate mock data based on block type
     switch (blockType) {
       case 'table':
         return this.generateTableData();
@@ -495,7 +523,6 @@ export class MockDashboardService implements IDashboardService {
   async executeQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult> {
     await this.delay(300);
 
-    // Find the query in global queries
     const query = this.globalQueries.find((q) => q.id === queryId);
 
     if (!query) {
@@ -506,18 +533,15 @@ export class MockDashboardService implements IDashboardService {
       throw new Error(`Query ${queryId} is not active`);
     }
 
-    // Get mock data for this query
     let mockData = this.queryResults.get(queryId);
     if (!mockData) {
       throw new Error(`No mock data available for query ${queryId}`);
     }
 
-    // Apply filter parameters to mock data
     if (parameters && Object.keys(parameters).length > 0) {
       mockData = this.applyFiltersToMockData([...mockData], parameters);
     }
 
-    // Convert to QueryResult format
     const columns: QueryColumn[] =
       mockData && mockData.length > 0
         ? Object.keys(mockData[0]).map((key) => ({
@@ -533,8 +557,68 @@ export class MockDashboardService implements IDashboardService {
       columns,
       rows,
       rowCount: rows.length,
-      executionTime: Math.random() * 500 + 100 // Random execution time between 100-600ms
+      executionTime: Math.random() * 500 + 100
     };
+  }
+
+  async refreshQueryCache(queryId: string, parameters?: Record<string, any>): Promise<QueryResult> {
+    const result = await this.executeQuery(queryId, parameters);
+
+    const cacheKey = this.generateCacheKey(queryId, parameters);
+    this.queryCache.set(cacheKey, {
+      queryId,
+      parameters: parameters || {},
+      result,
+      cachedAt: new Date()
+    });
+
+    const query = this.globalQueries.find((q) => q.id === queryId);
+    if (query) {
+      query.lastExecuted = new Date();
+    }
+
+    return result;
+  }
+
+  async getCachedQueryResult(
+    queryId: string,
+    parameters?: Record<string, any>
+  ): Promise<QueryResult | null> {
+    const cacheKey = this.generateCacheKey(queryId, parameters);
+    const cached = this.queryCache.get(cacheKey);
+
+    if (cached) {
+      return cached.result;
+    }
+
+    return null;
+  }
+
+  private generateCacheKey(queryId: string, parameters?: Record<string, any>): string {
+    const paramStr = parameters ? JSON.stringify(parameters) : '{}';
+    return `${queryId}::${paramStr}`;
+  }
+
+  clearQueryCache(queryId?: string): void {
+    if (queryId) {
+      const keysToDelete: string[] = [];
+      for (const key of this.queryCache.keys()) {
+        if (key.startsWith(`${queryId}::`)) {
+          keysToDelete.push(key);
+        }
+      }
+      keysToDelete.forEach((key) => this.queryCache.delete(key));
+    } else {
+      this.queryCache.clear();
+    }
+  }
+
+  getCacheInfo(): Array<{ queryId: string; parameters: Record<string, any>; cachedAt: Date }> {
+    return Array.from(this.queryCache.values()).map((entry) => ({
+      queryId: entry.queryId,
+      parameters: entry.parameters,
+      cachedAt: entry.cachedAt
+    }));
   }
 
   async validateQuery(sql: string): Promise<{ isValid: boolean; error?: string }> {

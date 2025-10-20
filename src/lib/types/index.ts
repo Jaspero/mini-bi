@@ -306,6 +306,11 @@ export interface IDashboardService {
 
   // Query operations
   executeQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult>;
+  refreshQueryCache(queryId: string, parameters?: Record<string, any>): Promise<QueryResult>;
+  getCachedQueryResult(
+    queryId: string,
+    parameters?: Record<string, any>
+  ): Promise<QueryResult | null>;
   validateQuery(sql: string): Promise<{ isValid: boolean; error?: string }>;
   getQueryPreview(sql: string, limit?: number): Promise<QueryResult>;
 
