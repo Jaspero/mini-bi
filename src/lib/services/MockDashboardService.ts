@@ -613,6 +613,25 @@ export class MockDashboardService implements IDashboardService {
     }
   }
 
+  clearDashboardCache(dashboardId: string): void {
+    const dashboard = this.dashboards.find((d) => d.id === dashboardId);
+    if (!dashboard) {
+      return;
+    }
+
+    const queryIds = new Set<string>();
+    for (const block of dashboard.blocks) {
+      const dataSource = block.dataSource || (block.config as any)?.dataSource;
+      if (dataSource?.type === 'query' && dataSource?.queryId) {
+        queryIds.add(dataSource.queryId);
+      }
+    }
+
+    for (const queryId of queryIds) {
+      this.clearQueryCache(queryId);
+    }
+  }
+
   getCacheInfo(): Array<{ queryId: string; parameters: Record<string, any>; cachedAt: Date }> {
     return Array.from(this.queryCache.values()).map((entry) => ({
       queryId: entry.queryId,

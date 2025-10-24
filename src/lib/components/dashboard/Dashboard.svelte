@@ -247,6 +247,7 @@
 
   async function refresh() {
     if (dashboardId) {
+      dashboardService.clearDashboardCache(dashboardId);
       await loadDashboard();
     }
   }

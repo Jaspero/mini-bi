@@ -311,6 +311,8 @@ export interface IDashboardService {
     queryId: string,
     parameters?: Record<string, any>
   ): Promise<QueryResult | null>;
+  clearQueryCache(queryId?: string): void;
+  clearDashboardCache(dashboardId: string): void;
   validateQuery(sql: string): Promise<{ isValid: boolean; error?: string }>;
   getQueryPreview(sql: string, limit?: number): Promise<QueryResult>;
 
