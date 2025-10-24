@@ -2,6 +2,7 @@
 export { default as DashboardComponent } from './components/dashboard/Dashboard.svelte';
 export { default as DashboardCanvas } from './components/dashboard/DashboardCanvas.svelte';
 export { default as DashboardManager } from './components/dashboard/DashboardManager.svelte';
+export { default as DashboardEditor } from './components/dashboard/DashboardEditor.svelte';
 export { default as BlockEditor } from './components/dashboard/BlockEditor.svelte';
 export { default as FilterManager } from './components/dashboard/FilterManager.svelte';
 export { default as FilterSidebar } from './components/dashboard/FilterSidebar.svelte';

@@ -15,6 +15,7 @@
   import FilterSidebar from './FilterSidebar.svelte';
   import FilterManager from './FilterManager.svelte';
   import DashboardSkeleton from '../ui/DashboardSkeleton.svelte';
+  import DashboardEditor from './DashboardEditor.svelte';
 
   interface Props {
     dashboardId?: string | null;
@@ -59,6 +60,9 @@
   let filters: Filter[] = $state([]);
   let showFilterSidebar = $state(false);
   let showFilterManager = $state(false);
+
+  // Dashboard editor state
+  let showDashboardEditor = $state(false);
 
   onMount(async () => {
     window.addEventListener('click', handleClickOutside);
@@ -127,6 +131,31 @@
 
   function closeFilterManager() {
     showFilterManager = false;
+  }
+
+  function openDashboardEditor() {
+    showDashboardEditor = true;
+  }
+
+  function closeDashboardEditor() {
+    showDashboardEditor = false;
+  }
+
+  function handleDashboardUpdate(updates: {
+    name?: string;
+    description?: string;
+    layout?: Dashboard['layout'];
+  }) {
+    if (!dashboard) return;
+
+    dashboard = {
+      ...dashboard,
+      name: updates.name ?? dashboard.name,
+      description: updates.description ?? dashboard.description,
+      layout: updates.layout ?? dashboard.layout
+    };
+
+    hasUnsavedChanges = true;
   }
 
   function onFiltersChange(newFilters: Filter[]) {
@@ -469,9 +498,21 @@
           <div class="flex min-w-0 flex-1 items-baseline gap-2 sm:gap-4">
             <div class="min-w-0 flex-1">
               <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
-                <h2 class="truncate text-lg font-bold text-gray-900 sm:text-2xl">
-                  {dashboard.name}
-                </h2>
+                <div class="flex items-center gap-2">
+                  <h2 class="truncate text-lg font-bold text-gray-900 sm:text-2xl">
+                    {dashboard.name}
+                  </h2>
+                  {#if editable}
+                    <button
+                      class="inline-flex h-6 w-6 touch-manipulation items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                      onclick={openDashboardEditor}
+                      title="Edit dashboard settings"
+                      aria-label="Edit dashboard settings"
+                    >
+                      <span class="material-symbols-outlined text-base">edit</span>
+                    </button>
+                  {/if}
+                </div>
                 <div class="flex items-center gap-2">
                   <button
                     class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700"
@@ -659,6 +700,13 @@
   {queries}
   {blockUpdated}
   close={handleBlockEditorClose}
+/>
+
+<DashboardEditor
+  {dashboard}
+  isOpen={showDashboardEditor}
+  onSave={handleDashboardUpdate}
+  onClose={closeDashboardEditor}
 />
 
 <!-- Block Deletion Confirmation Modal -->
