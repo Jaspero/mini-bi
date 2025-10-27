@@ -31,7 +31,7 @@ export class MockDashboardService implements IDashboardService {
   private async initializeCache() {
     try {
       for (const queryId of ['sales-query', 'campaign-query']) {
-        await this.refreshQueryCache(queryId, {});
+        await this.refreshQuery(queryId, {});
       }
     } catch (error) {
       console.warn('Failed to initialize query cache:', error);
@@ -498,7 +498,7 @@ export class MockDashboardService implements IDashboardService {
           return this.convertQueryResultToBlockData(cachedResult);
         }
 
-        const freshResult = await this.refreshQueryCache(actualDataSource.queryId, filterParams);
+        const freshResult = await this.refreshQuery(actualDataSource.queryId, filterParams);
         return this.convertQueryResultToBlockData(freshResult);
       } catch (error) {
         console.warn(
@@ -561,7 +561,7 @@ export class MockDashboardService implements IDashboardService {
     };
   }
 
-  async refreshQueryCache(queryId: string, parameters?: Record<string, any>): Promise<QueryResult> {
+  async refreshQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult> {
     const result = await this.executeQuery(queryId, parameters);
 
     const cacheKey = this.generateCacheKey(queryId, parameters);
