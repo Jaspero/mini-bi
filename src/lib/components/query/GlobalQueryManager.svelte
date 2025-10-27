@@ -60,6 +60,9 @@
   }
 
   function editQuery(query: Query) {
+    if (query.public) {
+      return;
+    }
     selectedQuery = query;
     name = query.name;
     description = query.description || '';
@@ -469,25 +472,41 @@
               class="cursor-pointer rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
               class:border-blue-500={selectedQuery?.id === query.id}
               class:bg-blue-50={selectedQuery?.id === query.id}
-              onclick={() => editQuery(query)}
-              onkeydown={(e) => e.key === 'Enter' && editQuery(query)}
+              class:cursor-default={query.public}
+              class:hover:border-gray-200={query.public}
+              class:hover:shadow-sm={query.public}
+              onclick={() => !query.public && editQuery(query)}
+              onkeydown={(e) => !query.public && e.key === 'Enter' && editQuery(query)}
               role="button"
               tabindex="0"
             >
               <div class="mb-2 flex items-start justify-between">
-                <h4 class="mr-2 flex-1 truncate text-sm font-medium text-gray-900">{query.name}</h4>
-                <button
-                  class="rounded p-1 text-gray-400 transition-colors hover:text-red-600"
-                  onclick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    deleteQuery(query);
-                  }}
-                  disabled={loading}
-                  aria-label="Delete query"
-                >
-                  <span class="material-symbols-outlined text-sm">delete</span>
-                </button>
+                <div class="mr-2 flex flex-1 items-center gap-2">
+                  <h4 class="truncate text-sm font-medium text-gray-900">{query.name}</h4>
+                  {#if query.public}
+                    <span
+                      class="material-symbols-outlined text-sm text-blue-600"
+                      title="Public Query"
+                      aria-label="Public Query"
+                    >
+                      public
+                    </span>
+                  {/if}
+                </div>
+                {#if !query.public}
+                  <button
+                    class="rounded p-1 text-gray-400 transition-colors hover:text-red-600"
+                    onclick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      deleteQuery(query);
+                    }}
+                    disabled={loading}
+                    aria-label="Delete query"
+                  >
+                    <span class="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                {/if}
               </div>
 
               {#if query.description}

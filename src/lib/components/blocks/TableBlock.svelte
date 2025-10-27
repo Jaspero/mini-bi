@@ -11,6 +11,7 @@
     onBlockEdit?: (block: Block) => void;
     onBlockDeleteRequest?: (block: Block) => void;
     showControls?: boolean;
+    readOnly?: boolean;
   }
 
   let {
@@ -19,7 +20,8 @@
     filterParams = {},
     onBlockEdit = () => {},
     onBlockDeleteRequest = () => {},
-    showControls = false
+    showControls = false,
+    readOnly = false
   }: Props = $props();
 
   let tableConfig: TableBlockConfig = $state({
@@ -260,6 +262,7 @@
         {data}
         {loading}
         showControls={showControls || isHovered}
+        {readOnly}
         {onEdit}
         {onRefresh}
         {onDelete}

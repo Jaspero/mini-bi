@@ -502,7 +502,16 @@
                   <h2 class="truncate text-lg font-bold text-gray-900 sm:text-2xl">
                     {dashboard.name}
                   </h2>
-                  {#if editable}
+                  {#if dashboard.public}
+                    <span
+                      class="material-symbols-outlined text-blue-600"
+                      title="Public Dashboard"
+                      aria-label="Public Dashboard"
+                    >
+                      public
+                    </span>
+                  {/if}
+                  {#if editable && !dashboard.public}
                     <button
                       class="inline-flex h-6 w-6 touch-manipulation items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-700"
                       onclick={openDashboardEditor}
@@ -562,81 +571,82 @@
 
           {#if editable}
             <div class="flex flex-shrink-0 items-center space-x-1 sm:space-x-2">
-              {#if hasUnsavedChanges}
+              {#if dashboard.public}
                 <span
-                  class="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800"
+                  class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
                 >
-                  <span class="material-symbols-outlined mr-1 text-xs">warning</span>
-                  <span class="hidden sm:inline">Unsaved changes</span>
-                  <span class="sm:hidden">Unsaved</span>
+                  <span class="material-symbols-outlined mr-1 text-xs">public</span>
+                  <span class="hidden sm:inline">Public - Read Only</span>
+                  <span class="sm:hidden">Read Only</span>
                 </span>
-              {/if}
-
-              <div class="add-block-container relative">
-                <button
-                  class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 sm:h-10 sm:w-10"
-                  onclick={toggleAddBlockDropdown}
-                  title="Add new block"
-                  aria-label="Add new block"
-                >
-                  <span class="material-symbols-outlined text-lg sm:text-xl">add</span>
-                </button>
-                {#if showAddBlockDropdown}
-                  <div
-                    class="ring-opacity-5 absolute right-0 z-50 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black"
+              {:else}
+                {#if hasUnsavedChanges}
+                  <span
+                    class="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800"
                   >
-                    <div class="py-1">
-                      <button
-                        class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onclick={() => handleAddBlock('table')}
-                      >
-                        <span class="material-symbols-outlined mr-3 text-base">table</span>
-                        Table Block
-                      </button>
-                      <button
-                        class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onclick={() => handleAddBlock('graph')}
-                      >
-                        <span class="material-symbols-outlined mr-3 text-base">bar_chart</span>
-                        Graph Block
-                      </button>
-                      <button
-                        class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onclick={() => handleAddBlock('text')}
-                      >
-                        <span class="material-symbols-outlined mr-3 text-base">text_fields</span>
-                        Text Block
-                      </button>
+                    <span class="material-symbols-outlined mr-1 text-xs">warning</span>
+                    <span class="hidden sm:inline">Unsaved changes</span>
+                    <span class="sm:hidden">Unsaved</span>
+                  </span>
+                {/if}
+
+                <div class="add-block-container relative">
+                  <button
+                    class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 sm:h-10 sm:w-10"
+                    onclick={toggleAddBlockDropdown}
+                    title="Add new block"
+                    aria-label="Add new block"
+                  >
+                    <span class="material-symbols-outlined text-lg sm:text-xl">add</span>
+                  </button>
+                  {#if showAddBlockDropdown}
+                    <div
+                      class="ring-opacity-5 absolute right-0 z-50 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black"
+                    >
+                      <div class="py-1">
+                        <button
+                          class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onclick={() => handleAddBlock('table')}
+                        >
+                          <span class="material-symbols-outlined mr-3 text-base">table</span>
+                          Table Block
+                        </button>
+                        <button
+                          class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onclick={() => handleAddBlock('graph')}
+                        >
+                          <span class="material-symbols-outlined mr-3 text-base">bar_chart</span>
+                          Graph Block
+                        </button>
+                        <button
+                          class="flex w-full touch-manipulation items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onclick={() => handleAddBlock('text')}
+                        >
+                          <span class="material-symbols-outlined mr-3 text-base">text_fields</span>
+                          Text Block
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                {/if}
-              </div>
+                  {/if}
+                </div>
 
-              <button
-                class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10"
-                class:animate-pulse={saving}
-                disabled={saving || !hasUnsavedChanges}
-                onclick={saveDashboard}
-                title={saving ? 'Saving...' : 'Save Dashboard'}
-                aria-label={saving ? 'Saving dashboard' : 'Save dashboard'}
-              >
-                {#if saving}
-                  <div
-                    class="h-4 w-4 animate-spin rounded-full border-b-2 border-current sm:h-5 sm:w-5"
-                  ></div>
-                {:else}
-                  <span class="material-symbols-outlined text-lg sm:text-xl">save</span>
-                {/if}
-              </button>
-
-              <button
-                class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-700 sm:h-10 sm:w-10"
-                onclick={refresh}
-                title="Refresh dashboard"
-                aria-label="Refresh dashboard"
-              >
-                <span class="material-symbols-outlined text-lg sm:text-xl">refresh</span>
-              </button>
+                <button
+                  class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10"
+                  class:animate-pulse={saving}
+                  disabled={saving || !hasUnsavedChanges}
+                  onclick={saveDashboard}
+                  title={saving ? 'Saving...' : 'Save Dashboard'}
+                  aria-label={saving ? 'Saving dashboard' : 'Save dashboard'}
+                >
+                  {#if saving}
+                    <div
+                      class="h-4 w-4 animate-spin rounded-full border-b-2 border-current sm:h-5 sm:w-5"
+                    ></div>
+                  {:else}
+                    <span class="material-symbols-outlined text-lg sm:text-xl">save</span>
+                  {/if}
+                </button>
+              {/if}
 
               <button
                 class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-orange-600 transition-colors hover:bg-orange-50 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10"
@@ -655,22 +665,24 @@
                 {/if}
               </button>
 
-              <button
-                class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700 sm:h-10 sm:w-10"
-                class:bg-purple-100={editMode}
-                class:text-purple-700={editMode}
-                onclick={toggleEditMode}
-                title={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
-                aria-label={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
-              >
-                {#if !editMode}
-                  <span class="material-symbols-outlined text-lg sm:text-xl"
-                    >arrow_selector_tool</span
-                  >
-                {:else}
-                  <span class="material-symbols-outlined text-lg sm:text-xl">edit</span>
-                {/if}
-              </button>
+              {#if !dashboard.public}
+                <button
+                  class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700 sm:h-10 sm:w-10"
+                  class:bg-purple-100={editMode}
+                  class:text-purple-700={editMode}
+                  onclick={toggleEditMode}
+                  title={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
+                  aria-label={editMode ? 'Switch to move mode' : 'Switch to edit mode'}
+                >
+                  {#if !editMode}
+                    <span class="material-symbols-outlined text-lg sm:text-xl"
+                      >arrow_selector_tool</span
+                    >
+                  {:else}
+                    <span class="material-symbols-outlined text-lg sm:text-xl">edit</span>
+                  {/if}
+                </button>
+              {/if}
             </div>
           {/if}
         </div>
@@ -681,8 +693,9 @@
       <DashboardCanvas
         {dashboard}
         {dashboardService}
-        editable={editable && !editMode}
-        editMode={editable && editMode}
+        editable={editable && !editMode && !dashboard.public}
+        editMode={editable && editMode && !dashboard.public}
+        readOnly={dashboard.public || false}
         filterParams={getActiveFilterValues()}
         {onDashboardUpdated}
         {onBlockMoved}

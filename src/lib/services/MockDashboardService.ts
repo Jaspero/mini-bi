@@ -30,7 +30,7 @@ export class MockDashboardService implements IDashboardService {
 
   private async initializeCache() {
     try {
-      for (const queryId of ['sales-query', 'campaign-query']) {
+      for (const queryId of ['sales-query', 'campaign-query', 'public-metrics-query']) {
         await this.refreshQuery(queryId, {});
       }
     } catch (error) {
@@ -45,6 +45,7 @@ export class MockDashboardService implements IDashboardService {
       description: 'Overview of sales performance and metrics',
       created: new Date('2024-01-15'),
       lastModified: new Date('2024-06-01'),
+      public: false,
       layout: {
         gridSize: 80,
         columns: 20,
@@ -183,6 +184,7 @@ export class MockDashboardService implements IDashboardService {
       description: 'Marketing campaign performance and analytics',
       created: new Date('2024-02-20'),
       lastModified: new Date('2024-05-15'),
+      public: false,
       layout: {
         gridSize: 80,
         columns: 20,
@@ -280,6 +282,75 @@ export class MockDashboardService implements IDashboardService {
           description: 'Filter campaigns with minimum budget'
         }
       ]
+    },
+    {
+      id: '3',
+      name: 'Public Company Overview',
+      description: 'Public dashboard showing company-wide metrics and KPIs',
+      created: new Date('2024-01-01'),
+      lastModified: new Date('2024-06-15'),
+      public: true,
+      layout: {
+        gridSize: 80,
+        columns: 20,
+        rows: 15,
+        gap: 10,
+        canvasWidth: { type: 'fixed', value: 1600 },
+        canvasHeight: { type: 'fixed', value: 1000 }
+      },
+      blocks: [
+        {
+          id: 'public-block-1',
+          type: 'text',
+          title: 'Company Overview',
+          position: { x: 0, y: 0 },
+          size: { width: 10, height: 4 },
+          config: {
+            content: `
+              <h2>Welcome to Our Company Dashboard</h2>
+              <p>This is a public dashboard showcasing our company's performance metrics.</p>
+              <p><strong>Total Revenue:</strong> $5.2M</p>
+              <p><strong>Active Projects:</strong> 42</p>
+              <p><strong>Team Members:</strong> 128</p>
+            `,
+            variables: {},
+            styling: {
+              fontSize: 16,
+              fontFamily: 'Arial, sans-serif',
+              color: '#1f2937',
+              backgroundColor: '#f0f9ff',
+              padding: 20,
+              textAlign: 'left',
+              fontWeight: 'normal',
+              fontStyle: 'normal'
+            }
+          } as any
+        },
+        {
+          id: 'public-block-2',
+          type: 'graph',
+          title: 'Public Metrics',
+          position: { x: 10, y: 0 },
+          size: { width: 10, height: 8 },
+          dataSource: {
+            type: 'query',
+            queryId: 'public-metrics-query'
+          },
+          config: {
+            chartType: 'line',
+            series: [{ name: 'Revenue', dataKey: 'sales', color: '#3b82f6' }],
+            xAxis: { type: 'category', name: 'Month' },
+            yAxis: { type: 'value', name: 'Amount ($)' },
+            legend: { show: true, position: 'top', align: 'right' },
+            colors: ['#3b82f6', '#10b981'],
+            animations: { enabled: true, duration: 1000, easing: 'cubicInOut' }
+          } as any
+        }
+      ],
+      variables: {
+        companyName: 'Public Corp'
+      },
+      filters: []
     }
   ];
 
@@ -293,7 +364,8 @@ export class MockDashboardService implements IDashboardService {
       created: new Date('2024-01-15'),
       lastModified: new Date('2024-06-01'),
       lastExecuted: new Date('2024-06-01'),
-      isActive: true
+      isActive: true,
+      public: false
     },
     {
       id: 'campaign-query',
@@ -304,7 +376,8 @@ export class MockDashboardService implements IDashboardService {
       created: new Date('2024-02-20'),
       lastModified: new Date('2024-05-15'),
       lastExecuted: new Date('2024-05-15'),
-      isActive: true
+      isActive: true,
+      public: false
     },
     {
       id: 'user-growth-query',
@@ -315,7 +388,8 @@ export class MockDashboardService implements IDashboardService {
       created: new Date('2024-02-01'),
       lastModified: new Date('2024-05-15'),
       lastExecuted: new Date('2024-05-15'),
-      isActive: true
+      isActive: true,
+      public: false
     },
     {
       id: 'revenue-query',
@@ -326,7 +400,20 @@ export class MockDashboardService implements IDashboardService {
       created: new Date('2024-03-10'),
       lastModified: new Date('2024-05-20'),
       lastExecuted: new Date('2024-05-20'),
-      isActive: true
+      isActive: true,
+      public: false
+    },
+    {
+      id: 'public-metrics-query',
+      name: 'Public Company Metrics',
+      description: 'Public-facing company performance metrics',
+      sql: 'SELECT month, sales FROM monthly_sales WHERE year = 2024 ORDER BY month',
+      parameters: [],
+      created: new Date('2024-01-01'),
+      lastModified: new Date('2024-06-15'),
+      lastExecuted: new Date('2024-06-15'),
+      isActive: true,
+      public: true
     }
   ];
 
@@ -408,12 +495,23 @@ export class MockDashboardService implements IDashboardService {
           status: 'active'
         }
       ]
+    ],
+    [
+      'public-metrics-query',
+      [
+        { month: 'Jan', sales: 4000 },
+        { month: 'Feb', sales: 3000 },
+        { month: 'Mar', sales: 5000 },
+        { month: 'Apr', sales: 4500 },
+        { month: 'May', sales: 6000 },
+        { month: 'Jun', sales: 5500 }
+      ]
     ]
   ]);
 
   async loadDashboards(): Promise<DashboardListItem[]> {
     await this.delay(500);
-    return this.dashboards.map((d) => ({ id: d.id, name: d.name }));
+    return this.dashboards.map((d) => ({ id: d.id, name: d.name, public: d.public }));
   }
 
   async loadDashboard(id: string): Promise<Dashboard> {
@@ -453,11 +551,15 @@ export class MockDashboardService implements IDashboardService {
     }
 
     const dashboard = this.dashboards[dashboardIndex];
+    if (dashboard.public) {
+      throw new Error('Cannot update a public dashboard');
+    }
+
     const updatedDashboard: Dashboard = {
       ...dashboard,
       ...request,
-      id: dashboard.id, // Ensure ID doesn't change
-      created: dashboard.created, // Preserve creation date
+      id: dashboard.id,
+      created: dashboard.created,
       lastModified: new Date()
     };
 
@@ -471,6 +573,11 @@ export class MockDashboardService implements IDashboardService {
     const dashboardIndex = this.dashboards.findIndex((d) => d.id === id);
     if (dashboardIndex === -1) {
       throw new Error(`Dashboard with id ${id} not found`);
+    }
+
+    const dashboard = this.dashboards[dashboardIndex];
+    if (dashboard.public) {
+      throw new Error('Cannot delete a public dashboard');
     }
 
     this.dashboards.splice(dashboardIndex, 1);
@@ -828,6 +935,11 @@ export class MockDashboardService implements IDashboardService {
       throw new Error(`Query with id ${queryId} not found`);
     }
 
+    const query = this.globalQueries[queryIndex];
+    if (query.public) {
+      throw new Error('Cannot update a public query');
+    }
+
     this.globalQueries[queryIndex] = {
       ...this.globalQueries[queryIndex],
       ...updates,
@@ -841,6 +953,11 @@ export class MockDashboardService implements IDashboardService {
     const queryIndex = this.globalQueries.findIndex((q) => q.id === queryId);
     if (queryIndex === -1) {
       throw new Error(`Query with id ${queryId} not found`);
+    }
+
+    const query = this.globalQueries[queryIndex];
+    if (query.public) {
+      throw new Error('Cannot delete a public query');
     }
 
     this.globalQueries.splice(queryIndex, 1);

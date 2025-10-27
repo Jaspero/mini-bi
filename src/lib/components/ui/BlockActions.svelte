@@ -7,6 +7,7 @@
     data?: BlockData | null;
     loading?: boolean;
     showControls?: boolean;
+    readOnly?: boolean;
     onEdit?: (block: Block) => void;
     onRefresh?: () => void;
     onDelete?: (block: Block) => void;
@@ -18,6 +19,7 @@
     data = null,
     loading = false,
     showControls = false,
+    readOnly = false,
     onEdit = () => {},
     onRefresh = () => {},
     onDelete = () => {},
@@ -149,13 +151,15 @@
       <div
         class="absolute top-full right-0 z-50 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg"
       >
-        <button
-          class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-          onclick={handleEdit}
-        >
-          <span class="material-symbols-outlined mr-3 text-base">edit</span>
-          Edit
-        </button>
+        {#if !readOnly}
+          <button
+            class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+            onclick={handleEdit}
+          >
+            <span class="material-symbols-outlined mr-3 text-base">edit</span>
+            Edit
+          </button>
+        {/if}
 
         <button
           class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
@@ -202,13 +206,15 @@
 
         <hr class="my-1 border-gray-200" />
 
-        <button
-          class="flex w-full items-center px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-          onclick={handleDelete}
-        >
-          <span class="material-symbols-outlined mr-3 text-base">delete</span>
-          Delete
-        </button>
+        {#if !readOnly}
+          <button
+            class="flex w-full items-center px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+            onclick={handleDelete}
+          >
+            <span class="material-symbols-outlined mr-3 text-base">delete</span>
+            Delete
+          </button>
+        {/if}
       </div>
     {/if}
   </div>

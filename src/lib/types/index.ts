@@ -25,6 +25,7 @@ export interface Dashboard {
   blocks: Block[];
   variables?: Record<string, any>;
   filters?: Filter[];
+  public?: boolean;
 }
 
 export interface DashboardLayout {
@@ -175,6 +176,7 @@ export interface Query {
   lastModified: Date;
   lastExecuted?: Date;
   isActive: boolean;
+  public?: boolean;
 }
 
 export interface QueryParameter {
@@ -263,6 +265,7 @@ export interface CreateDashboardRequest {
   blocks?: Block[];
   variables?: Record<string, any>;
   filters?: Filter[];
+  public?: boolean;
 }
 
 export interface UpdateDashboardRequest {
@@ -272,6 +275,7 @@ export interface UpdateDashboardRequest {
   blocks?: Block[];
   variables?: Record<string, any>;
   filters?: Filter[];
+  public?: boolean;
 }
 
 export interface BlockData {
@@ -286,6 +290,7 @@ export interface BlockData {
 export interface DashboardListItem {
   id: string;
   name: string;
+  public?: boolean;
 }
 
 export interface IDashboardService {

@@ -415,21 +415,34 @@
                 tabindex="0"
               >
                 <div class="flex items-start justify-between">
-                  <h4 class="mr-2 flex-1 truncate text-sm font-medium text-gray-900">
-                    {dashboard.name}
-                  </h4>
-                  <button
-                    class="rounded p-1 text-gray-400 transition-colors hover:text-red-600"
-                    onclick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      deleteDashboard(dashboard, e);
-                    }}
-                    disabled={deleting}
-                    aria-label="Delete dashboard"
-                  >
-                    <span class="material-symbols-outlined text-sm">delete</span>
-                  </button>
+                  <div class="mr-2 flex flex-1 items-center gap-2">
+                    <h4 class="truncate text-sm font-medium text-gray-900">
+                      {dashboard.name}
+                    </h4>
+                    {#if dashboard.public}
+                      <span
+                        class="material-symbols-outlined text-sm text-blue-600"
+                        title="Public Dashboard"
+                        aria-label="Public Dashboard"
+                      >
+                        public
+                      </span>
+                    {/if}
+                  </div>
+                  {#if !dashboard.public}
+                    <button
+                      class="rounded p-1 text-gray-400 transition-colors hover:text-red-600"
+                      onclick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        deleteDashboard(dashboard, e);
+                      }}
+                      disabled={deleting}
+                      aria-label="Delete dashboard"
+                    >
+                      <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  {/if}
                 </div>
               </div>
             {/each}

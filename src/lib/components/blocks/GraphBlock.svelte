@@ -13,6 +13,7 @@
     onBlockEdit?: (block: Block) => void;
     onBlockDeleteRequest?: (block: Block) => void;
     showControls?: boolean;
+    readOnly?: boolean;
   }
 
   let {
@@ -22,7 +23,8 @@
     onBlockUpdate = () => {},
     onBlockEdit = () => {},
     onBlockDeleteRequest = () => {},
-    showControls = false
+    showControls = false,
+    readOnly = false
   }: Props = $props();
 
   let graphConfig: GraphBlockConfig = $state({
@@ -439,6 +441,7 @@
         {data}
         {loading}
         showControls={showControls || isHovered}
+        {readOnly}
         {onEdit}
         {onRefresh}
         {onDelete}
