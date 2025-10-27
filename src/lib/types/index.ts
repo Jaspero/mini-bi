@@ -306,7 +306,7 @@ export interface IDashboardService {
 
   // Query operations
   executeQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult>;
-  refreshQueryCache(queryId: string, parameters?: Record<string, any>): Promise<QueryResult>;
+  refreshQuery(queryId: string, parameters?: Record<string, any>): Promise<QueryResult>;
   getCachedQueryResult(
     queryId: string,
     parameters?: Record<string, any>

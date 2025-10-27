@@ -134,7 +134,7 @@
     const dataSource = block.dataSource || (block.config as any)?.dataSource;
 
     if (dataSource?.type === 'query' && dataSource?.queryId) {
-      await dashboardService.refreshQueryCache(dataSource.queryId, filterParams);
+      await dashboardService.refreshQuery(dataSource.queryId, filterParams);
     }
 
     await reloadData();
