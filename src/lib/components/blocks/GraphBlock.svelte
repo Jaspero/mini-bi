@@ -27,15 +27,7 @@
     readOnly = false
   }: Props = $props();
 
-  let graphConfig: GraphBlockConfig = $state({
-    chartType: 'line',
-    series: [],
-    xAxis: { type: 'category' },
-    yAxis: { type: 'value' },
-    legend: { show: true, position: 'top', align: 'center' },
-    colors: [],
-    animations: { enabled: true, duration: 750, easing: 'cubicInOut' }
-  });
+  let graphConfig: GraphBlockConfig = $state(block.config as GraphBlockConfig);
   let chartContainer: HTMLDivElement | undefined = $state();
   let chart: echarts.ECharts | null = $state(null);
   let loading = $state(true);
@@ -93,12 +85,36 @@
   });
 
   $effect(() => {
-    graphConfig = block.config as GraphBlockConfig;
+    const newConfig = block.config as GraphBlockConfig;
+    const newConfigStr = JSON.stringify(newConfig);
+    const currentConfigStr = JSON.stringify(graphConfig);
+
+    if (newConfigStr !== currentConfigStr) {
+      graphConfig = newConfig;
+      if (chart && !chart.isDisposed() && data && !loading) {
+        chart.clear();
+        updateChart();
+      }
+    }
   });
 
+  let previousDataSource = $state<string>('');
+
   $effect(() => {
-    if (graphConfig && chart && data && !loading && !chart.isDisposed()) {
-      updateChart();
+    const currentDataSource = JSON.stringify(block.dataSource);
+    if (currentDataSource !== previousDataSource && previousDataSource !== '') {
+      previousDataSource = currentDataSource;
+      if (chart && !chart.isDisposed()) {
+        chart.dispose();
+        chart = null;
+      }
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserver = null;
+      }
+      reloadData();
+    } else if (previousDataSource === '') {
+      previousDataSource = currentDataSource;
     }
   });
 
@@ -252,7 +268,13 @@
             name: s.name,
             type: chartType === 'area' ? 'line' : chartType,
             data: data?.data.map((item) => item[s.dataKey]) || [],
-            areaStyle: chartType === 'area' ? {} : undefined,
+            itemStyle: s.color ? { color: s.color } : undefined,
+            lineStyle:
+              s.color && (chartType === 'line' || chartType === 'area')
+                ? { color: s.color }
+                : undefined,
+            areaStyle:
+              chartType === 'area' ? (s.color ? { color: s.color, opacity: 0.3 } : {}) : undefined,
             smooth: chartType === 'line' || chartType === 'area'
           }))
         };

@@ -31,6 +31,13 @@
   let apiEndpoint: string = $state('');
   let apiMethod: 'GET' | 'POST' = $state('GET');
   let apiToken: string = $state('');
+  let currentChartType: string = $state('line');
+
+  $effect(() => {
+    if (editedBlock?.type === 'graph' && editedBlock.config.chartType !== currentChartType) {
+      currentChartType = editedBlock.config.chartType;
+    }
+  });
 
   $effect(() => {
     if (block && isOpen && (!editedBlock || editedBlock.id !== block.id)) {
@@ -75,6 +82,41 @@
             type: 'text'
           }
         };
+      }
+
+      // Initialize graph config if it doesn't exist or is incomplete
+      if (editedBlock.type === 'graph') {
+        const defaultGraphConfig = {
+          chartType: 'line',
+          series: [],
+          xAxis: { type: 'category', name: '' },
+          yAxis: { type: 'value', name: '' },
+          legend: { show: true, position: 'top', align: 'center' },
+          colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'],
+          animations: { enabled: true, duration: 1000, easing: 'cubicInOut' }
+        };
+
+        if (!editedBlock.config.chartType) {
+          editedBlock.config = { ...defaultGraphConfig, ...editedBlock.config };
+        }
+        if (!editedBlock.config.series) {
+          editedBlock.config.series = [];
+        }
+        if (!editedBlock.config.xAxis) {
+          editedBlock.config.xAxis = { type: 'category', name: '' };
+        }
+        if (!editedBlock.config.yAxis) {
+          editedBlock.config.yAxis = { type: 'value', name: '' };
+        }
+        if (!editedBlock.config.legend) {
+          editedBlock.config.legend = { show: true, position: 'top', align: 'center' };
+        }
+        if (!editedBlock.config.colors) {
+          editedBlock.config.colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
+        }
+        if (!editedBlock.config.animations) {
+          editedBlock.config.animations = { enabled: true, duration: 1000, easing: 'cubicInOut' };
+        }
       }
 
       // Sync reactive variables with editedBlock
@@ -847,22 +889,376 @@
       {/if}
 
       {#if editedBlock.type === 'graph'}
-        <div class="space-y-2">
-          <label for="chart-type" class="block text-sm font-medium text-gray-700">Chart Type</label>
-          <select
-            id="chart-type"
-            bind:value={editedBlock.config.chartType}
-            class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          >
-            <option value="bar">Bar Chart</option>
-            <option value="line">Line Chart</option>
-            <option value="pie">Pie Chart</option>
-            <option value="area">Area Chart</option>
-            <option value="scatter">Scatter Plot</option>
-            <option value="donut">Donut Chart</option>
-            <option value="gauge">Gauge Chart</option>
-            <option value="heatmap">Heatmap</option>
-          </select>
+        <div class="space-y-4">
+          <h3 class="text-lg font-medium text-gray-900">Graph Configuration</h3>
+
+          <div class="space-y-2">
+            <label for="chart-type" class="block text-sm font-medium text-gray-700"
+              >Chart Type</label
+            >
+            <select
+              id="chart-type"
+              bind:value={editedBlock.config.chartType}
+              onchange={() => {
+                if (editedBlock) {
+                  currentChartType = editedBlock.config.chartType;
+                }
+              }}
+              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="bar">Bar Chart</option>
+              <option value="line">Line Chart</option>
+              <option value="pie">Pie Chart</option>
+              <option value="area">Area Chart</option>
+              <option value="scatter">Scatter Plot</option>
+              <option value="donut">Donut Chart</option>
+              <option value="gauge">Gauge Chart</option>
+              <option value="heatmap">Heatmap</option>
+            </select>
+          </div>
+
+          {#if !['pie', 'donut', 'gauge'].includes(currentChartType)}
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="block text-sm font-medium text-gray-700">Series</div>
+                <button
+                  type="button"
+                  class="text-sm text-blue-600 hover:text-blue-500"
+                  onclick={() => {
+                    if (editedBlock) {
+                      if (!editedBlock.config.series) editedBlock.config.series = [];
+                      editedBlock.config.series.push({
+                        name: `Series ${editedBlock.config.series.length + 1}`,
+                        dataKey: '',
+                        color: '#3b82f6'
+                      });
+                      editedBlock = { ...editedBlock };
+                    }
+                  }}
+                >
+                  + Add Series
+                </button>
+              </div>
+
+              {#if editedBlock.config.series && editedBlock.config.series.length > 0}
+                <div class="space-y-2">
+                  {#each editedBlock.config.series as series, index}
+                    <div class="rounded-md border border-gray-200 bg-gray-50 p-3">
+                      <div class="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center">
+                        <div class="sm:col-span-4">
+                          <label
+                            for={`series-name-${index}`}
+                            class="block text-xs font-medium text-gray-600 sm:hidden">Name</label
+                          >
+                          <input
+                            id={`series-name-${index}`}
+                            type="text"
+                            placeholder="Series name"
+                            bind:value={series.name}
+                            class="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                          />
+                        </div>
+                        <div class="sm:col-span-4">
+                          <label
+                            for={`series-datakey-${index}`}
+                            class="block text-xs font-medium text-gray-600 sm:hidden"
+                            >Data Key</label
+                          >
+                          <input
+                            id={`series-datakey-${index}`}
+                            type="text"
+                            placeholder="Data key"
+                            bind:value={series.dataKey}
+                            class="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                          />
+                        </div>
+                        <div class="sm:col-span-3">
+                          <label
+                            for={`series-color-${index}`}
+                            class="block text-xs font-medium text-gray-600 sm:hidden">Color</label
+                          >
+                          <input
+                            id={`series-color-${index}`}
+                            type="color"
+                            bind:value={series.color}
+                            class="w-full rounded border border-gray-300 px-1 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                          />
+                        </div>
+                        <div class="flex justify-end sm:col-span-1">
+                          <button
+                            type="button"
+                            onclick={() => {
+                              if (editedBlock) {
+                                editedBlock.config.series.splice(index, 1);
+                                editedBlock = { ...editedBlock };
+                              }
+                            }}
+                            class="rounded p-1 text-red-600 hover:bg-red-50"
+                            title="Remove series"
+                            aria-label="Remove series"
+                          >
+                            <svg
+                              class="h-4 w-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+
+            <div class="space-y-3">
+              <div class="block text-sm font-medium text-gray-700">X-Axis Configuration</div>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label for="xaxis-type" class="block text-xs font-medium text-gray-600"
+                    >Type</label
+                  >
+                  <select
+                    id="xaxis-type"
+                    bind:value={editedBlock.config.xAxis.type}
+                    class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="category">Category</option>
+                    <option value="value">Value</option>
+                    <option value="time">Time</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="xaxis-name" class="block text-xs font-medium text-gray-600"
+                    >Label</label
+                  >
+                  <input
+                    id="xaxis-name"
+                    type="text"
+                    placeholder="X-Axis label"
+                    bind:value={editedBlock.config.xAxis.name}
+                    class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div class="block text-sm font-medium text-gray-700">Y-Axis Configuration</div>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label for="yaxis-type" class="block text-xs font-medium text-gray-600"
+                    >Type</label
+                  >
+                  <select
+                    id="yaxis-type"
+                    bind:value={editedBlock.config.yAxis.type}
+                    class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="value">Value</option>
+                    <option value="category">Category</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="yaxis-name" class="block text-xs font-medium text-gray-600"
+                    >Label</label
+                  >
+                  <input
+                    id="yaxis-name"
+                    type="text"
+                    placeholder="Y-Axis label"
+                    bind:value={editedBlock.config.yAxis.name}
+                    class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label for="yaxis-min" class="block text-xs font-medium text-gray-600"
+                    >Min Value</label
+                  >
+                  <input
+                    id="yaxis-min"
+                    type="number"
+                    placeholder="Auto"
+                    bind:value={editedBlock.config.yAxis.min}
+                    class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label for="yaxis-max" class="block text-xs font-medium text-gray-600"
+                    >Max Value</label
+                  >
+                  <input
+                    id="yaxis-max"
+                    type="number"
+                    placeholder="Auto"
+                    bind:value={editedBlock.config.yAxis.max}
+                    class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          {/if}
+
+          <div class="space-y-3">
+            <div class="block text-sm font-medium text-gray-700">Legend Configuration</div>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input
+                  type="checkbox"
+                  bind:checked={editedBlock.config.legend.show}
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="ml-2 text-sm text-gray-600">Show legend</span>
+              </label>
+              {#if editedBlock.config.legend.show}
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label for="legend-position" class="block text-xs font-medium text-gray-600"
+                      >Position</label
+                    >
+                    <select
+                      id="legend-position"
+                      bind:value={editedBlock.config.legend.position}
+                      class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    >
+                      <option value="top">Top</option>
+                      <option value="bottom">Bottom</option>
+                      <option value="left">Left</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="legend-align" class="block text-xs font-medium text-gray-600"
+                      >Alignment</label
+                    >
+                    <select
+                      id="legend-align"
+                      bind:value={editedBlock.config.legend.align}
+                      class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    >
+                      <option value="left">Left</option>
+                      <option value="center">Center</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                </div>
+              {/if}
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div class="block text-sm font-medium text-gray-700">Animation Settings</div>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input
+                  type="checkbox"
+                  bind:checked={editedBlock.config.animations.enabled}
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="ml-2 text-sm text-gray-600">Enable animations</span>
+              </label>
+              {#if editedBlock.config.animations.enabled}
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label for="animation-duration" class="block text-xs font-medium text-gray-600"
+                      >Duration (ms)</label
+                    >
+                    <input
+                      id="animation-duration"
+                      type="number"
+                      min="0"
+                      max="5000"
+                      step="100"
+                      bind:value={editedBlock.config.animations.duration}
+                      class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label for="animation-easing" class="block text-xs font-medium text-gray-600"
+                      >Easing</label
+                    >
+                    <select
+                      id="animation-easing"
+                      bind:value={editedBlock.config.animations.easing}
+                      class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    >
+                      <option value="linear">Linear</option>
+                      <option value="quadraticIn">Quadratic In</option>
+                      <option value="quadraticOut">Quadratic Out</option>
+                      <option value="cubicInOut">Cubic In-Out</option>
+                    </select>
+                  </div>
+                </div>
+              {/if}
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div class="block text-sm font-medium text-gray-700">Color Palette</div>
+            <div class="flex flex-wrap gap-2">
+              {#each editedBlock.config.colors || [] as color, index}
+                <div class="flex items-center gap-1">
+                  <input
+                    type="color"
+                    bind:value={editedBlock.config.colors[index]}
+                    class="h-8 w-12 cursor-pointer rounded border border-gray-300"
+                    aria-label={`Color ${index + 1}`}
+                  />
+                  <button
+                    type="button"
+                    onclick={() => {
+                      if (editedBlock && editedBlock.config.colors) {
+                        editedBlock.config.colors.splice(index, 1);
+                        editedBlock = { ...editedBlock };
+                      }
+                    }}
+                    class="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-red-600"
+                    title="Remove color"
+                    aria-label={`Remove color ${index + 1}`}
+                  >
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              {/each}
+              <button
+                type="button"
+                onclick={() => {
+                  if (editedBlock) {
+                    if (!editedBlock.config.colors) editedBlock.config.colors = [];
+                    editedBlock.config.colors.push('#3b82f6');
+                    editedBlock = { ...editedBlock };
+                  }
+                }}
+                class="flex h-8 w-12 items-center justify-center rounded border-2 border-dashed border-gray-300 text-gray-400 hover:border-blue-500 hover:text-blue-500"
+                title="Add color"
+                aria-label="Add color to palette"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
       {/if}
 

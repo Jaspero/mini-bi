@@ -310,7 +310,10 @@
       title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} Block`,
       position,
       size: defaultSize,
-      config: getDefaultConfig(type)
+      config: getDefaultConfig(type),
+      dataSource: {
+        type: 'mock'
+      }
     };
 
     // Add the block to the dashboard
@@ -356,7 +359,8 @@
           series: [
             {
               name: 'Series 1',
-              dataKey: 'value'
+              dataKey: 'value',
+              color: '#3b82f6'
             }
           ],
           xAxis: {
@@ -372,16 +376,11 @@
             position: 'top',
             align: 'center'
           },
-          colors: [
-            'var(--minibi-color-primary)',
-            'var(--minibi-color-danger)',
-            'var(--minibi-color-accent)',
-            'var(--minibi-color-warning)'
-          ],
+          colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'],
           animations: {
             enabled: true,
-            duration: 750,
-            easing: 'quadraticOut'
+            duration: 1000,
+            easing: 'cubicInOut'
           }
         } as any;
       case 'text':
