@@ -46,6 +46,7 @@ export class MockDashboardService implements IDashboardService {
       created: new Date('2024-01-15'),
       lastModified: new Date('2024-06-01'),
       public: false,
+      publicToggleable: true,
       layout: {
         gridSize: 80,
         columns: 20,
@@ -185,6 +186,7 @@ export class MockDashboardService implements IDashboardService {
       created: new Date('2024-02-20'),
       lastModified: new Date('2024-05-15'),
       public: false,
+      publicToggleable: true,
       layout: {
         gridSize: 80,
         columns: 20,
@@ -511,7 +513,12 @@ export class MockDashboardService implements IDashboardService {
 
   async loadDashboards(): Promise<DashboardListItem[]> {
     await this.delay(500);
-    return this.dashboards.map((d) => ({ id: d.id, name: d.name, public: d.public }));
+    return this.dashboards.map((d) => ({
+      id: d.id,
+      name: d.name,
+      public: d.public,
+      publicToggleable: d.publicToggleable
+    }));
   }
 
   async loadDashboard(id: string): Promise<Dashboard> {
@@ -551,7 +558,7 @@ export class MockDashboardService implements IDashboardService {
     }
 
     const dashboard = this.dashboards[dashboardIndex];
-    if (dashboard.public) {
+    if (dashboard.public && !dashboard.publicToggleable) {
       throw new Error('Cannot update a public dashboard');
     }
 
@@ -560,7 +567,8 @@ export class MockDashboardService implements IDashboardService {
       ...request,
       id: dashboard.id,
       created: dashboard.created,
-      lastModified: new Date()
+      lastModified: new Date(),
+      publicToggleable: dashboard.publicToggleable
     };
 
     this.dashboards[dashboardIndex] = updatedDashboard;

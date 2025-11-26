@@ -64,6 +64,10 @@
   // Dashboard editor state
   let showDashboardEditor = $state(false);
 
+  function checkIsReadOnly(): boolean {
+    return !!(dashboard?.public && !dashboard?.publicToggleable);
+  }
+
   onMount(async () => {
     window.addEventListener('click', handleClickOutside);
   });
@@ -145,6 +149,7 @@
     name?: string;
     description?: string;
     layout?: Dashboard['layout'];
+    public?: boolean;
   }) {
     if (!dashboard) return;
 
@@ -152,7 +157,8 @@
       ...dashboard,
       name: updates.name ?? dashboard.name,
       description: updates.description ?? dashboard.description,
-      layout: updates.layout ?? dashboard.layout
+      layout: updates.layout ?? dashboard.layout,
+      public: updates.public ?? dashboard.public
     };
 
     hasUnsavedChanges = true;
@@ -194,7 +200,8 @@
           layout: dashboard.layout,
           blocks: dashboard.blocks,
           variables: dashboard.variables,
-          filters: filters
+          filters: filters,
+          public: dashboard.public
         });
       } else {
         savedDashboard = await dashboardService.createDashboard({
@@ -203,7 +210,8 @@
           layout: dashboard.layout,
           blocks: dashboard.blocks,
           variables: dashboard.variables,
-          filters: filters
+          filters: filters,
+          public: dashboard.public
         });
       }
 
@@ -510,7 +518,7 @@
                       public
                     </span>
                   {/if}
-                  {#if editable && !dashboard.public}
+                  {#if editable && !checkIsReadOnly()}
                     <button
                       class="inline-flex h-6 w-6 touch-manipulation items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-700"
                       onclick={openDashboardEditor}
@@ -570,7 +578,7 @@
 
           {#if editable}
             <div class="flex flex-shrink-0 items-center space-x-1 sm:space-x-2">
-              {#if dashboard.public}
+              {#if checkIsReadOnly()}
                 <span
                   class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
                 >
@@ -664,7 +672,7 @@
                 {/if}
               </button>
 
-              {#if !dashboard.public}
+              {#if !checkIsReadOnly()}
                 <button
                   class="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-md text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-700 sm:h-10 sm:w-10"
                   class:bg-purple-100={editMode}
@@ -692,9 +700,9 @@
       <DashboardCanvas
         {dashboard}
         {dashboardService}
-        editable={editable && !editMode && !dashboard.public}
-        editMode={editable && editMode && !dashboard.public}
-        readOnly={dashboard.public || false}
+        editable={editable && !editMode && !checkIsReadOnly()}
+        editMode={editable && editMode && !checkIsReadOnly()}
+        readOnly={checkIsReadOnly()}
         filterParams={getActiveFilterValues()}
         {onDashboardUpdated}
         {onBlockMoved}

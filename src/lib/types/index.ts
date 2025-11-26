@@ -26,6 +26,7 @@ export interface Dashboard {
   variables?: Record<string, any>;
   filters?: Filter[];
   public?: boolean;
+  publicToggleable?: boolean;
 }
 
 export interface DashboardLayout {
@@ -291,6 +292,7 @@ export interface DashboardListItem {
   id: string;
   name: string;
   public?: boolean;
+  publicToggleable?: boolean;
 }
 
 export interface IDashboardService {
