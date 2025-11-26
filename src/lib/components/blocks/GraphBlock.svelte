@@ -281,6 +281,8 @@
 
       case 'pie':
       case 'donut':
+        const nameKey = (graphConfig as any).nameKey || 'name';
+        const valueKey = (graphConfig as any).valueKey || 'value';
         return {
           ...baseOption,
           series: [
@@ -289,8 +291,8 @@
               type: 'pie',
               radius: chartType === 'donut' ? ['40%', '70%'] : '70%',
               data: data.data.map((item) => ({
-                name: item.name,
-                value: item.value
+                name: item[nameKey],
+                value: item[valueKey]
               })),
               emphasis: {
                 itemStyle: {

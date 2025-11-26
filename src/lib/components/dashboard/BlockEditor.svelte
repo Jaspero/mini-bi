@@ -917,6 +917,66 @@
             </select>
           </div>
 
+          {#if ['pie', 'donut'].includes(currentChartType)}
+            <div class="space-y-3">
+              <div class="block text-sm font-medium text-gray-700">Pie Chart Data Mapping</div>
+              <p class="text-xs text-gray-500">
+                Configure which fields from your data source map to the chart
+              </p>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label for="pie-name-key" class="block text-xs font-medium text-gray-600"
+                    >Name Field</label
+                  >
+                  <input
+                    id="pie-name-key"
+                    type="text"
+                    placeholder="e.g., category, month, name"
+                    bind:value={editedBlock.config.nameKey}
+                    class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <p class="mt-1 text-xs text-gray-400">Field to use as slice labels</p>
+                </div>
+                <div>
+                  <label for="pie-value-key" class="block text-xs font-medium text-gray-600"
+                    >Value Field</label
+                  >
+                  <input
+                    id="pie-value-key"
+                    type="text"
+                    placeholder="e.g., sales, count, value"
+                    bind:value={editedBlock.config.valueKey}
+                    class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <p class="mt-1 text-xs text-gray-400">Field to use as slice values</p>
+                </div>
+              </div>
+              <div>
+                <label for="pie-series-name" class="block text-xs font-medium text-gray-600"
+                  >Series Name</label
+                >
+                <input
+                  id="pie-series-name"
+                  type="text"
+                  placeholder="e.g., Sales by Category"
+                  value={editedBlock.config.series?.[0]?.name || ''}
+                  oninput={(e) => {
+                    if (editedBlock) {
+                      if (!editedBlock.config.series)
+                        editedBlock.config.series = [{ name: '', dataKey: '' }];
+                      if (!editedBlock.config.series[0])
+                        editedBlock.config.series[0] = { name: '', dataKey: '' };
+                      editedBlock.config.series[0].name = e.currentTarget.value;
+                      editedBlock = { ...editedBlock };
+                    }
+                  }}
+                  class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                />
+                <p class="mt-1 text-xs text-gray-400">Name shown in legend/tooltip</p>
+              </div>
+            </div>
+          {/if}
+
           {#if !['pie', 'donut', 'gauge'].includes(currentChartType)}
             <div class="space-y-3">
               <div class="flex items-center justify-between">

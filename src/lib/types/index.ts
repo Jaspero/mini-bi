@@ -108,6 +108,8 @@ export interface GraphBlockConfig extends BlockConfig {
   legend: LegendConfig;
   colors: string[];
   animations: AnimationConfig;
+  nameKey?: string;
+  valueKey?: string;
 }
 
 export interface SeriesConfig {
