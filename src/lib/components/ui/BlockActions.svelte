@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import type { Block, BlockData } from '../../types/index';
 
   interface Props {
@@ -28,10 +28,42 @@
 
   let isOpen = $state(false);
   let dropdownRef = $state() as HTMLDivElement;
+  let buttonRef = $state() as HTMLButtonElement;
+  let menuRef = $state() as HTMLDivElement;
+  let menuStyle = $state('');
 
-  function toggleDropdown(event: MouseEvent) {
+  async function toggleDropdown(event: MouseEvent) {
     event.stopPropagation();
     isOpen = !isOpen;
+    if (isOpen) {
+      await tick();
+      positionMenu();
+    }
+  }
+
+  function positionMenu() {
+    if (!buttonRef || !menuRef) return;
+
+    const buttonRect = buttonRef.getBoundingClientRect();
+    const menuRect = menuRef.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+
+    let top = buttonRect.bottom + 4;
+    let left = buttonRect.right - menuRect.width;
+
+    if (top + menuRect.height > viewportHeight - 10) {
+      top = buttonRect.top - menuRect.height - 4;
+    }
+
+    if (left < 10) {
+      left = 10;
+    }
+    if (left + menuRect.width > viewportWidth - 10) {
+      left = viewportWidth - menuRect.width - 10;
+    }
+
+    menuStyle = `top: ${top}px; left: ${left}px;`;
   }
 
   function closeDropdown() {
@@ -122,17 +154,22 @@
   }
 
   function handleClickOutside(event: MouseEvent) {
-    if (dropdownRef && !dropdownRef.contains(event.target as Node)) {
+    const target = event.target as Node;
+    if (dropdownRef && !dropdownRef.contains(target) && menuRef && !menuRef.contains(target)) {
       closeDropdown();
     }
   }
 
   onMount(() => {
     document.addEventListener('click', handleClickOutside);
+    window.addEventListener('scroll', closeDropdown, true);
+    window.addEventListener('resize', closeDropdown);
   });
 
   onDestroy(() => {
     document.removeEventListener('click', handleClickOutside);
+    window.removeEventListener('scroll', closeDropdown, true);
+    window.removeEventListener('resize', closeDropdown);
   });
 </script>
 
@@ -141,6 +178,7 @@
     <button
       class="flex cursor-pointer touch-manipulation rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-900"
       onclick={toggleDropdown}
+      bind:this={buttonRef}
       aria-label="Block actions"
       aria-expanded={isOpen}
     >
@@ -149,7 +187,9 @@
 
     {#if isOpen}
       <div
-        class="absolute top-full right-0 z-50 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+        class="fixed z-[9999] w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+        style={menuStyle}
+        bind:this={menuRef}
       >
         {#if !readOnly}
           <button
@@ -208,7 +248,7 @@
 
         {#if !readOnly}
           <button
-            class="flex w-full items-center px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+            class="flex w-full items-center px-4 py-2 text-left text-sm text-red-600"
             onclick={handleDelete}
           >
             <span class="material-symbols-outlined mr-3 text-base">delete</span>
