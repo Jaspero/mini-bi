@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import type { Block, Query } from '../../types/index';
+  import type { Block, Query, TextVariable } from '../../types/index';
   import Modal from '../ui/Modal.svelte';
   import MonacoEditor from '../ui/MonacoEditor.svelte';
 
@@ -121,6 +121,42 @@
         currentChartType = editedBlock.config.chartType || 'line';
       }
 
+      if (editedBlock.type === 'text') {
+        if (!editedBlock.config.content) {
+          editedBlock.config.content = '';
+        }
+        if (!editedBlock.config.variables || !Array.isArray(editedBlock.config.variables)) {
+          const oldVars = editedBlock.config.variables as Record<string, string> | undefined;
+          if (oldVars && typeof oldVars === 'object') {
+            editedBlock.config.variables = Object.entries(oldVars).map(([name, value]) => ({
+              name,
+              type: 'static' as const,
+              value
+            }));
+          } else {
+            editedBlock.config.variables = [];
+          }
+        }
+        if (!editedBlock.config.styling) {
+          editedBlock.config.styling = {
+            fontSize: 14,
+            fontFamily: 'Arial, sans-serif',
+            color: '#000000',
+            padding: 8,
+            textAlign: 'left',
+            fontWeight: 'normal',
+            fontStyle: 'normal'
+          };
+        } else {
+          if (editedBlock.config.styling.color?.startsWith('var(')) {
+            editedBlock.config.styling.color = '#000000';
+          }
+          if (editedBlock.config.styling.backgroundColor?.startsWith('var(')) {
+            editedBlock.config.styling.backgroundColor = '#ffffff';
+          }
+        }
+      }
+
       // Sync reactive variables with editedBlock
       dataSourceType = editedBlock.dataSource.type;
       selectedQueryId = editedBlock.dataSource.queryId || '';
@@ -191,6 +227,13 @@
   // Watch for changes in static data JSON and update the data source
   $effect(() => {
     if (dataSourceType === 'static' && staticDataJson) {
+      updateDataSource();
+    }
+  });
+
+  // Watch for changes in query selection and update the data source
+  $effect(() => {
+    if (dataSourceType === 'query' && selectedQueryId) {
       updateDataSource();
     }
   });
@@ -331,12 +374,11 @@
     event.preventDefault();
 
     if (editedBlock) {
-      // Make sure we get the latest content from CKEditor for text blocks
       if (editedBlock.type === 'text' && editorInstance) {
         (editedBlock.config as any).content = editorInstance.getData();
       }
       blockUpdated(editedBlock);
-      close();
+      handleClose();
     }
   }
 
@@ -418,7 +460,7 @@
         </div>
       </div>
 
-      {#if editedBlock.type === 'table' || editedBlock.type === 'graph'}
+      {#if editedBlock.type === 'table' || editedBlock.type === 'graph' || editedBlock.type === 'text'}
         <div class="space-y-2">
           <label for="data-source" class="block text-sm font-medium text-gray-700"
             >Data Source</label
@@ -434,6 +476,11 @@
             <option value="query">SQL Query</option>
             <option value="api">API Endpoint</option>
           </select>
+          {#if editedBlock.type === 'text'}
+            <p class="text-xs text-gray-500">
+              Data source is used for dynamic variables that transform data into display values.
+            </p>
+          {/if}
         </div>
 
         {#if dataSourceType === 'query'}
@@ -1341,7 +1388,6 @@
         <div class="space-y-2">
           <label for="text-content" class="block text-sm font-medium text-gray-700">Content</label>
           {#if ckeditorError}
-            <!-- Fallback textarea if CKEditor fails to load -->
             <textarea
               id="text-content"
               bind:value={editedBlock.config.content}
@@ -1350,7 +1396,6 @@
               class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             ></textarea>
           {:else}
-            <!-- CKEditor 5 source element -->
             <textarea
               bind:this={editorElement}
               id="text-content-editor"
@@ -1358,6 +1403,282 @@
               placeholder="Enter text content..."
             ></textarea>
           {/if}
+          <p class="text-xs text-gray-500">Use {'{{variableName}}'} syntax to insert variables.</p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Variables</h3>
+            <button
+              type="button"
+              class="text-sm text-blue-600 hover:text-blue-500"
+              onclick={() => {
+                if (editedBlock) {
+                  if (!editedBlock.config.variables) editedBlock.config.variables = [];
+                  if (!Array.isArray(editedBlock.config.variables)) {
+                    const oldVars = editedBlock.config.variables as Record<string, string>;
+                    editedBlock.config.variables = Object.entries(oldVars).map(([name, value]) => ({
+                      name,
+                      type: 'static' as const,
+                      value
+                    }));
+                  }
+                  (editedBlock.config.variables as TextVariable[]).push({
+                    name: `var${editedBlock.config.variables.length + 1}`,
+                    type: 'static',
+                    value: ''
+                  });
+                  editedBlock = { ...editedBlock };
+                }
+              }}
+            >
+              + Add Variable
+            </button>
+          </div>
+
+          {#if editedBlock.config.variables && Array.isArray(editedBlock.config.variables) && editedBlock.config.variables.length > 0}
+            <div class="space-y-3">
+              {#each editedBlock.config.variables as variable, index}
+                <div class="space-y-3 rounded-md border border-gray-200 bg-gray-50 p-3">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-600"
+                      >
+                        {index + 1}
+                      </span>
+                      <code class="text-sm text-gray-700">{`{{${variable.name}}}`}</code>
+                    </div>
+                    <button
+                      type="button"
+                      onclick={() => {
+                        if (editedBlock && Array.isArray(editedBlock.config.variables)) {
+                          editedBlock.config.variables.splice(index, 1);
+                          editedBlock = { ...editedBlock };
+                        }
+                      }}
+                      class="rounded p-1 text-red-600 hover:bg-red-50"
+                      title="Remove variable"
+                      aria-label="Remove variable"
+                    >
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label
+                        for={`var-name-${index}`}
+                        class="block text-xs font-medium text-gray-600">Name</label
+                      >
+                      <input
+                        id={`var-name-${index}`}
+                        type="text"
+                        placeholder="variableName"
+                        bind:value={editedBlock.config.variables[index].name}
+                        class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for={`var-type-${index}`}
+                        class="block text-xs font-medium text-gray-600">Type</label
+                      >
+                      <select
+                        id={`var-type-${index}`}
+                        value={variable.type}
+                        onchange={(e) => {
+                          const newType = e.currentTarget.value as 'static' | 'dynamic';
+                          if (editedBlock && Array.isArray(editedBlock.config.variables)) {
+                            const vars = editedBlock.config.variables as TextVariable[];
+                            vars[index] = {
+                              ...vars[index],
+                              type: newType,
+                              value: newType === 'static' ? vars[index].value || '' : undefined,
+                              transform:
+                                newType === 'dynamic'
+                                  ? vars[index].transform ||
+                                    '// data contains the data source array\nreturn data.length > 0 ? data[0].value : "N/A";'
+                                  : undefined
+                            };
+                            editedBlock = { ...editedBlock };
+                          }
+                        }}
+                        class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      >
+                        <option value="static">Static Value</option>
+                        <option value="dynamic">Dynamic (from Data Source)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {#if variable.type === 'static'}
+                    <div>
+                      <label
+                        for={`var-value-${index}`}
+                        class="block text-xs font-medium text-gray-600">Value</label
+                      >
+                      <input
+                        id={`var-value-${index}`}
+                        type="text"
+                        placeholder="Enter static value"
+                        bind:value={editedBlock.config.variables[index].value}
+                        class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      />
+                    </div>
+                  {:else if variable.transform !== undefined}
+                    <div>
+                      <label
+                        for={`var-transform-${index}`}
+                        class="block text-xs font-medium text-gray-600">Transform Function</label
+                      >
+                      <div
+                        class="h-[120px] w-full overflow-hidden rounded-md border border-gray-300"
+                      >
+                        <MonacoEditor
+                          bind:value={editedBlock.config.variables[index].transform}
+                          language="javascript"
+                          theme="vs"
+                          placeholder="// 'data' contains the data source array\nreturn data.length > 0 ? data[0].value : 'N/A';"
+                          fontSize={12}
+                          minimap={false}
+                        />
+                      </div>
+                      <p class="mt-1 text-xs text-gray-500">
+                        Write JS code. Use <code class="rounded bg-gray-100 px-1">data</code> to access
+                        the data source array. Return a string value.
+                      </p>
+                    </div>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {:else}
+            <p
+              class="rounded-md border border-dashed border-gray-300 py-4 text-center text-sm text-gray-500"
+            >
+              No variables defined. Add variables to use dynamic content in your text block.
+            </p>
+          {/if}
+        </div>
+
+        <div class="space-y-4">
+          <h3 class="text-lg font-medium text-gray-900">Styling</h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="space-y-2">
+              <label for="text-font-size" class="block text-sm font-medium text-gray-700"
+                >Font Size (px)</label
+              >
+              <input
+                id="text-font-size"
+                type="number"
+                min="8"
+                max="72"
+                bind:value={editedBlock.config.styling.fontSize}
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
+            <div class="space-y-2">
+              <label for="text-font-family" class="block text-sm font-medium text-gray-700"
+                >Font Family</label
+              >
+              <select
+                id="text-font-family"
+                bind:value={editedBlock.config.styling.fontFamily}
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="Helvetica, sans-serif">Helvetica</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="Times New Roman, serif">Times New Roman</option>
+                <option value="Courier New, monospace">Courier New</option>
+                <option value="Verdana, sans-serif">Verdana</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label for="text-color" class="block text-sm font-medium text-gray-700"
+                >Text Color</label
+              >
+              <input
+                id="text-color"
+                type="color"
+                bind:value={editedBlock.config.styling.color}
+                class="h-10 w-full rounded-md border border-gray-300 px-1 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
+            <div class="space-y-2">
+              <label for="text-bg-color" class="block text-sm font-medium text-gray-700"
+                >Background Color</label
+              >
+              <input
+                id="text-bg-color"
+                type="color"
+                bind:value={editedBlock.config.styling.backgroundColor}
+                class="h-10 w-full rounded-md border border-gray-300 px-1 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
+            <div class="space-y-2">
+              <label for="text-padding" class="block text-sm font-medium text-gray-700"
+                >Padding (px)</label
+              >
+              <input
+                id="text-padding"
+                type="number"
+                min="0"
+                max="100"
+                bind:value={editedBlock.config.styling.padding}
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
+            <div class="space-y-2">
+              <label for="text-align" class="block text-sm font-medium text-gray-700"
+                >Text Align</label
+              >
+              <select
+                id="text-align"
+                bind:value={editedBlock.config.styling.textAlign}
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+                <option value="justify">Justify</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label for="text-font-weight" class="block text-sm font-medium text-gray-700"
+                >Font Weight</label
+              >
+              <select
+                id="text-font-weight"
+                bind:value={editedBlock.config.styling.fontWeight}
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="normal">Normal</option>
+                <option value="bold">Bold</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label for="text-font-style" class="block text-sm font-medium text-gray-700"
+                >Font Style</label
+              >
+              <select
+                id="text-font-style"
+                bind:value={editedBlock.config.styling.fontStyle}
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="normal">Normal</option>
+                <option value="italic">Italic</option>
+              </select>
+            </div>
+          </div>
         </div>
       {/if}
     </form>

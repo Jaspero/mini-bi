@@ -32,6 +32,7 @@ export type {
   TableBlockConfig,
   GraphBlockConfig,
   TextBlockConfig,
+  TextVariable,
   ColumnDefinition,
   PaginationConfig,
   SortingConfig,

@@ -43,6 +43,18 @@
   let monaco: any | null = null;
   let monacoInitialized = false;
   let initializationAttempts = $state(0);
+  let isUpdatingFromExternal = false;
+
+  $effect(() => {
+    if (useMonaco && editor && !isUpdatingFromExternal) {
+      const currentValue = editor.getValue();
+      if (value !== currentValue) {
+        isUpdatingFromExternal = true;
+        editor.setValue(value || '');
+        isUpdatingFromExternal = false;
+      }
+    }
+  });
 
   export function insertText(text: string) {
     if (useMonaco && editor) {
@@ -133,8 +145,10 @@
 
       // Listen for changes
       editor.onDidChangeModelContent(() => {
-        const newValue = editor!.getValue();
-        value = newValue;
+        if (!isUpdatingFromExternal) {
+          const newValue = editor!.getValue();
+          value = newValue;
+        }
       });
 
       // Add keyboard shortcuts

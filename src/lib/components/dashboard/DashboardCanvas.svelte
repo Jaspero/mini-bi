@@ -533,6 +533,8 @@
             <TextBlock
               {block}
               dashboardVariables={dashboard.variables}
+              {dashboardService}
+              {filterParams}
               showControls={editMode}
               {readOnly}
               {onBlockUpdate}

@@ -142,8 +142,15 @@ export interface AnimationConfig {
 // Text specific configurations
 export interface TextBlockConfig extends BlockConfig {
   content: string; // Template with {{variable}} syntax
-  variables: Record<string, string>;
+  variables: TextVariable[];
   styling: TextStyling;
+}
+
+export interface TextVariable {
+  name: string;
+  type: 'static' | 'dynamic';
+  value?: string; // For static variables
+  transform?: string; // JS function body for dynamic variables (receives 'data' parameter)
 }
 
 export interface TextStyling {

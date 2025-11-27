@@ -1,12 +1,20 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import BlockActions from '../ui/BlockActions.svelte';
-  import type { Block, TextBlockConfig } from '../../types/index';
+  import type {
+    Block,
+    TextBlockConfig,
+    DataSourceConfig,
+    BlockData,
+    IDashboardService
+  } from '../../types/index';
   import { processTemplate, sanitizeHtml, type TemplateContext } from '../../utils/template';
 
   interface Props {
     block: Block;
     dashboardVariables?: Record<string, any>;
+    dashboardService?: IDashboardService;
+    filterParams?: Record<string, any>;
     onBlockUpdate?: (block: Block) => void;
     onBlockEdit?: (block: Block) => void;
     onBlockDeleteRequest?: (block: Block) => void;
@@ -17,6 +25,8 @@
   let {
     block,
     dashboardVariables = {},
+    dashboardService,
+    filterParams = {},
     onBlockUpdate = () => {},
     onBlockEdit = () => {},
     onBlockDeleteRequest = () => {},
@@ -26,7 +36,7 @@
 
   let textConfig: TextBlockConfig = $state({
     content: '',
-    variables: {},
+    variables: [],
     styling: {
       fontSize: 14,
       fontFamily: 'Arial, sans-serif',
@@ -40,11 +50,59 @@
   let element: HTMLDivElement | undefined = $state();
   let processedContent = $state('');
   let isHovered = $state(false);
+  let dataSourceData: any[] = $state([]);
+
+  async function loadDataSource() {
+    if (!block.dataSource || !dashboardService) {
+      dataSourceData = [];
+      return;
+    }
+
+    try {
+      const result: BlockData = await dashboardService.loadBlockData(
+        block.id,
+        block.type,
+        block.config,
+        block.dataSource,
+        filterParams
+      );
+      dataSourceData = result.data || [];
+    } catch (error) {
+      console.error('Failed to load text block data source:', error);
+      dataSourceData = [];
+    }
+  }
+
+  function computeVariables(): Record<string, any> {
+    const vars: Record<string, any> = {};
+    const variables = textConfig.variables || [];
+
+    if (Array.isArray(variables)) {
+      for (const variable of variables) {
+        if (variable.type === 'static') {
+          vars[variable.name] = variable.value || '';
+        } else if (variable.type === 'dynamic' && variable.transform) {
+          try {
+            const fn = new Function('data', variable.transform);
+            vars[variable.name] = fn(dataSourceData);
+          } catch (error) {
+            console.error(`Error executing transform for ${variable.name}:`, error);
+            vars[variable.name] = `[Error: ${variable.name}]`;
+          }
+        }
+      }
+    } else if (typeof variables === 'object') {
+      Object.assign(vars, variables);
+    }
+
+    return vars;
+  }
 
   function updateContent() {
     if (textConfig) {
+      const computedVars = computeVariables();
       const context: TemplateContext = {
-        variables: textConfig.variables || {},
+        variables: computedVars,
         dashboardVariables
       };
 
@@ -65,16 +123,14 @@
 
   onMount(() => {
     normalizeStyling();
-    updateContent();
+    loadDataSource().then(() => updateContent());
     if (typeof window !== 'undefined') {
       window.addEventListener('themechange', handleThemeChange);
     }
   });
 
   function handleThemeChange() {
-    // Force refresh of inline styles pulling from CSS variables
     if (textConfig?.styling && textConfig.styling.color?.startsWith('var(')) {
-      // trigger reactive re-render by cloning
       textConfig = { ...textConfig } as any;
     }
   }
@@ -82,7 +138,15 @@
   $effect(() => {
     textConfig = block.config as TextBlockConfig;
     normalizeStyling();
-    updateContent();
+  });
+
+  $effect(() => {
+    const dataSourceType = block.dataSource?.type;
+    const queryId = block.dataSource?.queryId;
+    const staticData = block.dataSource?.staticData;
+    void filterParams;
+    void textConfig;
+    loadDataSource().then(() => updateContent());
   });
 
   onDestroy(() => {
@@ -100,7 +164,7 @@
   }
 
   function onRefresh() {
-    updateContent();
+    loadDataSource().then(() => updateContent());
   }
 
   function getStyleString(): string {
