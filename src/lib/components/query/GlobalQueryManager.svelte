@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Query, IDashboardService, QueryParameter } from '../../types/index';
+  import type { Query, IDashboardService, QueryParameter, QueryResult } from '../../types/index';
   import SQLEditor from './SQLEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
+  import Modal from '../ui/Modal.svelte';
 
   let {
     dashboardService,
@@ -30,6 +31,11 @@
 
   let showConfirmModal = $state(false);
   let queryToDelete: Query | null = $state(null);
+
+  let showResultsModal = $state(false);
+  let queryResults: QueryResult | null = $state(null);
+  let resultsLoading = $state(false);
+  let resultsError = $state('');
 
   let name = $state('');
   let description = $state('');
@@ -186,6 +192,33 @@
     } finally {
       loading = false;
     }
+  }
+
+  async function runQuery() {
+    if (!sql.trim()) {
+      error = 'SQL is required to run the query';
+      return;
+    }
+
+    try {
+      resultsLoading = true;
+      resultsError = '';
+      queryResults = null;
+      showResultsModal = true;
+
+      queryResults = await dashboardService.getQueryPreview(sql.trim(), 100);
+    } catch (err) {
+      resultsError = err instanceof Error ? err.message : 'Failed to run query';
+      console.error('Error running query:', err);
+    } finally {
+      resultsLoading = false;
+    }
+  }
+
+  function closeResultsModal() {
+    showResultsModal = false;
+    queryResults = null;
+    resultsError = '';
   }
 
   function addParameter() {
@@ -435,11 +468,20 @@
         </button>
         <button
           type="button"
+          class="rounded-md border border-green-300 bg-green-50 px-4 py-2 text-green-700 hover:bg-green-100 disabled:opacity-50"
+          onclick={runQuery}
+          disabled={loading || !sql.trim()}
+          title="Run the query and see results"
+        >
+          Run Query
+        </button>
+        <button
+          type="button"
           class="rounded-md border border-blue-300 bg-blue-50 px-4 py-2 text-blue-700 hover:bg-blue-100 disabled:opacity-50"
           onclick={testQuery}
           disabled={loading || !sql.trim()}
         >
-          Test Query
+          Validate
         </button>
         <button
           type="submit"
@@ -554,3 +596,95 @@
   onConfirm={confirmDeleteQuery}
   onCancel={cancelDeleteQuery}
 />
+
+<Modal isOpen={showResultsModal} title="Query Results" close={closeResultsModal} size="xlarge">
+  <div class="p-4">
+    {#if resultsLoading}
+      <div class="flex items-center justify-center py-12">
+        <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
+        <span class="ml-3 text-gray-600">Running query...</span>
+      </div>
+    {:else if resultsError}
+      <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div class="flex items-start">
+          <span class="material-symbols-outlined mr-2 text-red-500">error</span>
+          <div>
+            <h4 class="font-medium text-red-800">Query Error</h4>
+            <p class="mt-1 text-sm text-red-700">{resultsError}</p>
+          </div>
+        </div>
+      </div>
+    {:else if queryResults}
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <span class="rounded bg-blue-100 px-2 py-1 text-sm font-medium text-blue-800">
+              {queryResults.rowCount} row{queryResults.rowCount !== 1 ? 's' : ''}
+            </span>
+            <span class="rounded bg-gray-100 px-2 py-1 text-sm text-gray-600">
+              {queryResults.executionTime.toFixed(0)}ms
+            </span>
+          </div>
+          <span class="text-sm text-gray-500">
+            {queryResults.columns.length} column{queryResults.columns.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <h4 class="mb-2 text-sm font-medium text-gray-700">Column Schema</h4>
+          <div class="flex flex-wrap gap-2">
+            {#each queryResults.columns as column}
+              <div
+                class="flex items-center gap-1 rounded border border-gray-300 bg-white px-2 py-1"
+              >
+                <span class="font-medium text-gray-900">{column.name}</span>
+                <span
+                  class="rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700"
+                >
+                  {column.type}
+                </span>
+                {#if column.nullable}
+                  <span class="text-xs text-gray-400">nullable</span>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        </div>
+
+        {#if queryResults.rows.length > 0}
+          <div class="overflow-x-auto rounded-lg border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  {#each queryResults.columns as column}
+                    <th
+                      class="px-4 py-2 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase"
+                    >
+                      {column.name}
+                    </th>
+                  {/each}
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 bg-white">
+                {#each queryResults.rows as row}
+                  <tr class="hover:bg-gray-50">
+                    {#each row as cell}
+                      <td class="px-4 py-2 text-sm whitespace-nowrap text-gray-900">
+                        {cell ?? 'NULL'}
+                      </td>
+                    {/each}
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        {:else}
+          <div class="rounded-lg border border-gray-200 bg-gray-50 py-8 text-center">
+            <span class="material-symbols-outlined mb-2 text-4xl text-gray-400">table_rows</span>
+            <p class="text-gray-500">No rows returned</p>
+          </div>
+        {/if}
+      </div>
+    {/if}
+  </div>
+</Modal>
