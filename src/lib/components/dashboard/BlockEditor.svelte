@@ -1603,28 +1603,6 @@
               </select>
             </div>
             <div class="space-y-2">
-              <label for="text-color" class="block text-sm font-medium text-gray-700"
-                >Text Color</label
-              >
-              <input
-                id="text-color"
-                type="color"
-                bind:value={editedBlock.config.styling.color}
-                class="h-10 w-full rounded-md border border-gray-300 px-1 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-            <div class="space-y-2">
-              <label for="text-bg-color" class="block text-sm font-medium text-gray-700"
-                >Background Color</label
-              >
-              <input
-                id="text-bg-color"
-                type="color"
-                bind:value={editedBlock.config.styling.backgroundColor}
-                class="h-10 w-full rounded-md border border-gray-300 px-1 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-            <div class="space-y-2">
               <label for="text-padding" class="block text-sm font-medium text-gray-700"
                 >Padding (px)</label
               >
