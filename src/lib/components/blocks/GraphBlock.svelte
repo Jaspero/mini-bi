@@ -285,9 +285,12 @@
         const valueKey = (graphConfig as any).valueKey || 'value';
         return {
           ...baseOption,
+          xAxis: undefined,
+          yAxis: undefined,
+          grid: undefined,
           series: [
             {
-              name: series[0]?.name || 'Data',
+              name: block.title || 'Data',
               type: 'pie',
               radius: chartType === 'donut' ? ['40%', '70%'] : '70%',
               data: data.data.map((item) => ({
@@ -328,6 +331,9 @@
       case 'gauge':
         return {
           ...baseOption,
+          xAxis: undefined,
+          yAxis: undefined,
+          grid: undefined,
           series: [
             {
               name: series[0]?.name || 'Gauge',

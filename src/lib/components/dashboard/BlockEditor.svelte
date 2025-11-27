@@ -117,6 +117,8 @@
         if (!editedBlock.config.animations) {
           editedBlock.config.animations = { enabled: true, duration: 1000, easing: 'cubicInOut' };
         }
+
+        currentChartType = editedBlock.config.chartType || 'line';
       }
 
       // Sync reactive variables with editedBlock
@@ -901,7 +903,43 @@
               bind:value={editedBlock.config.chartType}
               onchange={() => {
                 if (editedBlock) {
-                  currentChartType = editedBlock.config.chartType;
+                  const newChartType = editedBlock.config.chartType;
+                  const oldChartType = currentChartType;
+                  currentChartType = newChartType;
+
+                  const isPieType = ['pie', 'donut'].includes(newChartType);
+                  const wasAxisType = ['line', 'bar', 'area', 'scatter', 'heatmap'].includes(
+                    oldChartType
+                  );
+                  const isAxisType = ['line', 'bar', 'area', 'scatter', 'heatmap'].includes(
+                    newChartType
+                  );
+                  const wasPieType = ['pie', 'donut'].includes(oldChartType);
+
+                  if (isPieType && wasAxisType) {
+                    editedBlock.config.xAxis = { type: 'category', name: '' };
+                    editedBlock.config.yAxis = { type: 'value', name: '' };
+                    editedBlock.config.series = [];
+                    if (!editedBlock.config.nameKey) editedBlock.config.nameKey = 'name';
+                    if (!editedBlock.config.valueKey) editedBlock.config.valueKey = 'value';
+                  }
+
+                  if (isAxisType && wasPieType) {
+                    delete editedBlock.config.nameKey;
+                    delete editedBlock.config.valueKey;
+                    if (!editedBlock.config.series || editedBlock.config.series.length === 0) {
+                      editedBlock.config.series = [
+                        { name: 'Series 1', dataKey: '', color: '#3b82f6' }
+                      ];
+                    }
+                  }
+
+                  if (newChartType === 'gauge') {
+                    editedBlock.config.xAxis = { type: 'category', name: '' };
+                    editedBlock.config.yAxis = { type: 'value', name: '' };
+                  }
+
+                  editedBlock = { ...editedBlock };
                 }
               }}
               class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -950,29 +988,6 @@
                   />
                   <p class="mt-1 text-xs text-gray-400">Field to use as slice values</p>
                 </div>
-              </div>
-              <div>
-                <label for="pie-series-name" class="block text-xs font-medium text-gray-600"
-                  >Series Name</label
-                >
-                <input
-                  id="pie-series-name"
-                  type="text"
-                  placeholder="e.g., Sales by Category"
-                  value={editedBlock.config.series?.[0]?.name || ''}
-                  oninput={(e) => {
-                    if (editedBlock) {
-                      if (!editedBlock.config.series)
-                        editedBlock.config.series = [{ name: '', dataKey: '' }];
-                      if (!editedBlock.config.series[0])
-                        editedBlock.config.series[0] = { name: '', dataKey: '' };
-                      editedBlock.config.series[0].name = e.currentTarget.value;
-                      editedBlock = { ...editedBlock };
-                    }
-                  }}
-                  class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                />
-                <p class="mt-1 text-xs text-gray-400">Name shown in legend/tooltip</p>
               </div>
             </div>
           {/if}
