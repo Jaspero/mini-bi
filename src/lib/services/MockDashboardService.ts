@@ -788,6 +788,26 @@ export class MockDashboardService implements IDashboardService {
       throw new Error(validation.error);
     }
 
+    const query = this.globalQueries.find((q) => q.sql === sql);
+    if (query) {
+      const mockData = this.queryResults.get(query.id);
+      if (mockData && mockData.length > 0) {
+        const limitedData = mockData.slice(0, limit);
+        const columns: QueryColumn[] = Object.keys(mockData[0]).map((key) => ({
+          name: key,
+          type: typeof mockData[0][key] === 'number' ? 'number' : 'string',
+          nullable: false
+        }));
+        const rows = limitedData.map((row) => columns.map((col) => row[col.name]));
+        return {
+          columns,
+          rows,
+          rowCount: rows.length,
+          executionTime: Math.random() * 200 + 50
+        };
+      }
+    }
+
     const sampleData = [
       { id: 1, name: 'Sample Item 1', value: 100, date: '2024-01-01' },
       { id: 2, name: 'Sample Item 2', value: 200, date: '2024-01-02' },

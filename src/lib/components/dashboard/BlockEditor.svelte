@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import type { Block, Query, TextVariable } from '../../types/index';
+  import type { Block, Query, TextVariable, IDashboardService } from '../../types/index';
   import Modal from '../ui/Modal.svelte';
   import MonacoEditor from '../ui/MonacoEditor.svelte';
 
@@ -8,15 +8,19 @@
     block = null,
     isOpen = false,
     queries = [],
+    dashboardService,
     blockUpdated = (block: Block) => {},
     close = () => {}
   }: {
     block?: Block | null;
     isOpen?: boolean;
     queries?: Query[];
+    dashboardService?: IDashboardService;
     blockUpdated?: (block: Block) => void;
     close?: () => void;
   } = $props();
+
+  let autoFillLoading = $state(false);
 
   let editedBlock: Block | null = $state(null);
   let editorInstance: any = $state(null);
@@ -370,6 +374,41 @@
     close();
   }
 
+  async function autoFillColumns() {
+    if (!editedBlock || editedBlock.type !== 'table' || !selectedQueryId || !dashboardService)
+      return;
+
+    const query = queries.find((q) => q.id === selectedQueryId);
+    if (!query) return;
+
+    autoFillLoading = true;
+    try {
+      const result = await dashboardService.getQueryPreview(query.sql, 1);
+      if (result.columns && result.columns.length > 0) {
+        const config = editedBlock.config as any;
+        config.columns = result.columns.map((col) => ({
+          key: col.name,
+          header: '',
+          type:
+            col.type === 'integer' || col.type === 'float' || col.type === 'number'
+              ? 'number'
+              : col.type === 'boolean'
+                ? 'boolean'
+                : col.type === 'date' || col.type === 'timestamp'
+                  ? 'date'
+                  : 'string',
+          sortable: true,
+          filterable: true
+        }));
+        editedBlock = { ...editedBlock };
+      }
+    } catch (e) {
+      console.error('Failed to auto-fill columns:', e);
+    } finally {
+      autoFillLoading = false;
+    }
+  }
+
   function onsubmit(event: SubmitEvent) {
     event.preventDefault();
 
@@ -598,7 +637,45 @@
       {#if editedBlock.type === 'table'}
         <!-- Table Configuration -->
         <div class="space-y-4">
-          <h3 class="text-lg font-medium text-gray-900">Table Configuration</h3>
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Table Configuration</h3>
+            {#if dataSourceType === 'query' && selectedQueryId && dashboardService}
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                onclick={autoFillColumns}
+                disabled={autoFillLoading}
+              >
+                {#if autoFillLoading}
+                  <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                {:else}
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                {/if}
+                Auto Fill
+              </button>
+            {/if}
+          </div>
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <div class="block text-sm font-medium text-gray-700">Columns</div>

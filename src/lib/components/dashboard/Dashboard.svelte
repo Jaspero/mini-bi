@@ -718,6 +718,7 @@
   block={editingBlock}
   isOpen={showBlockEditor}
   {queries}
+  {dashboardService}
   {blockUpdated}
   close={handleBlockEditorClose}
 />
