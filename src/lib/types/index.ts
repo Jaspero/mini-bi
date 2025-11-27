@@ -110,6 +110,7 @@ export interface GraphBlockConfig extends BlockConfig {
   animations: AnimationConfig;
   nameKey?: string;
   valueKey?: string;
+  xAxisKey?: string;
 }
 
 export interface SeriesConfig {

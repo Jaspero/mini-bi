@@ -1247,6 +1247,21 @@
                     class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
+                <div class="sm:col-span-2">
+                  <label for="xaxis-key" class="block text-xs font-medium text-gray-600"
+                    >Data Key (optional)</label
+                  >
+                  <input
+                    id="xaxis-key"
+                    type="text"
+                    placeholder="e.g., month, date, category (auto-detected if empty)"
+                    bind:value={editedBlock.config.xAxisKey}
+                    class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <p class="mt-1 text-xs text-gray-400">
+                    Field from data to use as x-axis values. Leave empty to auto-detect.
+                  </p>
+                </div>
               </div>
             </div>
 

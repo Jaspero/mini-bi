@@ -384,7 +384,10 @@
   }
 
   function getDataKey(): string {
-    // For x-axis data, use the first available key
+    if (graphConfig.xAxisKey) {
+      return graphConfig.xAxisKey;
+    }
+
     const firstDataItem = data?.data[0];
     if (!firstDataItem) return 'x';
 
