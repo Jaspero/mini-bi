@@ -1032,10 +1032,10 @@
                   currentChartType = newChartType;
 
                   const isPieType = ['pie', 'donut'].includes(newChartType);
-                  const wasAxisType = ['line', 'bar', 'area', 'scatter', 'heatmap'].includes(
+                  const wasAxisType = ['line', 'bar', 'area', 'scatter', 'radar'].includes(
                     oldChartType
                   );
-                  const isAxisType = ['line', 'bar', 'area', 'scatter', 'heatmap'].includes(
+                  const isAxisType = ['line', 'bar', 'area', 'scatter', 'radar'].includes(
                     newChartType
                   );
                   const wasPieType = ['pie', 'donut'].includes(oldChartType);
@@ -1058,11 +1058,6 @@
                     }
                   }
 
-                  if (newChartType === 'gauge') {
-                    editedBlock.config.xAxis = { type: 'category', name: '' };
-                    editedBlock.config.yAxis = { type: 'value', name: '' };
-                  }
-
                   editedBlock = { ...editedBlock };
                 }
               }}
@@ -1074,8 +1069,7 @@
               <option value="area">Area Chart</option>
               <option value="scatter">Scatter Plot</option>
               <option value="donut">Donut Chart</option>
-              <option value="gauge">Gauge Chart</option>
-              <option value="heatmap">Heatmap</option>
+              <option value="radar">Radar Chart</option>
             </select>
           </div>
 
@@ -1116,7 +1110,7 @@
             </div>
           {/if}
 
-          {#if !['pie', 'donut', 'gauge'].includes(currentChartType)}
+          {#if !['pie', 'donut'].includes(currentChartType)}
             <div class="space-y-3">
               <div class="flex items-center justify-between">
                 <div class="block text-sm font-medium text-gray-700">Series</div>
@@ -1405,9 +1399,13 @@
                       class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                     >
                       <option value="linear">Linear</option>
-                      <option value="quadraticIn">Quadratic In</option>
-                      <option value="quadraticOut">Quadratic Out</option>
-                      <option value="cubicInOut">Cubic In-Out</option>
+                      <option value="easeInQuad">Ease In Quad</option>
+                      <option value="easeOutQuad">Ease Out Quad</option>
+                      <option value="easeInOutQuad">Ease In-Out Quad</option>
+                      <option value="easeInCubic">Ease In Cubic</option>
+                      <option value="easeOutCubic">Ease Out Cubic</option>
+                      <option value="easeInOutCubic">Ease In-Out Cubic</option>
+                      <option value="easeOutBounce">Ease Out Bounce</option>
                     </select>
                   </div>
                 </div>

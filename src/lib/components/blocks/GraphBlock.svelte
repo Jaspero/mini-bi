@@ -1,14 +1,52 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import * as echarts from 'echarts';
+  import { onMount, onDestroy, untrack } from 'svelte';
+  import {
+    Chart,
+    CategoryScale,
+    LinearScale,
+    BarController,
+    BarElement,
+    LineController,
+    LineElement,
+    PointElement,
+    PieController,
+    DoughnutController,
+    ArcElement,
+    ScatterController,
+    RadarController,
+    RadialLinearScale,
+    Filler,
+    Legend,
+    Title,
+    Tooltip
+  } from 'chart.js';
   import BlockActions from '../ui/BlockActions.svelte';
   import type { Block, GraphBlockConfig, BlockData, IDashboardService } from '../../types/index';
+
+  Chart.register(
+    CategoryScale,
+    LinearScale,
+    BarController,
+    BarElement,
+    LineController,
+    LineElement,
+    PointElement,
+    PieController,
+    DoughnutController,
+    ArcElement,
+    ScatterController,
+    RadarController,
+    RadialLinearScale,
+    Filler,
+    Legend,
+    Title,
+    Tooltip
+  );
 
   interface Props {
     block: Block;
     dashboardService: IDashboardService;
     filterParams?: Record<string, any>;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onBlockUpdate?: (block: Block) => void;
     onBlockEdit?: (block: Block) => void;
     onBlockDeleteRequest?: (block: Block) => void;
@@ -28,13 +66,14 @@
   }: Props = $props();
 
   let graphConfig: GraphBlockConfig = $state(block.config as GraphBlockConfig);
-  let chartContainer: HTMLDivElement | undefined = $state();
-  let chart: echarts.ECharts | null = $state(null);
+  let chartCanvas: HTMLCanvasElement | undefined = $state();
+  let chart: Chart | null = null;
   let loading = $state(true);
   let error = $state('');
   let data: BlockData | null = $state(null);
   let isHovered = $state(false);
   let isRefreshing = $state(false);
+  let chartInitialized = $state(false);
 
   let resizeObserver: ResizeObserver | null = null;
 
@@ -48,7 +87,7 @@
 
   onDestroy(() => {
     if (chart) {
-      chart.dispose();
+      chart.destroy();
       chart = null;
     }
     if (resizeObserver) {
@@ -62,25 +101,31 @@
 
   function handleThemeChange() {
     if (chart && data) {
-      updateChart();
+      rebuildChart();
     }
   }
 
   $effect(() => {
-    if (chartContainer && data && !loading) {
-      if (!chart || chart.isDisposed()) {
+    if (chartCanvas && data && !loading && !chartInitialized) {
+      const canvas = chartCanvas;
+      untrack(() => {
         if (resizeObserver) {
           resizeObserver.disconnect();
         }
 
-        chart = echarts.init(chartContainer);
+        if (chart) {
+          chart.destroy();
+          chart = null;
+        }
+
+        createChart();
+        chartInitialized = true;
 
         resizeObserver = new ResizeObserver(() => {
           chart?.resize();
         });
-        resizeObserver.observe(chartContainer);
-      }
-      updateChart();
+        resizeObserver.observe(canvas.parentElement!);
+      });
     }
   });
 
@@ -91,27 +136,32 @@
 
     if (newConfigStr !== currentConfigStr) {
       graphConfig = newConfig;
-      if (chart && !chart.isDisposed() && data && !loading) {
-        chart.clear();
-        updateChart();
-      }
+      untrack(() => {
+        if (chart && data && !loading) {
+          rebuildChart();
+        }
+      });
     }
   });
 
-  let previousDataSource = $state<string>('');
+  let previousDataSource = '';
+  let previousFilterParams = '';
 
   $effect(() => {
     const currentDataSource = JSON.stringify(block.dataSource);
     if (currentDataSource !== previousDataSource && previousDataSource !== '') {
       previousDataSource = currentDataSource;
-      if (chart && !chart.isDisposed()) {
-        chart.dispose();
-        chart = null;
-      }
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-        resizeObserver = null;
-      }
+      untrack(() => {
+        if (chart) {
+          chart.destroy();
+          chart = null;
+        }
+        chartInitialized = false;
+        if (resizeObserver) {
+          resizeObserver.disconnect();
+          resizeObserver = null;
+        }
+      });
       reloadData();
     } else if (previousDataSource === '') {
       previousDataSource = currentDataSource;
@@ -119,8 +169,15 @@
   });
 
   $effect(() => {
-    if (filterParams) {
+    const currentFilterParams = JSON.stringify(filterParams);
+    if (currentFilterParams !== previousFilterParams && previousFilterParams !== '') {
+      previousFilterParams = currentFilterParams;
+      untrack(() => {
+        chartInitialized = false;
+      });
       reloadData();
+    } else if (previousFilterParams === '') {
+      previousFilterParams = currentFilterParams;
     }
   });
 
@@ -182,101 +239,148 @@
     }
   }
 
-  function updateChart() {
-    if (!chart || !data || !graphConfig) return;
+  function createChart() {
+    if (!chartCanvas || !data || !graphConfig) return;
 
-    const option = generateEChartsOption();
-    chart.setOption(option, true);
+    const config = generateChartConfig();
+    chart = new Chart(chartCanvas, config);
   }
 
-  function generateEChartsOption(): echarts.EChartsOption {
+  function rebuildChart() {
+    if (!data || !graphConfig) return;
+
+    if (chart) {
+      chart.destroy();
+      chart = null;
+    }
+    createChart();
+  }
+
+  function generateChartConfig(): any {
     if (!data) return {};
 
     const { chartType, series, xAxis, yAxis, legend, colors, animations } = graphConfig;
+    const defaultColors = colors || [
+      '#3b82f6',
+      '#10b981',
+      '#f59e0b',
+      '#ef4444',
+      '#8b5cf6',
+      '#ec4899',
+      '#06b6d4',
+      '#84cc16'
+    ];
 
-    const baseOption: echarts.EChartsOption = {
-      color: colors,
-      animation: animations?.enabled ?? true,
-      animationDuration: animations?.duration ?? 1000,
-      backgroundColor: getCssVar('--minibi-color-surface', '#ffffff'),
-      textStyle: { color: getCssVar('--minibi-color-text', '#111827') },
-      grid: {
-        left: '10%',
-        right: '10%',
-        bottom: '15%',
-        top: legend?.show ? '15%' : '10%',
-        containLabel: true
+    const textColor = getCssVar('--minibi-color-text', '#111827');
+    const textMutedColor = getCssVar('--minibi-color-text-muted', '#4b5563');
+    const gridColor = getCssVar('--minibi-color-grid-line', '#e5e7eb');
+
+    const baseOptions: any = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: animations?.enabled !== false ? (animations?.duration ?? 1000) : 0,
+        easing: animations?.easing || 'easeOutQuad'
       },
-      xAxis:
-        xAxis?.type === 'category'
-          ? {
-              type: 'category',
-              name: xAxis.name,
-              axisLine: {
-                lineStyle: { color: getCssVar('--minibi-color-border-strong', '#d1d5db') }
-              },
-              axisLabel: { color: getCssVar('--minibi-color-text-muted', '#4b5563') },
-              splitLine: { show: false }
-            }
-          : undefined,
-      yAxis:
-        yAxis?.type === 'value'
-          ? {
-              type: 'value',
-              name: yAxis.name,
-              axisLine: {
-                lineStyle: { color: getCssVar('--minibi-color-border-strong', '#d1d5db') }
-              },
-              axisLabel: { color: getCssVar('--minibi-color-text-muted', '#4b5563') },
-              splitLine: {
-                show: true,
-                lineStyle: { color: getCssVar('--minibi-color-grid-line', '#e5e7eb') }
-              }
-            }
-          : undefined,
-      legend: legend?.show
-        ? {
-            show: true,
-            type: 'plain',
-            orient: 'horizontal',
-            left: legend.align,
-            top: legend.position === 'top' ? 0 : 'auto',
-            bottom: legend.position === 'bottom' ? 0 : 'auto',
-            textStyle: { color: getCssVar('--minibi-color-text-muted', '#4b5563') }
+      plugins: {
+        legend: {
+          display: legend?.show ?? true,
+          position: legend?.position || 'top',
+          align: legend?.align || 'center',
+          labels: {
+            color: textMutedColor
           }
-        : undefined
+        },
+        title: {
+          display: false
+        }
+      }
     };
 
     switch (chartType) {
       case 'line':
-      case 'bar':
       case 'area':
         return {
-          ...baseOption,
-          xAxis: {
-            type: xAxis?.type || 'category',
-            name: xAxis?.name,
-            data: data.data.map((item) => item[getDataKey()])
+          type: 'line',
+          data: {
+            labels: data.data.map((item) => item[getDataKey()]),
+            datasets: series.map((s, index) => ({
+              label: s.name,
+              data: data?.data.map((item) => item[s.dataKey]) || [],
+              borderColor: s.color || defaultColors[index % defaultColors.length],
+              backgroundColor:
+                chartType === 'area'
+                  ? `${s.color || defaultColors[index % defaultColors.length]}4D`
+                  : 'transparent',
+              fill: chartType === 'area',
+              tension: 0.4
+            }))
           },
-          yAxis: {
-            type: yAxis?.type || 'value',
-            name: yAxis?.name,
-            min: yAxis?.min,
-            max: yAxis?.max
+          options: {
+            ...baseOptions,
+            scales: {
+              x: {
+                title: {
+                  display: !!xAxis?.name,
+                  text: xAxis?.name,
+                  color: textColor
+                },
+                ticks: { color: textMutedColor },
+                grid: { color: gridColor }
+              },
+              y: {
+                title: {
+                  display: !!yAxis?.name,
+                  text: yAxis?.name,
+                  color: textColor
+                },
+                min: yAxis?.min,
+                max: yAxis?.max,
+                ticks: { color: textMutedColor },
+                grid: { color: gridColor }
+              }
+            }
+          }
+        };
+
+      case 'bar':
+        return {
+          type: 'bar',
+          data: {
+            labels: data.data.map((item) => item[getDataKey()]),
+            datasets: series.map((s, index) => ({
+              label: s.name,
+              data: data?.data.map((item) => item[s.dataKey]) || [],
+              backgroundColor: s.color || defaultColors[index % defaultColors.length],
+              borderColor: s.color || defaultColors[index % defaultColors.length],
+              borderWidth: 1
+            }))
           },
-          series: series.map((s) => ({
-            name: s.name,
-            type: chartType === 'area' ? 'line' : chartType,
-            data: data?.data.map((item) => item[s.dataKey]) || [],
-            itemStyle: s.color ? { color: s.color } : undefined,
-            lineStyle:
-              s.color && (chartType === 'line' || chartType === 'area')
-                ? { color: s.color }
-                : undefined,
-            areaStyle:
-              chartType === 'area' ? (s.color ? { color: s.color, opacity: 0.3 } : {}) : undefined,
-            smooth: chartType === 'line' || chartType === 'area'
-          }))
+          options: {
+            ...baseOptions,
+            scales: {
+              x: {
+                title: {
+                  display: !!xAxis?.name,
+                  text: xAxis?.name,
+                  color: textColor
+                },
+                ticks: { color: textMutedColor },
+                grid: { color: gridColor }
+              },
+              y: {
+                title: {
+                  display: !!yAxis?.name,
+                  text: yAxis?.name,
+                  color: textColor
+                },
+                min: yAxis?.min,
+                max: yAxis?.max,
+                ticks: { color: textMutedColor },
+                grid: { color: gridColor }
+              }
+            }
+          }
         };
 
       case 'pie':
@@ -284,102 +388,104 @@
         const nameKey = (graphConfig as any).nameKey || 'name';
         const valueKey = (graphConfig as any).valueKey || 'value';
         return {
-          ...baseOption,
-          xAxis: undefined,
-          yAxis: undefined,
-          grid: undefined,
-          series: [
-            {
-              name: block.title || 'Data',
-              type: 'pie',
-              radius: chartType === 'donut' ? ['40%', '70%'] : '70%',
-              data: data.data.map((item) => ({
-                name: item[nameKey],
-                value: item[valueKey]
-              })),
-              emphasis: {
-                itemStyle: {
-                  shadowBlur: 10,
-                  shadowOffsetX: 0,
-                  shadowColor: 'rgba(0, 0, 0, 0.5)'
-                }
+          type: chartType === 'donut' ? 'doughnut' : 'pie',
+          data: {
+            labels: data.data.map((item) => item[nameKey]),
+            datasets: [
+              {
+                data: data.data.map((item) => item[valueKey]),
+                backgroundColor: data.data.map(
+                  (_, index) => defaultColors[index % defaultColors.length]
+                ),
+                borderWidth: 2,
+                borderColor: getCssVar('--minibi-color-surface', '#ffffff')
               }
-            }
-          ]
+            ]
+          },
+          options: {
+            ...baseOptions,
+            cutout: chartType === 'donut' ? '50%' : 0
+          }
         };
 
       case 'scatter':
         return {
-          ...baseOption,
-          xAxis: {
-            type: 'value',
-            name: xAxis?.name
+          type: 'scatter',
+          data: {
+            datasets: [
+              {
+                label: series[0]?.name || 'Data',
+                data: data.data.map((item) => ({ x: item.x, y: item.y })),
+                backgroundColor: defaultColors[0],
+                pointRadius: data.data.map((item) => item.size || 5)
+              }
+            ]
           },
-          yAxis: {
-            type: 'value',
-            name: yAxis?.name
-          },
-          series: [
-            {
-              name: series[0]?.name || 'Data',
-              type: 'scatter',
-              data: data.data.map((item) => [item.x, item.y, item.size])
-            }
-          ]
-        };
-
-      case 'gauge':
-        return {
-          ...baseOption,
-          xAxis: undefined,
-          yAxis: undefined,
-          grid: undefined,
-          series: [
-            {
-              name: series[0]?.name || 'Gauge',
-              type: 'gauge',
-              data: [{ value: data.data[0]?.value || 0, name: 'Value' }],
-              detail: { fontSize: 20 }
-            }
-          ]
-        };
-
-      case 'heatmap':
-        return {
-          ...baseOption,
-          xAxis: {
-            type: 'category',
-            data: [...new Set(data.data.map((item) => item.x))]
-          },
-          yAxis: {
-            type: 'category',
-            data: [...new Set(data.data.map((item) => item.y))]
-          },
-          visualMap: {
-            min: Math.min(...data.data.map((item) => item.value)),
-            max: Math.max(...data.data.map((item) => item.value)),
-            calculable: true,
-            orient: 'horizontal',
-            left: 'center',
-            bottom: '5%'
-          },
-          series: [
-            {
-              name: series[0]?.name || 'Heatmap',
-              type: 'heatmap',
-              data: data.data.map((item) => [item.x, item.y, item.value]),
-              emphasis: {
-                itemStyle: {
-                  shadowBlur: 10,
-                  shadowColor: 'rgba(0, 0, 0, 0.5)'
-                }
+          options: {
+            ...baseOptions,
+            scales: {
+              x: {
+                type: 'linear',
+                title: {
+                  display: !!xAxis?.name,
+                  text: xAxis?.name,
+                  color: textColor
+                },
+                ticks: { color: textMutedColor },
+                grid: { color: gridColor }
+              },
+              y: {
+                type: 'linear',
+                title: {
+                  display: !!yAxis?.name,
+                  text: yAxis?.name,
+                  color: textColor
+                },
+                ticks: { color: textMutedColor },
+                grid: { color: gridColor }
               }
             }
-          ]
+          }
+        };
+
+      case 'radar':
+        return {
+          type: 'radar',
+          data: {
+            labels: data.data.map((item) => item[getDataKey()]),
+            datasets: series.map((s, index) => ({
+              label: s.name,
+              data: data?.data.map((item) => item[s.dataKey]) || [],
+              borderColor: s.color || defaultColors[index % defaultColors.length],
+              backgroundColor: `${s.color || defaultColors[index % defaultColors.length]}4D`,
+              fill: true
+            }))
+          },
+          options: {
+            ...baseOptions,
+            scales: {
+              r: {
+                ticks: { color: textMutedColor },
+                grid: { color: gridColor },
+                pointLabels: { color: textMutedColor }
+              }
+            }
+          }
         };
 
       default:
-        return baseOption;
+        return {
+          type: 'bar',
+          data: {
+            labels: data.data.map((item) => item[getDataKey()]),
+            datasets: series.map((s, index) => ({
+              label: s.name,
+              data: data?.data.map((item) => item[s.dataKey]) || [],
+              backgroundColor: s.color || defaultColors[index % defaultColors.length]
+            }))
+          },
+          options: baseOptions
+        };
     }
   }
 
@@ -399,10 +505,11 @@
   }
 
   async function onRefresh() {
-    if (chart && !chart.isDisposed()) {
-      chart.dispose();
+    if (chart) {
+      chart.destroy();
       chart = null;
     }
+    chartInitialized = false;
     if (resizeObserver) {
       resizeObserver.disconnect();
       resizeObserver = null;
@@ -419,26 +526,19 @@
   }
 
   function onExportImage() {
-    if (!chart) {
-      console.error('Chart not initialized');
+    if (!chartCanvas) {
+      console.error('Chart canvas not initialized');
       return;
     }
 
     try {
-      const bg = getCssVar('--minibi-color-surface', '#ffffff');
-      const dataURL = chart.getDataURL({
-        type: 'png',
-        pixelRatio: 2,
-        backgroundColor: bg
-      });
+      const dataURL = chartCanvas.toDataURL('image/png', 1.0);
 
-      // Create download link
       const link = document.createElement('a');
       const filename = `${block.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_chart_${new Date().toISOString().split('T')[0]}.png`;
       link.download = filename;
       link.href = dataURL;
 
-      // Trigger download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -448,7 +548,6 @@
     }
   }
 
-  // Derive background color from CSS variable at runtime
   const getCssVar = (name: string, fallback: string) => {
     if (typeof window === 'undefined') return fallback;
     const val = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -502,7 +601,9 @@
     </div>
   {:else}
     <div class="relative min-h-0 w-full flex-1">
-      <div class="chart-surface h-full w-full" bind:this={chartContainer}></div>
+      <div class="chart-surface h-full w-full">
+        <canvas bind:this={chartCanvas}></canvas>
+      </div>
       {#if isRefreshing}
         <div class="absolute inset-0 flex items-center justify-center bg-white/70">
           <div
@@ -514,7 +615,6 @@
   {/if}
 </div>
 
-<!-- placeholder to ensure component picks up global vars if needed -->
 <style>
   .chart-surface {
     background: var(--minibi-color-block-surface);

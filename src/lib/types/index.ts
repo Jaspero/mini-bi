@@ -1,7 +1,7 @@
 // Core Types for Mini-BI Library
 
 export type BlockType = 'table' | 'graph' | 'text';
-export type ChartType = 'line' | 'bar' | 'pie' | 'scatter' | 'area' | 'donut' | 'gauge' | 'heatmap';
+export type ChartType = 'line' | 'bar' | 'pie' | 'scatter' | 'area' | 'donut' | 'radar';
 
 // Position and Size interfaces
 export interface Position {
@@ -137,7 +137,15 @@ export interface LegendConfig {
 export interface AnimationConfig {
   enabled: boolean;
   duration: number;
-  easing: 'linear' | 'quadraticIn' | 'quadraticOut' | 'cubicInOut';
+  easing:
+    | 'linear'
+    | 'easeInQuad'
+    | 'easeOutQuad'
+    | 'easeInOutQuad'
+    | 'easeInCubic'
+    | 'easeOutCubic'
+    | 'easeInOutCubic'
+    | 'easeOutBounce';
 }
 
 // Text specific configurations
