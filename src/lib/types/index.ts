@@ -39,8 +39,8 @@ export interface DashboardLayout {
 }
 
 export interface CanvasDimension {
-  type: 'fixed' | 'screen';
-  value?: number; // Only used when type is 'fixed'
+  type: 'fixed' | 'auto';
+  value?: number;
 }
 
 export interface Block {

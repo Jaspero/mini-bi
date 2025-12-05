@@ -52,8 +52,8 @@ export class MockDashboardService implements IDashboardService {
         columns: 20,
         rows: 15,
         gap: 10,
-        canvasWidth: { type: 'fixed', value: 1600 },
-        canvasHeight: { type: 'fixed', value: 1000 }
+        canvasWidth: { type: 'auto' },
+        canvasHeight: { type: 'auto' }
       },
       blocks: [
         {
@@ -192,8 +192,8 @@ export class MockDashboardService implements IDashboardService {
         columns: 20,
         rows: 12,
         gap: 10,
-        canvasWidth: { type: 'screen' },
-        canvasHeight: { type: 'fixed', value: 800 }
+        canvasWidth: { type: 'auto' },
+        canvasHeight: { type: 'auto' }
       },
       blocks: [
         {
@@ -297,8 +297,8 @@ export class MockDashboardService implements IDashboardService {
         columns: 20,
         rows: 15,
         gap: 10,
-        canvasWidth: { type: 'fixed', value: 1600 },
-        canvasHeight: { type: 'fixed', value: 1000 }
+        canvasWidth: { type: 'auto' },
+        canvasHeight: { type: 'auto' }
       },
       blocks: [
         {

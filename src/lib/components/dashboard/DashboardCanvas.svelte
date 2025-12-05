@@ -33,98 +33,70 @@
   } = $props();
 
   let canvasElement = $state() as HTMLDivElement;
+  let gridElement = $state() as HTMLDivElement;
   let draggedBlock: Block | null = $state(null);
-  let dragOffset = { x: 0, y: 0 };
   let resizingBlock: Block | null = $state(null);
   let resizeMode = '';
   let isDragging = false;
   let isResizing = false;
-  let canvasWidth = $state(1600);
-  let canvasHeight = $state(1000);
+  let dragStartPos = { x: 0, y: 0 };
+  let dragStartBlockPos = { x: 0, y: 0 };
 
-  // Grid settings
-  let gridSize = $derived(dashboard.layout.gridSize);
+  let columns = $derived(dashboard.layout.columns);
+  let rows = $derived(dashboard.layout.rows);
+  let gap = $derived(dashboard.layout.gap);
+  let minRowHeight = $derived(dashboard.layout.gridSize);
+  let isAutoWidth = $derived(dashboard.layout.canvasWidth?.type === 'auto');
+  let isAutoHeight = $derived(dashboard.layout.canvasHeight?.type === 'auto');
+  let fixedWidth = $derived(dashboard.layout.canvasWidth?.value || 1600);
+  let fixedHeight = $derived(dashboard.layout.canvasHeight?.value || 1000);
 
-  // Calculate canvas dimensions based on dashboard configuration
-  $effect(() => {
-    if (dashboard.layout.canvasWidth) {
-      if (dashboard.layout.canvasWidth.type === 'screen') {
-        canvasWidth =
-          (typeof window !== 'undefined' ? window.innerWidth : 1600) -
-          (window.innerWidth < 640 ? 20 : 40); // Smaller margins on mobile
-      } else {
-        canvasWidth = dashboard.layout.canvasWidth.value || 1600;
-      }
-    } else {
-      canvasWidth = 1600; // Default fallback
-    }
+  function getGridStyle(): string {
+    const widthStyle = isAutoWidth ? '100%' : `${fixedWidth}px`;
+    const heightStyle = isAutoHeight ? 'auto' : `${fixedHeight}px`;
+    const minHeightStyle = isAutoHeight ? `${rows * minRowHeight}px` : 'auto';
 
-    if (dashboard.layout.canvasHeight) {
-      if (dashboard.layout.canvasHeight.type === 'screen') {
-        canvasHeight =
-          (typeof window !== 'undefined' ? window.innerHeight : 1000) -
-          (window.innerWidth < 640 ? 100 : 120); // Smaller header on mobile
-      } else {
-        canvasHeight = dashboard.layout.canvasHeight.value || 1000;
-      }
-    } else {
-      canvasHeight = 1000; // Default fallback
-    }
-  });
-
-  // Update canvas size based on container and content
-  onMount(() => {
-    updateCanvasSize();
-    window.addEventListener('resize', handleWindowResize);
-    return () => window.removeEventListener('resize', handleWindowResize);
-  });
-
-  function handleWindowResize() {
-    // Update dimensions if using screen-based sizing
-    if (
-      dashboard.layout.canvasWidth?.type === 'screen' ||
-      dashboard.layout.canvasHeight?.type === 'screen'
-    ) {
-      updateCanvasSize();
-    }
+    return `
+      display: grid;
+      grid-template-columns: repeat(${columns}, 1fr);
+      grid-template-rows: repeat(${rows}, minmax(${minRowHeight}px, 1fr));
+      gap: ${gap}px;
+      width: ${widthStyle};
+      height: ${heightStyle};
+      min-height: ${minHeightStyle};
+    `;
   }
 
-  function updateCanvasSize() {
-    if (canvasElement) {
-      const containerWidth =
-        canvasElement.parentElement?.clientWidth ||
-        (typeof window !== 'undefined' ? window.innerWidth : 1600);
-      const containerHeight =
-        canvasElement.parentElement?.clientHeight ||
-        (typeof window !== 'undefined' ? window.innerHeight : 1000);
+  function getBlockGridStyle(block: Block): string {
+    const colStart = block.position.x + 1;
+    const colEnd = block.position.x + block.size.width + 1;
+    const rowStart = block.position.y + 1;
+    const rowEnd = block.position.y + block.size.height + 1;
 
-      // Update canvas dimensions based on configuration
-      if (dashboard.layout.canvasWidth) {
-        if (dashboard.layout.canvasWidth.type === 'screen') {
-          canvasWidth =
-            containerWidth - (typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 40); // Smaller margins on mobile
-        } else {
-          canvasWidth = dashboard.layout.canvasWidth.value || 1600;
-        }
-      }
+    return `
+      grid-column: ${colStart} / ${colEnd};
+      grid-row: ${rowStart} / ${rowEnd};
+      z-index: ${draggedBlock === block ? 1000 : 1};
+    `;
+  }
 
-      if (dashboard.layout.canvasHeight) {
-        if (dashboard.layout.canvasHeight.type === 'screen') {
-          canvasHeight =
-            containerHeight -
-            (typeof window !== 'undefined' && window.innerWidth < 640 ? 100 : 120); // Smaller header on mobile
-        } else {
-          canvasHeight = dashboard.layout.canvasHeight.value || 1000;
-        }
-      }
+  function getCellFromPoint(clientX: number, clientY: number): { col: number; row: number } | null {
+    if (!gridElement) return null;
 
-      // Ensure minimum size based on grid layout
-      const minWidth = dashboard.layout.columns * gridSize;
-      const minHeight = dashboard.layout.rows * gridSize;
+    const rect = gridElement.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
-      canvasWidth = Math.max(minWidth, canvasWidth);
-      canvasHeight = Math.max(minHeight, canvasHeight);
-    }
+    const cellWidth = rect.width / columns;
+    const cellHeight = rect.height / rows;
+
+    const col = Math.floor(x / cellWidth);
+    const row = Math.floor(y / cellHeight);
+
+    return {
+      col: Math.max(0, Math.min(columns - 1, col)),
+      row: Math.max(0, Math.min(rows - 1, row))
+    };
   }
 
   onMount(() => {
@@ -137,11 +109,9 @@
     };
   });
 
-  // Touch event handlers for mobile support
   function handleBlockTouchStart(event: TouchEvent, block: Block) {
     if (!editMode) return;
 
-    // Don't start dragging if clicking on interactive elements
     const target = event.target as HTMLElement;
     const tagName = target.tagName.toLowerCase();
     const isInteractive =
@@ -152,7 +122,7 @@
       tagName === 'a' ||
       target.closest('button, input, select, textarea, a') !== null ||
       target.getAttribute('role') === 'button' ||
-      target.classList.contains('material-symbols-outlined'); // Icon elements
+      target.classList.contains('material-symbols-outlined');
 
     if (isInteractive) return;
 
@@ -160,15 +130,11 @@
     event.stopPropagation();
 
     const touch = event.touches[0];
-    const canvasRect = canvasElement.getBoundingClientRect();
-
     draggedBlock = block;
-    dragOffset = {
-      x: touch.clientX - canvasRect.left - block.position.x * gridSize,
-      y: touch.clientY - canvasRect.top - block.position.y * gridSize
-    };
-
+    dragStartPos = { x: touch.clientX, y: touch.clientY };
+    dragStartBlockPos = { x: block.position.x, y: block.position.y };
     isDragging = true;
+
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('touchend', handleTouchEnd);
   }
@@ -179,8 +145,10 @@
     event.preventDefault();
     event.stopPropagation();
 
+    const touch = event.touches[0];
     resizingBlock = block;
     resizeMode = mode;
+    dragStartPos = { x: touch.clientX, y: touch.clientY };
     isResizing = true;
 
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -189,82 +157,23 @@
 
   function handleTouchMove(event: TouchEvent) {
     event.preventDefault();
-
     const touch = event.touches[0];
 
     if (isDragging && draggedBlock) {
-      const canvasRect = canvasElement.getBoundingClientRect();
-      const x = touch.clientX - canvasRect.left - dragOffset.x;
-      const y = touch.clientY - canvasRect.top - dragOffset.y;
-
-      // Snap to grid
-      const gridX = Math.round(x / gridSize);
-      const gridY = Math.round(y / gridSize);
-
-      // Ensure block stays within bounds
-      const maxX = dashboard.layout.columns - draggedBlock.size.width;
-      const maxY = dashboard.layout.rows - draggedBlock.size.height;
-
-      const newPosition: Position = {
-        x: Math.max(0, Math.min(maxX, gridX)),
-        y: Math.max(0, Math.min(maxY, gridY))
-      };
-
-      updateBlockPosition(draggedBlock.id, newPosition);
+      const cell = getCellFromPoint(touch.clientX, touch.clientY);
+      if (cell) {
+        const maxX = columns - draggedBlock.size.width;
+        const maxY = rows - draggedBlock.size.height;
+        const newPosition: Position = {
+          x: Math.max(0, Math.min(maxX, cell.col)),
+          y: Math.max(0, Math.min(maxY, cell.row))
+        };
+        updateBlockPosition(draggedBlock.id, newPosition);
+      }
     }
 
     if (isResizing && resizingBlock) {
-      const canvasRect = canvasElement.getBoundingClientRect();
-      const x = touch.clientX - canvasRect.left;
-      const y = touch.clientY - canvasRect.top;
-
-      const blockRect = {
-        left: resizingBlock.position.x * gridSize,
-        top: resizingBlock.position.y * gridSize,
-        right: (resizingBlock.position.x + resizingBlock.size.width) * gridSize,
-        bottom: (resizingBlock.position.y + resizingBlock.size.height) * gridSize
-      };
-
-      let newSize = { ...resizingBlock.size };
-
-      switch (resizeMode) {
-        case 'se': // southeast
-          newSize.width = Math.max(2, Math.round((x - blockRect.left) / gridSize));
-          newSize.height = Math.max(2, Math.round((y - blockRect.top) / gridSize));
-          break;
-        case 'sw': // southwest
-          newSize.width = Math.max(2, Math.round((blockRect.right - x) / gridSize));
-          newSize.height = Math.max(2, Math.round((y - blockRect.top) / gridSize));
-          break;
-        case 'ne': // northeast
-          newSize.width = Math.max(2, Math.round((x - blockRect.left) / gridSize));
-          newSize.height = Math.max(2, Math.round((blockRect.bottom - y) / gridSize));
-          break;
-        case 'nw': // northwest
-          newSize.width = Math.max(2, Math.round((blockRect.right - x) / gridSize));
-          newSize.height = Math.max(2, Math.round((blockRect.bottom - y) / gridSize));
-          break;
-        case 'e': // east
-          newSize.width = Math.max(2, Math.round((x - blockRect.left) / gridSize));
-          break;
-        case 'w': // west
-          newSize.width = Math.max(2, Math.round((blockRect.right - x) / gridSize));
-          break;
-        case 'n': // north
-          newSize.height = Math.max(2, Math.round((blockRect.bottom - y) / gridSize));
-          break;
-        case 's': // south
-          newSize.height = Math.max(2, Math.round((y - blockRect.top) / gridSize));
-          break;
-      }
-
-      // Ensure the block doesn't exceed canvas bounds
-      const maxWidth = dashboard.layout.columns - resizingBlock.position.x;
-      const maxHeight = dashboard.layout.rows - resizingBlock.position.y;
-      newSize.width = Math.min(newSize.width, maxWidth);
-      newSize.height = Math.min(newSize.height, maxHeight);
-
-      updateBlockSize(resizingBlock.id, newSize);
+      handleResize(touch.clientX, touch.clientY);
     }
   }
 
@@ -279,7 +188,6 @@
       onBlockResized(resizingBlock.id, resizingBlock.size);
     }
 
-    // Clean up
     isDragging = false;
     isResizing = false;
     draggedBlock = null;
@@ -290,26 +198,9 @@
     window.removeEventListener('touchend', handleTouchEnd);
   }
 
-  function getBlockStyle(block: Block): string {
-    const x = block.position.x * gridSize;
-    const y = block.position.y * gridSize;
-    const width = block.size.width * gridSize - dashboard.layout.gap;
-    const height = block.size.height * gridSize - dashboard.layout.gap;
-
-    return `
-      position: absolute;
-      left: ${x}px;
-      top: ${y}px;
-      width: ${width}px;
-      height: ${height}px;
-      z-index: ${draggedBlock === block ? 1000 : 1};
-    `;
-  }
-
   function handleBlockMouseDown(event: MouseEvent, block: Block) {
-    if (!editMode) return; // Only allow dragging in edit mode
+    if (!editMode) return;
 
-    // Don't start dragging if clicking on interactive elements
     const target = event.target as HTMLElement;
     const tagName = target.tagName.toLowerCase();
     const isInteractive =
@@ -320,110 +211,123 @@
       tagName === 'a' ||
       target.closest('button, input, select, textarea, a') !== null ||
       target.getAttribute('role') === 'button' ||
-      target.classList.contains('material-symbols-outlined'); // Icon elements
+      target.classList.contains('material-symbols-outlined');
 
     if (isInteractive) return;
 
     event.preventDefault();
     event.stopPropagation();
 
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    const canvasRect = canvasElement.getBoundingClientRect();
-
     draggedBlock = block;
-    dragOffset = {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top
-    };
+    dragStartPos = { x: event.clientX, y: event.clientY };
+    dragStartBlockPos = { x: block.position.x, y: block.position.y };
     isDragging = true;
   }
 
   function handleResizeMouseDown(event: MouseEvent, block: Block, mode: string) {
-    if (!editMode) return; // Only allow resizing in edit mode
+    if (!editMode) return;
 
     event.preventDefault();
     event.stopPropagation();
 
     resizingBlock = block;
     resizeMode = mode;
+    dragStartPos = { x: event.clientX, y: event.clientY };
     isResizing = true;
   }
 
   function handleMouseMove(event: MouseEvent) {
     if (isDragging && draggedBlock) {
-      const canvasRect = canvasElement.getBoundingClientRect();
-      const x = event.clientX - canvasRect.left - dragOffset.x;
-      const y = event.clientY - canvasRect.top - dragOffset.y;
-
-      // Snap to grid
-      const gridX = Math.round(x / gridSize);
-      const gridY = Math.round(y / gridSize);
-
-      // Ensure block stays within bounds
-      const maxX = dashboard.layout.columns - draggedBlock.size.width;
-      const maxY = dashboard.layout.rows - draggedBlock.size.height;
-
-      const newPosition: Position = {
-        x: Math.max(0, Math.min(maxX, gridX)),
-        y: Math.max(0, Math.min(maxY, gridY))
-      };
-
-      updateBlockPosition(draggedBlock.id, newPosition);
+      const cell = getCellFromPoint(event.clientX, event.clientY);
+      if (cell) {
+        const maxX = columns - draggedBlock.size.width;
+        const maxY = rows - draggedBlock.size.height;
+        const newPosition: Position = {
+          x: Math.max(0, Math.min(maxX, cell.col)),
+          y: Math.max(0, Math.min(maxY, cell.row))
+        };
+        updateBlockPosition(draggedBlock.id, newPosition);
+      }
     }
 
     if (isResizing && resizingBlock) {
-      const canvasRect = canvasElement.getBoundingClientRect();
-      const x = event.clientX - canvasRect.left;
-      const y = event.clientY - canvasRect.top;
-
-      const blockRect = {
-        left: resizingBlock.position.x * gridSize,
-        top: resizingBlock.position.y * gridSize,
-        right: (resizingBlock.position.x + resizingBlock.size.width) * gridSize,
-        bottom: (resizingBlock.position.y + resizingBlock.size.height) * gridSize
-      };
-
-      let newSize = { ...resizingBlock.size };
-
-      switch (resizeMode) {
-        case 'se': // southeast
-          newSize.width = Math.max(2, Math.round((x - blockRect.left) / gridSize));
-          newSize.height = Math.max(2, Math.round((y - blockRect.top) / gridSize));
-          break;
-        case 'sw': // southwest
-          newSize.width = Math.max(2, Math.round((blockRect.right - x) / gridSize));
-          newSize.height = Math.max(2, Math.round((y - blockRect.top) / gridSize));
-          break;
-        case 'ne': // northeast
-          newSize.width = Math.max(2, Math.round((x - blockRect.left) / gridSize));
-          newSize.height = Math.max(2, Math.round((blockRect.bottom - y) / gridSize));
-          break;
-        case 'nw': // northwest
-          newSize.width = Math.max(2, Math.round((blockRect.right - x) / gridSize));
-          newSize.height = Math.max(2, Math.round((blockRect.bottom - y) / gridSize));
-          break;
-        case 'e': // east
-          newSize.width = Math.max(2, Math.round((x - blockRect.left) / gridSize));
-          break;
-        case 'w': // west
-          newSize.width = Math.max(2, Math.round((blockRect.right - x) / gridSize));
-          break;
-        case 'n': // north
-          newSize.height = Math.max(2, Math.round((blockRect.bottom - y) / gridSize));
-          break;
-        case 's': // south
-          newSize.height = Math.max(2, Math.round((y - blockRect.top) / gridSize));
-          break;
-      }
-
-      // Ensure the block doesn't exceed canvas bounds
-      const maxWidth = dashboard.layout.columns - resizingBlock.position.x;
-      const maxHeight = dashboard.layout.rows - resizingBlock.position.y;
-      newSize.width = Math.min(newSize.width, maxWidth);
-      newSize.height = Math.min(newSize.height, maxHeight);
-
-      updateBlockSize(resizingBlock.id, newSize);
+      handleResize(event.clientX, event.clientY);
     }
+  }
+
+  function handleResize(clientX: number, clientY: number) {
+    if (!resizingBlock || !gridElement) return;
+
+    const cell = getCellFromPoint(clientX, clientY);
+    if (!cell) return;
+
+    let newSize = { ...resizingBlock.size };
+    let newPosition = { ...resizingBlock.position };
+
+    switch (resizeMode) {
+      case 'se':
+        newSize.width = Math.max(1, cell.col - resizingBlock.position.x + 1);
+        newSize.height = Math.max(1, cell.row - resizingBlock.position.y + 1);
+        break;
+      case 'sw':
+        const newWidthSW = resizingBlock.position.x + resizingBlock.size.width - cell.col;
+        if (newWidthSW >= 1) {
+          newPosition.x = cell.col;
+          newSize.width = newWidthSW;
+        }
+        newSize.height = Math.max(1, cell.row - resizingBlock.position.y + 1);
+        break;
+      case 'ne':
+        newSize.width = Math.max(1, cell.col - resizingBlock.position.x + 1);
+        const newHeightNE = resizingBlock.position.y + resizingBlock.size.height - cell.row;
+        if (newHeightNE >= 1) {
+          newPosition.y = cell.row;
+          newSize.height = newHeightNE;
+        }
+        break;
+      case 'nw':
+        const newWidthNW = resizingBlock.position.x + resizingBlock.size.width - cell.col;
+        const newHeightNW = resizingBlock.position.y + resizingBlock.size.height - cell.row;
+        if (newWidthNW >= 1) {
+          newPosition.x = cell.col;
+          newSize.width = newWidthNW;
+        }
+        if (newHeightNW >= 1) {
+          newPosition.y = cell.row;
+          newSize.height = newHeightNW;
+        }
+        break;
+      case 'e':
+        newSize.width = Math.max(1, cell.col - resizingBlock.position.x + 1);
+        break;
+      case 'w':
+        const newWidthW = resizingBlock.position.x + resizingBlock.size.width - cell.col;
+        if (newWidthW >= 1) {
+          newPosition.x = cell.col;
+          newSize.width = newWidthW;
+        }
+        break;
+      case 'n':
+        const newHeightN = resizingBlock.position.y + resizingBlock.size.height - cell.row;
+        if (newHeightN >= 1) {
+          newPosition.y = cell.row;
+          newSize.height = newHeightN;
+        }
+        break;
+      case 's':
+        newSize.height = Math.max(1, cell.row - resizingBlock.position.y + 1);
+        break;
+    }
+
+    newSize.width = Math.min(newSize.width, columns - newPosition.x);
+    newSize.height = Math.min(newSize.height, rows - newPosition.y);
+    newPosition.x = Math.max(0, newPosition.x);
+    newPosition.y = Math.max(0, newPosition.y);
+
+    if (newPosition.x !== resizingBlock.position.x || newPosition.y !== resizingBlock.position.y) {
+      updateBlockPosition(resizingBlock.id, newPosition);
+    }
+    updateBlockSize(resizingBlock.id, newSize);
   }
 
   function handleMouseUp() {
@@ -467,157 +371,156 @@
       onDashboardUpdated(dashboard);
     }
   }
+
+  function getGridBackgroundStyle(): string {
+    return `
+      background-image: 
+        linear-gradient(to right, var(--minibi-color-grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--minibi-color-grid-line) 1px, transparent 1px);
+      background-size: calc(100% / ${columns}) calc(100% / ${rows});
+    `;
+  }
 </script>
 
-<div class="dashboard-canvas relative h-full w-full overflow-auto" bind:this={canvasElement}>
-  <div
-    class="relative m-2 min-h-full min-w-full sm:m-5"
-    style="width: {canvasWidth}px; height: {canvasHeight}px;"
-  >
-    <!-- Grid background -->
-    {#if editMode}
-      <div
-        class="pointer-events-none absolute top-0 left-0 h-full w-full opacity-50"
-        style="
-        background-image: linear-gradient(to right, var(--minibi-color-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--minibi-color-grid-line) 1px, transparent 1px);
-        background-size: {gridSize}px {gridSize}px;
-      "
-      ></div>
-    {/if}
-
-    <!-- Blocks -->
-    {#each dashboard.blocks as block (block.id)}
-      <div
-        class="group {editMode
-          ? 'cursor-move'
-          : 'cursor-default'} touch-manipulation transition-shadow duration-200 ease-in-out select-none hover:shadow-xl {draggedBlock ===
-        block
-          ? '[transform:rotate(2deg)] shadow-2xl'
-          : ''} {resizingBlock === block ? 'shadow-lg shadow-blue-400' : ''}"
-        style={getBlockStyle(block)}
-        onmousedown={(e) => handleBlockMouseDown(e, block)}
-        ontouchstart={(e) => handleBlockTouchStart(e, block)}
-        role="button"
-        tabindex="0"
-      >
-        <!-- Block content -->
+<div class="dashboard-canvas h-full w-full overflow-auto" bind:this={canvasElement}>
+  <div class="p-2 sm:p-5" class:w-full={isAutoWidth} class:h-full={isAutoHeight}>
+    <div bind:this={gridElement} class="dashboard-grid relative" style={getGridStyle()}>
+      {#if editMode}
         <div
-          class="pointer-events-auto h-full w-full {draggedBlock === block ||
-          resizingBlock === block
-            ? 'pointer-events-none'
-            : ''}"
+          class="pointer-events-none absolute inset-0 opacity-50"
+          style={getGridBackgroundStyle()}
+        ></div>
+      {/if}
+
+      {#each dashboard.blocks as block (block.id)}
+        <div
+          class="dashboard-block group relative {editMode
+            ? 'cursor-move'
+            : 'cursor-default'} touch-manipulation transition-shadow duration-200 ease-in-out select-none hover:shadow-xl {draggedBlock ===
+          block
+            ? '[transform:rotate(2deg)] shadow-2xl'
+            : ''} {resizingBlock === block ? 'shadow-lg shadow-blue-400' : ''}"
+          style={getBlockGridStyle(block)}
+          onmousedown={(e) => handleBlockMouseDown(e, block)}
+          ontouchstart={(e) => handleBlockTouchStart(e, block)}
+          role="button"
+          tabindex="0"
         >
-          {#if block.type === 'table'}
-            <TableBlock
-              {block}
-              {dashboardService}
-              {filterParams}
-              showControls={editMode}
-              {readOnly}
-              {onBlockUpdate}
-              {onBlockEdit}
-              {onBlockDeleteRequest}
-            />
-          {:else if block.type === 'graph'}
-            <GraphBlock
-              {block}
-              {dashboardService}
-              {filterParams}
-              showControls={editMode}
-              {readOnly}
-              {onBlockUpdate}
-              {onBlockEdit}
-              {onBlockDeleteRequest}
-            />
-          {:else if block.type === 'text'}
-            <TextBlock
-              {block}
-              dashboardVariables={dashboard.variables}
-              {dashboardService}
-              {filterParams}
-              showControls={editMode}
-              {readOnly}
-              {onBlockUpdate}
-              {onBlockEdit}
-              {onBlockDeleteRequest}
-            />
+          <div
+            class="pointer-events-auto h-full w-full {draggedBlock === block ||
+            resizingBlock === block
+              ? 'pointer-events-none'
+              : ''}"
+          >
+            {#if block.type === 'table'}
+              <TableBlock
+                {block}
+                {dashboardService}
+                {filterParams}
+                showControls={editMode}
+                {readOnly}
+                {onBlockUpdate}
+                {onBlockEdit}
+                {onBlockDeleteRequest}
+              />
+            {:else if block.type === 'graph'}
+              <GraphBlock
+                {block}
+                {dashboardService}
+                {filterParams}
+                showControls={editMode}
+                {readOnly}
+                {onBlockUpdate}
+                {onBlockEdit}
+                {onBlockDeleteRequest}
+              />
+            {:else if block.type === 'text'}
+              <TextBlock
+                {block}
+                dashboardVariables={dashboard.variables}
+                {dashboardService}
+                {filterParams}
+                showControls={editMode}
+                {readOnly}
+                {onBlockUpdate}
+                {onBlockEdit}
+                {onBlockDeleteRequest}
+              />
+            {/if}
+          </div>
+
+          {#if editMode}
+            <div class="pointer-events-none absolute inset-0">
+              <div
+                class="pointer-events-auto absolute -top-1 -left-1 h-3 w-3 cursor-nw-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
+                onmousedown={(e) => handleResizeMouseDown(e, block, 'nw')}
+                ontouchstart={(e) => handleResizeTouchStart(e, block, 'nw')}
+                role="button"
+                tabindex="0"
+                aria-label="Resize northwest"
+              ></div>
+              <div
+                class="pointer-events-auto absolute -top-1 -right-1 h-3 w-3 cursor-ne-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
+                onmousedown={(e) => handleResizeMouseDown(e, block, 'ne')}
+                ontouchstart={(e) => handleResizeTouchStart(e, block, 'ne')}
+                role="button"
+                tabindex="0"
+                aria-label="Resize northeast"
+              ></div>
+              <div
+                class="pointer-events-auto absolute -bottom-1 -left-1 h-3 w-3 cursor-sw-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
+                onmousedown={(e) => handleResizeMouseDown(e, block, 'sw')}
+                ontouchstart={(e) => handleResizeTouchStart(e, block, 'sw')}
+                role="button"
+                tabindex="0"
+                aria-label="Resize southwest"
+              ></div>
+              <div
+                class="pointer-events-auto absolute -right-1 -bottom-1 h-3 w-3 cursor-se-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
+                onmousedown={(e) => handleResizeMouseDown(e, block, 'se')}
+                ontouchstart={(e) => handleResizeTouchStart(e, block, 'se')}
+                role="button"
+                tabindex="0"
+                aria-label="Resize southeast"
+              ></div>
+
+              <div
+                class="pointer-events-auto absolute -top-1 left-1/2 h-3 w-3 -translate-x-1/2 cursor-n-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
+                onmousedown={(e) => handleResizeMouseDown(e, block, 'n')}
+                ontouchstart={(e) => handleResizeTouchStart(e, block, 'n')}
+                role="button"
+                tabindex="0"
+                aria-label="Resize north"
+              ></div>
+              <div
+                class="pointer-events-auto absolute -bottom-1 left-1/2 h-3 w-3 -translate-x-1/2 cursor-s-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
+                onmousedown={(e) => handleResizeMouseDown(e, block, 's')}
+                ontouchstart={(e) => handleResizeTouchStart(e, block, 's')}
+                role="button"
+                tabindex="0"
+                aria-label="Resize south"
+              ></div>
+              <div
+                class="pointer-events-auto absolute top-1/2 -right-1 h-3 w-3 -translate-y-1/2 cursor-e-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
+                onmousedown={(e) => handleResizeMouseDown(e, block, 'e')}
+                ontouchstart={(e) => handleResizeTouchStart(e, block, 'e')}
+                role="button"
+                tabindex="0"
+                aria-label="Resize east"
+              ></div>
+              <div
+                class="pointer-events-auto absolute top-1/2 -left-1 h-3 w-3 -translate-y-1/2 cursor-w-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
+                onmousedown={(e) => handleResizeMouseDown(e, block, 'w')}
+                ontouchstart={(e) => handleResizeTouchStart(e, block, 'w')}
+                role="button"
+                tabindex="0"
+                aria-label="Resize west"
+              ></div>
+            </div>
           {/if}
         </div>
-
-        <!-- Resize handles (only show when in edit mode) -->
-        {#if editMode}
-          <div class="pointer-events-none absolute top-0 right-0 bottom-0 left-0">
-            <!-- Corner handles - larger touch targets on mobile -->
-            <div
-              class="pointer-events-auto absolute -top-1 -left-1 h-3 w-3 cursor-nw-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              onmousedown={(e) => handleResizeMouseDown(e, block, 'nw')}
-              ontouchstart={(e) => handleResizeTouchStart(e, block, 'nw')}
-              role="button"
-              tabindex="0"
-              aria-label="Resize northwest"
-            ></div>
-            <div
-              class="pointer-events-auto absolute -top-1 -right-1 h-3 w-3 cursor-ne-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              onmousedown={(e) => handleResizeMouseDown(e, block, 'ne')}
-              ontouchstart={(e) => handleResizeTouchStart(e, block, 'ne')}
-              role="button"
-              tabindex="0"
-              aria-label="Resize northeast"
-            ></div>
-            <div
-              class="pointer-events-auto absolute -bottom-1 -left-1 h-3 w-3 cursor-sw-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              onmousedown={(e) => handleResizeMouseDown(e, block, 'sw')}
-              ontouchstart={(e) => handleResizeTouchStart(e, block, 'sw')}
-              role="button"
-              tabindex="0"
-              aria-label="Resize southwest"
-            ></div>
-            <div
-              class="pointer-events-auto absolute -right-1 -bottom-1 h-3 w-3 cursor-se-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              onmousedown={(e) => handleResizeMouseDown(e, block, 'se')}
-              ontouchstart={(e) => handleResizeTouchStart(e, block, 'se')}
-              role="button"
-              tabindex="0"
-              aria-label="Resize southeast"
-            ></div>
-
-            <!-- Edge handles -->
-            <div
-              class="pointer-events-auto absolute -top-1 left-1/2 h-3 w-3 -translate-x-1/2 cursor-n-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              onmousedown={(e) => handleResizeMouseDown(e, block, 'n')}
-              ontouchstart={(e) => handleResizeTouchStart(e, block, 'n')}
-              role="button"
-              tabindex="0"
-              aria-label="Resize north"
-            ></div>
-            <div
-              class="pointer-events-auto absolute -bottom-1 left-1/2 h-3 w-3 -translate-x-1/2 cursor-s-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              onmousedown={(e) => handleResizeMouseDown(e, block, 's')}
-              ontouchstart={(e) => handleResizeTouchStart(e, block, 's')}
-              role="button"
-              tabindex="0"
-              aria-label="Resize south"
-            ></div>
-            <div
-              class="pointer-events-auto absolute top-1/2 -right-1 h-3 w-3 -translate-y-1/2 cursor-e-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              onmousedown={(e) => handleResizeMouseDown(e, block, 'e')}
-              ontouchstart={(e) => handleResizeTouchStart(e, block, 'e')}
-              role="button"
-              tabindex="0"
-              aria-label="Resize east"
-            ></div>
-            <div
-              class="pointer-events-auto absolute top-1/2 -left-1 h-3 w-3 -translate-y-1/2 cursor-w-resize touch-manipulation border border-white bg-blue-500 opacity-0 transition-opacity duration-200 ease-in-out group-hover:opacity-100 sm:h-2 sm:w-2"
-              onmousedown={(e) => handleResizeMouseDown(e, block, 'w')}
-              ontouchstart={(e) => handleResizeTouchStart(e, block, 'w')}
-              role="button"
-              tabindex="0"
-              aria-label="Resize west"
-            ></div>
-          </div>
-        {/if}
-      </div>
-    {/each}
+      {/each}
+    </div>
   </div>
 </div>
 

@@ -22,9 +22,9 @@
   let columns = $state(20);
   let rows = $state(15);
   let gap = $state(10);
-  let canvasWidthType = $state<'fixed' | 'screen'>('fixed');
+  let canvasWidthType = $state<'fixed' | 'auto'>('auto');
   let canvasWidthValue = $state(1600);
-  let canvasHeightType = $state<'fixed' | 'screen'>('fixed');
+  let canvasHeightType = $state<'fixed' | 'auto'>('auto');
   let canvasHeightValue = $state(1000);
   let isPublic = $state(false);
 
@@ -161,8 +161,8 @@
             <div class="space-y-3">
               <div class="flex gap-6">
                 <label class="flex items-center">
-                  <input type="radio" bind:group={canvasWidthType} value="screen" class="mr-2" />
-                  <span class="text-sm">Full Screen</span>
+                  <input type="radio" bind:group={canvasWidthType} value="auto" class="mr-2" />
+                  <span class="text-sm">Auto (Responsive)</span>
                 </label>
                 <label class="flex items-center">
                   <input type="radio" bind:group={canvasWidthType} value="fixed" class="mr-2" />
@@ -193,8 +193,8 @@
             <div class="space-y-3">
               <div class="flex gap-6">
                 <label class="flex items-center">
-                  <input type="radio" bind:group={canvasHeightType} value="screen" class="mr-2" />
-                  <span class="text-sm">Full Screen</span>
+                  <input type="radio" bind:group={canvasHeightType} value="auto" class="mr-2" />
+                  <span class="text-sm">Auto (Responsive)</span>
                 </label>
                 <label class="flex items-center">
                   <input type="radio" bind:group={canvasHeightType} value="fixed" class="mr-2" />

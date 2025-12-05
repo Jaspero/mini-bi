@@ -115,8 +115,8 @@
         columns: 20,
         rows: 15,
         gap: 10,
-        canvasWidth: { type: 'fixed', value: 1600 },
-        canvasHeight: { type: 'fixed', value: 1000 }
+        canvasWidth: { type: 'auto' },
+        canvasHeight: { type: 'auto' }
       },
       blocks: [],
       variables: {},
@@ -482,7 +482,7 @@
   ];
 </script>
 
-<div class="min-h-screen bg-gray-50">
+<div class="flex min-h-screen flex-col bg-gray-50">
   {#if loading}
     <DashboardSkeleton />
   {:else if error}

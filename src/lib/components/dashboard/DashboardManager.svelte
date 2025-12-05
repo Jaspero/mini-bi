@@ -41,9 +41,9 @@
   let gridSize = $state(80);
   let columns = $state(20);
   let rows = 15;
-  let canvasWidthType = $state('fixed');
+  let canvasWidthType = $state<'fixed' | 'auto'>('auto');
   let canvasWidthValue = $state(1600);
-  let canvasHeightType = $state('fixed');
+  let canvasHeightType = $state<'fixed' | 'auto'>('auto');
   let canvasHeightValue = $state(1000);
 
   onMount(() => {
@@ -73,9 +73,9 @@
     gridSize = 80;
     columns = 20;
     rows = 15;
-    canvasWidthType = 'fixed';
+    canvasWidthType = 'auto';
     canvasWidthValue = 1600;
-    canvasHeightType = 'fixed';
+    canvasHeightType = 'auto';
     canvasHeightValue = 1000;
   }
 
@@ -83,9 +83,9 @@
     showCreateForm = false;
     newDashboardName = '';
     newDashboardDescription = '';
-    canvasWidthType = 'fixed';
+    canvasWidthType = 'auto';
     canvasWidthValue = 1600;
-    canvasHeightType = 'fixed';
+    canvasHeightType = 'auto';
     canvasHeightValue = 1000;
   }
 
@@ -104,11 +104,11 @@
         rows,
         gap: 10,
         canvasWidth: {
-          type: canvasWidthType as 'fixed' | 'screen',
+          type: canvasWidthType as 'fixed' | 'auto',
           value: canvasWidthType === 'fixed' ? canvasWidthValue : undefined
         },
         canvasHeight: {
-          type: canvasHeightType as 'fixed' | 'screen',
+          type: canvasHeightType as 'fixed' | 'auto',
           value: canvasHeightType === 'fixed' ? canvasHeightValue : undefined
         }
       },
@@ -243,13 +243,8 @@
                 <div class="space-y-2">
                   <div class="flex gap-4">
                     <label class="flex items-center">
-                      <input
-                        type="radio"
-                        bind:group={canvasWidthType}
-                        value="screen"
-                        class="mr-2"
-                      />
-                      <span class="text-sm">Screen</span>
+                      <input type="radio" bind:group={canvasWidthType} value="auto" class="mr-2" />
+                      <span class="text-sm">Auto</span>
                     </label>
                     <label class="flex items-center">
                       <input type="radio" bind:group={canvasWidthType} value="fixed" class="mr-2" />
@@ -276,13 +271,8 @@
                 <div class="space-y-2">
                   <div class="flex gap-4">
                     <label class="flex items-center">
-                      <input
-                        type="radio"
-                        bind:group={canvasHeightType}
-                        value="screen"
-                        class="mr-2"
-                      />
-                      <span class="text-sm">Screen</span>
+                      <input type="radio" bind:group={canvasHeightType} value="auto" class="mr-2" />
+                      <span class="text-sm">Auto</span>
                     </label>
                     <label class="flex items-center">
                       <input
