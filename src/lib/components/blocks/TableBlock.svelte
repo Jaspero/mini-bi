@@ -537,7 +537,7 @@
           <tr>
             {#each tableConfig.columns as column}
               <th
-                class="border-b border-gray-200 px-2 py-2 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-4 sm:py-3 {column.sortable &&
+                class="group/col border-b border-gray-200 px-2 py-2 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-4 sm:py-3 {column.sortable &&
                 tableConfig.sorting?.enabled
                   ? 'cursor-pointer touch-manipulation select-none hover:bg-gray-100'
                   : ''} {sortColumn === column.key ? 'bg-gray-100' : ''}"
@@ -562,9 +562,9 @@
                   <button
                     class="flex-shrink-0 rounded p-0.5 transition-colors hover:bg-gray-200 {hasActiveFilter(
                       column.key
-                    )
+                    ) || activeFilterColumn?.key === column.key
                       ? 'text-blue-600'
-                      : 'text-gray-400'}"
+                      : 'text-gray-400 opacity-0 group-hover/col:opacity-100'}"
                     onclick={(e) => openFilterDialog(column, e)}
                     aria-label="Filter {column.header}"
                   >
