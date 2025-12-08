@@ -140,7 +140,7 @@
     let result = [...data.data];
 
     if (searchTerm.trim() && tableConfig?.filtering?.enabled) {
-      const filterableColumns = tableConfig.columns
+      const filterableColumns = effectiveColumns
         .filter((col) => col.filterable)
         .map((col) => col.key);
 
@@ -457,6 +457,39 @@
     onBlockDeleteRequest(block);
   }
 
+  function inferColumnType(value: any): 'string' | 'number' | 'date' | 'boolean' {
+    if (typeof value === 'number') return 'number';
+    if (typeof value === 'boolean') return 'boolean';
+    if (value instanceof Date) return 'date';
+    if (typeof value === 'string') {
+      const datePattern = /^\d{4}-\d{2}-\d{2}(T|\s)/;
+      if (datePattern.test(value)) return 'date';
+    }
+    return 'string';
+  }
+
+  function formatHeader(key: string): string {
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/[_-]/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .trim();
+  }
+
+  let effectiveColumns: ColumnDefinition[] = $derived.by(() => {
+    if (tableConfig?.autoColumns && data && data.data && data.data.length > 0) {
+      const firstRow = data.data[0];
+      return Object.keys(firstRow).map((key) => ({
+        key,
+        header: formatHeader(key),
+        type: inferColumnType(firstRow[key]),
+        sortable: true,
+        filterable: true
+      }));
+    }
+    return tableConfig?.columns || [];
+  });
+
   $effect(() => {
     tableConfig = block.config as TableBlockConfig;
     if (tableConfig?.pagination) {
@@ -535,7 +568,7 @@
       <table class="w-full">
         <thead class="sticky top-0 bg-gray-50">
           <tr>
-            {#each tableConfig.columns as column}
+            {#each effectiveColumns as column}
               <th
                 class="group/col border-b border-gray-200 px-2 py-2 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-4 sm:py-3 {column.sortable &&
                 tableConfig.sorting?.enabled
@@ -589,7 +622,7 @@
         <tbody class="divide-y divide-gray-200 bg-white">
           {#each paginatedData as row, rowIndex}
             <tr class="hover:bg-gray-50 {rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
-              {#each tableConfig.columns as column}
+              {#each effectiveColumns as column}
                 <td
                   class="px-2 py-2 text-xs whitespace-nowrap text-gray-900 sm:px-4 sm:py-3 sm:text-sm"
                 >

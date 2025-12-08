@@ -64,6 +64,7 @@ export interface BlockConfig {
 // Table specific configurations
 export interface TableBlockConfig extends BlockConfig {
   columns: ColumnDefinition[];
+  autoColumns?: boolean;
   pagination: PaginationConfig;
   sorting: SortingConfig;
   filtering: FilterConfig;

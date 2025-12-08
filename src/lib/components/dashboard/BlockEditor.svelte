@@ -678,30 +678,48 @@
           </div>
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <div class="block text-sm font-medium text-gray-700">Columns</div>
-              <button
-                type="button"
-                class="text-sm text-blue-600 hover:text-blue-500"
-                onclick={() => {
-                  if (editedBlock) {
-                    const config = editedBlock.config as any;
-                    if (!config.columns) config.columns = [];
-                    config.columns.push({
-                      key: `column_${config.columns.length + 1}`,
-                      header: `Column ${config.columns.length + 1}`,
-                      type: 'string',
-                      sortable: true,
-                      filterable: true
-                    });
-                    editedBlock = { ...editedBlock };
-                  }
-                }}
-              >
-                + Add Column
-              </button>
+              <div class="flex items-center gap-4">
+                <div class="block text-sm font-medium text-gray-700">Columns</div>
+                <label class="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={editedBlock.config.autoColumns ?? false}
+                    onchange={(e) => {
+                      if (editedBlock) {
+                        editedBlock.config.autoColumns = e.currentTarget.checked;
+                        editedBlock = { ...editedBlock };
+                      }
+                    }}
+                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span class="text-sm text-gray-600">Auto</span>
+                </label>
+              </div>
+              {#if !editedBlock.config.autoColumns}
+                <button
+                  type="button"
+                  class="text-sm text-blue-600 hover:text-blue-500"
+                  onclick={() => {
+                    if (editedBlock) {
+                      const config = editedBlock.config as any;
+                      if (!config.columns) config.columns = [];
+                      config.columns.push({
+                        key: `column_${config.columns.length + 1}`,
+                        header: `Column ${config.columns.length + 1}`,
+                        type: 'string',
+                        sortable: true,
+                        filterable: true
+                      });
+                      editedBlock = { ...editedBlock };
+                    }
+                  }}
+                >
+                  + Add Column
+                </button>
+              {/if}
             </div>
 
-            {#if editedBlock.config.columns}
+            {#if !editedBlock.config.autoColumns && editedBlock.config.columns}
               <div class="space-y-2 overflow-y-auto">
                 {#each editedBlock.config.columns as column, index}
                   <div
