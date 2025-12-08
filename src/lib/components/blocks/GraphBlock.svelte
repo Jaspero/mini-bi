@@ -312,7 +312,7 @@
                 chartType === 'area'
                   ? `${s.color || defaultColors[index % defaultColors.length]}4D`
                   : 'transparent',
-              fill: chartType === 'area',
+              fill: chartType === 'area' ? (graphConfig.stacked ? 'origin' : true) : false,
               tension: 0.4
             }))
           },
@@ -320,6 +320,7 @@
             ...baseOptions,
             scales: {
               x: {
+                stacked: chartType === 'area' && graphConfig.stacked,
                 title: {
                   display: !!xAxis?.name,
                   text: xAxis?.name,
@@ -329,6 +330,7 @@
                 grid: { color: gridColor }
               },
               y: {
+                stacked: chartType === 'area' && graphConfig.stacked,
                 title: {
                   display: !!yAxis?.name,
                   text: yAxis?.name,
@@ -360,6 +362,7 @@
             ...baseOptions,
             scales: {
               x: {
+                stacked: graphConfig.stacked,
                 title: {
                   display: !!xAxis?.name,
                   text: xAxis?.name,
@@ -369,6 +372,7 @@
                 grid: { color: gridColor }
               },
               y: {
+                stacked: graphConfig.stacked,
                 title: {
                   display: !!yAxis?.name,
                   text: yAxis?.name,

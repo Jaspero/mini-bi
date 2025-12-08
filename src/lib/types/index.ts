@@ -111,6 +111,7 @@ export interface GraphBlockConfig extends BlockConfig {
   nameKey?: string;
   valueKey?: string;
   xAxisKey?: string;
+  stacked?: boolean;
 }
 
 export interface SeriesConfig {

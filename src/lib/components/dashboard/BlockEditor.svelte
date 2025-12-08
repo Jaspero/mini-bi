@@ -1110,6 +1110,22 @@
             </div>
           {/if}
 
+          {#if ['bar', 'area'].includes(currentChartType)}
+            <div class="space-y-3">
+              <label class="flex items-center">
+                <input
+                  type="checkbox"
+                  bind:checked={editedBlock.config.stacked}
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="ml-2 text-sm text-gray-600">Stacked</span>
+              </label>
+              <p class="text-xs text-gray-400">
+                Stack series on top of each other instead of side by side
+              </p>
+            </div>
+          {/if}
+
           {#if !['pie', 'donut'].includes(currentChartType)}
             <div class="space-y-3">
               <div class="flex items-center justify-between">
