@@ -1,6 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Query, IDashboardService, QueryParameter, QueryResult } from '../../types/index';
+  import type {
+    Query,
+    IDashboardService,
+    QueryParameter,
+    QueryPreprocessing,
+    QueryResult
+  } from '../../types/index';
   import SQLEditor from './SQLEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
   import Modal from '../ui/Modal.svelte';
@@ -41,6 +47,7 @@
   let description = $state('');
   let sql = $state('');
   let parameters: QueryParameter[] = $state([]);
+  let preprocessing: QueryPreprocessing[] = $state([]);
 
   onMount(async () => {
     await loadQueries();
@@ -74,6 +81,7 @@
     description = query.description || '';
     sql = query.sql;
     parameters = query.parameters ? [...query.parameters] : [];
+    preprocessing = query.preprocessing ? query.preprocessing.map((p) => ({ ...p })) : [];
     showQueryEditor = true;
   }
 
@@ -82,6 +90,7 @@
     description = '';
     sql = '';
     parameters = [];
+    preprocessing = [];
     showQueryEditor = false;
     selectedQuery = null;
     error = '';
@@ -99,24 +108,24 @@
       error = '';
 
       if (selectedQuery) {
-        // Update existing query
         const updatedQuery = await dashboardService.updateGlobalQuery(selectedQuery.id, {
           name: name.trim(),
           description: description.trim(),
           sql: sql.trim(),
           parameters: parameters,
+          preprocessing: preprocessing,
           isActive: true,
           lastModified: new Date()
         });
 
         onQueryUpdated(updatedQuery);
       } else {
-        // Create new query
         const newQuery = await dashboardService.saveGlobalQuery({
           name: name.trim(),
           description: description.trim(),
           sql: sql.trim(),
           parameters: parameters,
+          preprocessing: preprocessing,
           isActive: true,
           lastModified: new Date()
         });
@@ -243,6 +252,28 @@
 
   function getVariableNames(): string[] {
     return parameters.map((p) => p.name).filter((name) => name.trim() !== '');
+  }
+
+  function addPreprocessing() {
+    preprocessing = [
+      ...preprocessing,
+      {
+        id: `prep-${Date.now()}`,
+        name: '',
+        description: '',
+        transform: 'return data;'
+      }
+    ];
+  }
+
+  function removePreprocessing(index: number) {
+    preprocessing = preprocessing.filter((_, i) => i !== index);
+  }
+
+  function updatePreprocessing(index: number, field: keyof QueryPreprocessing, value: any) {
+    preprocessing = preprocessing.map((prep, i) =>
+      i === index ? { ...prep, [field]: value } : prep
+    );
   }
 </script>
 
@@ -432,6 +463,115 @@
                 <p class="text-sm text-gray-500">
                   No variables defined. Variables can be used in SQL queries with {`{{variableName}}`}
                   syntax.
+                </p>
+              </div>
+            {/if}
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="block text-sm font-medium text-gray-700">Preprocessing</div>
+              <button
+                type="button"
+                class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                onclick={addPreprocessing}
+                disabled={loading}
+              >
+                <span class="mr-1">+</span>
+                Add Preprocessing
+              </button>
+            </div>
+
+            {#if preprocessing.length > 0}
+              <div class="space-y-3">
+                {#each preprocessing as prep, index}
+                  <div class="rounded-md border border-gray-200 bg-gray-50 p-3">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div class="space-y-1">
+                        <label
+                          for="prep-name-{index}"
+                          class="block text-xs font-medium text-gray-600">Name</label
+                        >
+                        <input
+                          id="prep-name-{index}"
+                          type="text"
+                          value={prep.name}
+                          oninput={(e) =>
+                            updatePreprocessing(
+                              index,
+                              'name',
+                              (e.target as HTMLInputElement)?.value || ''
+                            )}
+                          placeholder="e.g., Sum totals"
+                          disabled={loading}
+                          class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
+                        />
+                      </div>
+
+                      <div class="flex items-end justify-end">
+                        <button
+                          type="button"
+                          class="inline-flex items-center rounded-md border border-red-300 bg-white px-2 py-1 text-sm font-medium text-red-700 hover:bg-red-50"
+                          onclick={() => removePreprocessing(index)}
+                          disabled={loading}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="mt-3 space-y-1">
+                      <label
+                        for="prep-description-{index}"
+                        class="block text-xs font-medium text-gray-600">Description</label
+                      >
+                      <input
+                        type="text"
+                        id="prep-description-{index}"
+                        value={prep.description || ''}
+                        oninput={(e) =>
+                          updatePreprocessing(
+                            index,
+                            'description',
+                            (e.target as HTMLInputElement)?.value || ''
+                          )}
+                        placeholder="Optional description"
+                        disabled={loading}
+                        class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div class="mt-3 space-y-1">
+                      <label
+                        for="prep-transform-{index}"
+                        class="block text-xs font-medium text-gray-600">Transform Function</label
+                      >
+                      <textarea
+                        id="prep-transform-{index}"
+                        value={prep.transform}
+                        oninput={(e) =>
+                          updatePreprocessing(
+                            index,
+                            'transform',
+                            (e.target as HTMLTextAreaElement)?.value || ''
+                          )}
+                        placeholder={'return data.map(row => ({ ...row, total: row.a + row.b }));'}
+                        disabled={loading}
+                        rows={3}
+                        class="w-full rounded-md border border-gray-300 px-2 py-1 font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
+                      ></textarea>
+                      <p class="text-xs text-gray-500">
+                        JS function body. Receives <code class="rounded bg-gray-200 px-1">data</code
+                        > (array of rows). Must return transformed data.
+                      </p>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {:else}
+              <div class="py-4 text-center">
+                <p class="text-sm text-gray-500">
+                  No preprocessing defined. Preprocessing transforms query results before display.
                 </p>
               </div>
             {/if}

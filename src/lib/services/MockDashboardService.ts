@@ -363,6 +363,20 @@ export class MockDashboardService implements IDashboardService {
       description: 'Retrieves monthly sales and target data',
       sql: 'SELECT month, sales, target FROM monthly_sales ORDER BY month',
       parameters: [],
+      preprocessing: [
+        {
+          id: 'prep-cumulative-sales',
+          name: 'Cumulative Sales',
+          description: 'Adds cumulative sales column',
+          transform: `let cumulative = 0; return data.map(row => { cumulative += row.sales; return { ...row, cumulative }; });`
+        },
+        {
+          id: 'prep-variance',
+          name: 'Target Variance',
+          description: 'Calculates variance from target',
+          transform: `return data.map(row => ({ ...row, variance: row.sales - row.target, variancePercent: ((row.sales - row.target) / row.target * 100).toFixed(1) }));`
+        }
+      ],
       created: new Date('2024-01-15'),
       lastModified: new Date('2024-06-01'),
       lastExecuted: new Date('2024-06-01'),
@@ -375,6 +389,14 @@ export class MockDashboardService implements IDashboardService {
       description: 'Retrieves campaign performance metrics',
       sql: 'SELECT campaign_name, impressions, clicks FROM campaign_stats ORDER BY campaign_name',
       parameters: [],
+      preprocessing: [
+        {
+          id: 'prep-ctr',
+          name: 'Click-Through Rate',
+          description: 'Calculates CTR percentage',
+          transform: `return data.map(row => ({ ...row, ctr: (row.clicks / row.impressions * 100).toFixed(2) }));`
+        }
+      ],
       created: new Date('2024-02-20'),
       lastModified: new Date('2024-05-15'),
       lastExecuted: new Date('2024-05-15'),
@@ -609,12 +631,23 @@ export class MockDashboardService implements IDashboardService {
           filterParams
         );
 
+        let blockData: BlockData;
         if (cachedResult) {
-          return this.convertQueryResultToBlockData(cachedResult);
+          blockData = this.convertQueryResultToBlockData(cachedResult);
+        } else {
+          const freshResult = await this.refreshQuery(actualDataSource.queryId, filterParams);
+          blockData = this.convertQueryResultToBlockData(freshResult);
         }
 
-        const freshResult = await this.refreshQuery(actualDataSource.queryId, filterParams);
-        return this.convertQueryResultToBlockData(freshResult);
+        if (actualDataSource.preprocessingId) {
+          blockData = this.applyPreprocessing(
+            blockData,
+            actualDataSource.queryId,
+            actualDataSource.preprocessingId
+          );
+        }
+
+        return blockData;
       } catch (error) {
         console.warn(
           `Failed to load query ${actualDataSource.queryId}, falling back to mock data:`,
@@ -632,6 +665,39 @@ export class MockDashboardService implements IDashboardService {
         return { data: [], metadata: { lastUpdated: new Date() } };
       default:
         throw new Error(`Unsupported block type: ${blockType}`);
+    }
+  }
+
+  private applyPreprocessing(
+    blockData: BlockData,
+    queryId: string,
+    preprocessingId: string
+  ): BlockData {
+    const query = this.globalQueries.find((q) => q.id === queryId);
+    if (!query?.preprocessing) {
+      return blockData;
+    }
+
+    const preprocessing = query.preprocessing.find((p) => p.id === preprocessingId);
+    if (!preprocessing) {
+      return blockData;
+    }
+
+    try {
+      const fn = new Function('data', preprocessing.transform);
+      const transformedData = fn(blockData.data);
+      return {
+        ...blockData,
+        data: transformedData,
+        metadata: {
+          ...blockData.metadata,
+          preprocessed: true,
+          preprocessingName: preprocessing.name
+        }
+      };
+    } catch (error) {
+      console.error(`Error applying preprocessing "${preprocessing.name}":`, error);
+      return blockData;
     }
   }
 

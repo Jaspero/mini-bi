@@ -29,6 +29,7 @@
   let ckeditorError = $state(false);
   let dataSourceType: 'api' | 'static' | 'mock' | 'query' = $state('mock');
   let selectedQueryId: string = $state('');
+  let selectedPreprocessingId: string = $state('');
   let draggedIndex: number | null = $state(null);
   let dragOverIndex: number | null = $state(null);
   let staticDataJson: string = $state('[]');
@@ -164,6 +165,7 @@
       // Sync reactive variables with editedBlock
       dataSourceType = editedBlock.dataSource.type;
       selectedQueryId = editedBlock.dataSource.queryId || '';
+      selectedPreprocessingId = editedBlock.dataSource.preprocessingId || '';
       staticDataJson = editedBlock.dataSource.staticData
         ? JSON.stringify(editedBlock.dataSource.staticData, null, 2)
         : '[]';
@@ -191,6 +193,7 @@
       editedBlock.dataSource.type = dataSourceType;
       if (dataSourceType === 'query') {
         editedBlock.dataSource.queryId = selectedQueryId;
+        editedBlock.dataSource.preprocessingId = selectedPreprocessingId || undefined;
         delete editedBlock.dataSource.staticData;
         delete editedBlock.dataSource.endpoint;
         delete editedBlock.dataSource.method;
@@ -199,10 +202,10 @@
         try {
           editedBlock.dataSource.staticData = JSON.parse(staticDataJson);
         } catch (e) {
-          // Keep existing static data if JSON is invalid
           console.warn('Invalid JSON in static data:', e);
         }
         delete editedBlock.dataSource.queryId;
+        delete editedBlock.dataSource.preprocessingId;
         delete editedBlock.dataSource.endpoint;
         delete editedBlock.dataSource.method;
         delete editedBlock.dataSource.headers;
@@ -217,9 +220,11 @@
           delete editedBlock.dataSource.headers;
         }
         delete editedBlock.dataSource.queryId;
+        delete editedBlock.dataSource.preprocessingId;
         delete editedBlock.dataSource.staticData;
       } else {
         delete editedBlock.dataSource.queryId;
+        delete editedBlock.dataSource.preprocessingId;
         delete editedBlock.dataSource.staticData;
         delete editedBlock.dataSource.endpoint;
         delete editedBlock.dataSource.method;
@@ -239,6 +244,23 @@
   $effect(() => {
     if (dataSourceType === 'query' && selectedQueryId) {
       updateDataSource();
+    }
+  });
+
+  // Watch for changes in preprocessing selection and update the data source
+  $effect(() => {
+    if (dataSourceType === 'query' && selectedQueryId) {
+      updateDataSource();
+    }
+  });
+
+  // Reset preprocessing when query changes
+  $effect(() => {
+    if (dataSourceType === 'query') {
+      const query = queries.find((q) => q.id === selectedQueryId);
+      if (!query || !query.preprocessing?.find((p) => p.id === selectedPreprocessingId)) {
+        selectedPreprocessingId = '';
+      }
     }
   });
 
@@ -544,6 +566,33 @@
               </p>
             {/if}
           </div>
+
+          {#if selectedQueryId}
+            {@const selectedQuery = queries.find((q) => q.id === selectedQueryId)}
+            {#if selectedQuery?.preprocessing && selectedQuery.preprocessing.length > 0}
+              <div class="space-y-2">
+                <label for="preprocessing-select" class="block text-sm font-medium text-gray-700"
+                  >Preprocessing (Optional)</label
+                >
+                <select
+                  id="preprocessing-select"
+                  bind:value={selectedPreprocessingId}
+                  onchange={updateDataSource}
+                  class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="">-- No preprocessing --</option>
+                  {#each selectedQuery.preprocessing as prep}
+                    <option value={prep.id}
+                      >{prep.name}{prep.description ? ` - ${prep.description}` : ''}</option
+                    >
+                  {/each}
+                </select>
+                <p class="text-xs text-gray-500">
+                  Apply a transformation function to the query results before display.
+                </p>
+              </div>
+            {/if}
+          {/if}
         {/if}
 
         {#if dataSourceType === 'static'}

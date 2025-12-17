@@ -183,7 +183,16 @@ export interface DataSourceConfig {
   headers?: Record<string, string>;
   body?: any;
   staticData?: any[];
-  queryId?: string; // Reference to a query
+  queryId?: string;
+  preprocessingId?: string;
+}
+
+// Query preprocessing
+export interface QueryPreprocessing {
+  id: string;
+  name: string;
+  description?: string;
+  transform: string;
 }
 
 // Query management
@@ -193,6 +202,7 @@ export interface Query {
   description?: string;
   sql: string;
   parameters?: QueryParameter[];
+  preprocessing?: QueryPreprocessing[];
   created: Date;
   lastModified: Date;
   lastExecuted?: Date;
@@ -305,6 +315,8 @@ export interface BlockData {
     totalCount?: number;
     lastUpdated?: Date;
     source?: string;
+    preprocessed?: boolean;
+    preprocessingName?: string;
   };
 }
 

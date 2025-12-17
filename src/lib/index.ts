@@ -54,6 +54,7 @@ export type {
   QueryResult,
   QueryColumn,
   QueryParameter,
+  QueryPreprocessing,
   DatabaseSchema,
   TableSchema,
   ViewSchema,
