@@ -20,6 +20,17 @@
   let showFilterEditor = $state(false);
   let newFilter: Partial<Filter> = $state({});
 
+  let initialDateRangeStart = $state('');
+  let initialDateRangeEnd = $state('');
+  let initialRangeStart: number = $state(0);
+  let initialRangeEnd: number = $state(100);
+
+  function formatDateForInput(date: Date | string): string {
+    if (!date) return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toISOString().split('T')[0];
+  }
+
   function createNewFilter() {
     newFilter = {
       key: '',
@@ -31,6 +42,10 @@
       placeholder: '',
       description: ''
     };
+    initialDateRangeStart = formatDateForInput(new Date());
+    initialDateRangeEnd = formatDateForInput(new Date());
+    initialRangeStart = 0;
+    initialRangeEnd = 100;
     editingFilter = null;
     showFilterEditor = true;
   }
@@ -38,6 +53,17 @@
   function editFilter(filter: Filter) {
     editingFilter = filter;
     newFilter = { ...filter };
+    if (filter.type === 'date_range' && Array.isArray(filter.initialValue)) {
+      initialDateRangeStart = formatDateForInput(filter.initialValue[0]);
+      initialDateRangeEnd = formatDateForInput(filter.initialValue[1]);
+    }
+    if (
+      (filter.type === 'integer_range' || filter.type === 'float_range') &&
+      Array.isArray(filter.initialValue)
+    ) {
+      initialRangeStart = filter.initialValue[0];
+      initialRangeEnd = filter.initialValue[1];
+    }
     showFilterEditor = true;
   }
 
@@ -48,17 +74,21 @@
 
     const filterId = editingFilter?.id || 'filter-' + Math.random().toString(36).substr(2, 9);
 
+    let initialValue = newFilter.initialValue ?? getDefaultValueForType(newFilter.type!);
+    if (newFilter.type === 'date_range') {
+      initialValue = [new Date(initialDateRangeStart), new Date(initialDateRangeEnd)];
+    } else if (newFilter.type === 'integer_range' || newFilter.type === 'float_range') {
+      initialValue = [initialRangeStart, initialRangeEnd];
+    }
+
     const savedFilter: Filter = {
       id: filterId,
       key: newFilter.key!,
       name: newFilter.name!,
       type: newFilter.type!,
       active: newFilter.active ?? true,
-      initialValue: getTypedValue(newFilter.initialValue, newFilter.type!),
-      currentValue: getTypedValue(
-        newFilter.currentValue || newFilter.initialValue,
-        newFilter.type!
-      ),
+      initialValue: initialValue,
+      currentValue: initialValue,
       options: newFilter.options || [],
       min: newFilter.min,
       max: newFilter.max,
@@ -67,7 +97,7 @@
     };
 
     if (editingFilter) {
-      filters = filters.map((f) => (f.id === filterId ? savedFilter : f));
+      filters = filters.map((f) => (f.id === editingFilter.id ? savedFilter : f));
     } else {
       filters = [...filters, savedFilter];
     }
@@ -346,9 +376,7 @@
 
     <!-- Initial Value -->
     <div>
-      <label for="filter-initial-value" class="block text-sm font-medium text-gray-700"
-        >Initial Value</label
-      >
+      <label class="block text-sm font-medium text-gray-700">Initial Value</label>
       {#if newFilter.type === 'boolean'}
         <select
           id="filter-initial-value"
@@ -365,6 +393,77 @@
           bind:value={newFilter.initialValue}
           class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
         />
+      {:else if newFilter.type === 'date_range'}
+        <div class="mt-1 grid grid-cols-2 gap-4">
+          <div>
+            <label for="date-range-start" class="mb-1 block text-xs text-gray-500">Start Date</label
+            >
+            <input
+              id="date-range-start"
+              type="date"
+              bind:value={initialDateRangeStart}
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
+            />
+          </div>
+          <div>
+            <label for="date-range-end" class="mb-1 block text-xs text-gray-500">End Date</label>
+            <input
+              id="date-range-end"
+              type="date"
+              bind:value={initialDateRangeEnd}
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
+            />
+          </div>
+        </div>
+      {:else if newFilter.type === 'integer_range'}
+        <div class="mt-1 grid grid-cols-2 gap-4">
+          <div>
+            <label for="int-range-start" class="mb-1 block text-xs text-gray-500">Start Value</label
+            >
+            <input
+              id="int-range-start"
+              type="number"
+              step="1"
+              bind:value={initialRangeStart}
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
+            />
+          </div>
+          <div>
+            <label for="int-range-end" class="mb-1 block text-xs text-gray-500">End Value</label>
+            <input
+              id="int-range-end"
+              type="number"
+              step="1"
+              bind:value={initialRangeEnd}
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
+            />
+          </div>
+        </div>
+      {:else if newFilter.type === 'float_range'}
+        <div class="mt-1 grid grid-cols-2 gap-4">
+          <div>
+            <label for="float-range-start" class="mb-1 block text-xs text-gray-500"
+              >Start Value</label
+            >
+            <input
+              id="float-range-start"
+              type="number"
+              step="0.01"
+              bind:value={initialRangeStart}
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
+            />
+          </div>
+          <div>
+            <label for="float-range-end" class="mb-1 block text-xs text-gray-500">End Value</label>
+            <input
+              id="float-range-end"
+              type="number"
+              step="0.01"
+              bind:value={initialRangeEnd}
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
+            />
+          </div>
+        </div>
       {:else if newFilter.type === 'integer' || newFilter.type === 'float'}
         <input
           id="filter-initial-value"
@@ -373,6 +472,10 @@
           bind:value={newFilter.initialValue}
           class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
         />
+      {:else if newFilter.type === 'list'}
+        <p class="mt-1 text-sm text-gray-500">
+          Initial value will be set from selected options below
+        </p>
       {:else}
         <input
           id="filter-initial-value"
