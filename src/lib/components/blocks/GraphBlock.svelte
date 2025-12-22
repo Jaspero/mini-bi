@@ -79,6 +79,7 @@
 
   onMount(async () => {
     await loadData();
+    initialLoadDone = true;
 
     if (typeof window !== 'undefined') {
       window.addEventListener('themechange', handleThemeChange);
@@ -146,10 +147,11 @@
 
   let previousDataSource = '';
   let previousFilterParams = '';
+  let initialLoadDone = false;
 
   $effect(() => {
     const currentDataSource = JSON.stringify(block.dataSource);
-    if (currentDataSource !== previousDataSource && previousDataSource !== '') {
+    if (initialLoadDone && currentDataSource !== previousDataSource) {
       previousDataSource = currentDataSource;
       untrack(() => {
         if (chart) {
@@ -163,20 +165,17 @@
         }
       });
       reloadData();
-    } else if (previousDataSource === '') {
+    } else if (!initialLoadDone) {
       previousDataSource = currentDataSource;
     }
   });
 
   $effect(() => {
     const currentFilterParams = JSON.stringify(filterParams);
-    if (currentFilterParams !== previousFilterParams && previousFilterParams !== '') {
+    if (initialLoadDone && currentFilterParams !== previousFilterParams) {
       previousFilterParams = currentFilterParams;
-      untrack(() => {
-        chartInitialized = false;
-      });
       reloadData();
-    } else if (previousFilterParams === '') {
+    } else if (!initialLoadDone) {
       previousFilterParams = currentFilterParams;
     }
   });
@@ -232,6 +231,7 @@
         block.dataSource,
         filterParams
       );
+      chartInitialized = false;
       isRefreshing = false;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load data';

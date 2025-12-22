@@ -58,7 +58,6 @@
     const target = event.target as HTMLSelectElement;
     const selectedOptions = Array.from(target.selectedOptions);
     const selectedValues = selectedOptions.map((option) => {
-      // Try to parse as number first, then return as string
       const numValue = parseFloat(option.value);
       return isNaN(numValue) ? option.value : numValue;
     });

@@ -3,9 +3,11 @@
   import type {
     Query,
     IDashboardService,
-    QueryParameter,
+    QueryFilterBinding,
     QueryPreprocessing,
-    QueryResult
+    QueryResult,
+    Dashboard,
+    Filter
   } from '../../types/index';
   import SQLEditor from './SQLEditor.svelte';
   import ConfirmationModal from '../ui/ConfirmationModal.svelte';
@@ -46,11 +48,19 @@
   let name = $state('');
   let description = $state('');
   let sql = $state('');
-  let parameters: QueryParameter[] = $state([]);
+  let filterBindings: QueryFilterBinding[] = $state([]);
   let preprocessing: QueryPreprocessing[] = $state([]);
 
+  let dashboards: { id: string; name: string }[] = $state([]);
+  let dashboardFilters: Map<string, Filter[]> = $state(new Map());
+
+  let showFilterBindingModal = $state(false);
+  let editingBindingIndex: number | null = $state(null);
+  let newBinding: Partial<QueryFilterBinding> = $state({});
+  let selectedDashboardFilters: Filter[] = $state([]);
+
   onMount(async () => {
-    await loadQueries();
+    await Promise.all([loadQueries(), loadDashboards()]);
   });
 
   async function loadQueries() {
@@ -63,6 +73,21 @@
       console.error('Error loading queries:', err);
     } finally {
       loading = false;
+    }
+  }
+
+  async function loadDashboards() {
+    try {
+      const dashboardList = await dashboardService.loadDashboards();
+      dashboards = dashboardList.map((d) => ({ id: d.id, name: d.name }));
+
+      for (const dash of dashboardList) {
+        const fullDashboard = await dashboardService.loadDashboard(dash.id);
+        dashboardFilters.set(dash.id, fullDashboard.filters || []);
+      }
+      dashboardFilters = new Map(dashboardFilters);
+    } catch (err) {
+      console.error('Error loading dashboards:', err);
     }
   }
 
@@ -80,7 +105,7 @@
     name = query.name;
     description = query.description || '';
     sql = query.sql;
-    parameters = query.parameters ? [...query.parameters] : [];
+    filterBindings = query.filterBindings ? [...query.filterBindings] : [];
     preprocessing = query.preprocessing ? query.preprocessing.map((p) => ({ ...p })) : [];
     showQueryEditor = true;
   }
@@ -89,7 +114,7 @@
     name = '';
     description = '';
     sql = '';
-    parameters = [];
+    filterBindings = [];
     preprocessing = [];
     showQueryEditor = false;
     selectedQuery = null;
@@ -112,7 +137,7 @@
           name: name.trim(),
           description: description.trim(),
           sql: sql.trim(),
-          parameters: parameters,
+          filterBindings: filterBindings,
           preprocessing: preprocessing,
           isActive: true,
           lastModified: new Date()
@@ -124,7 +149,7 @@
           name: name.trim(),
           description: description.trim(),
           sql: sql.trim(),
-          parameters: parameters,
+          filterBindings: filterBindings,
           preprocessing: preprocessing,
           isActive: true,
           lastModified: new Date()
@@ -230,28 +255,76 @@
     resultsError = '';
   }
 
-  function addParameter() {
-    parameters = [
-      ...parameters,
-      {
-        name: '',
-        type: 'string',
-        defaultValue: '',
-        description: ''
-      }
-    ];
+  function openAddFilterBinding() {
+    newBinding = {
+      dashboardId: '',
+      filterKey: '',
+      activeValue: '',
+      inactiveValue: '1=1'
+    };
+    selectedDashboardFilters = [];
+    editingBindingIndex = null;
+    showFilterBindingModal = true;
   }
 
-  function removeParameter(index: number) {
-    parameters = parameters.filter((_, i) => i !== index);
+  function editFilterBinding(index: number) {
+    const binding = filterBindings[index];
+    newBinding = { ...binding };
+    selectedDashboardFilters = dashboardFilters.get(binding.dashboardId) || [];
+    editingBindingIndex = index;
+    showFilterBindingModal = true;
   }
 
-  function updateParameter(index: number, field: keyof QueryParameter, value: any) {
-    parameters = parameters.map((param, i) => (i === index ? { ...param, [field]: value } : param));
+  function removeFilterBinding(index: number) {
+    filterBindings = filterBindings.filter((_, i) => i !== index);
   }
 
-  function getVariableNames(): string[] {
-    return parameters.map((p) => p.name).filter((name) => name.trim() !== '');
+  function onDashboardSelect(dashboardId: string) {
+    newBinding.dashboardId = dashboardId;
+    newBinding.filterKey = '';
+    selectedDashboardFilters = dashboardFilters.get(dashboardId) || [];
+  }
+
+  function saveFilterBinding() {
+    if (!newBinding.dashboardId || !newBinding.filterKey || !newBinding.activeValue) {
+      return;
+    }
+
+    const binding: QueryFilterBinding = {
+      dashboardId: newBinding.dashboardId!,
+      filterKey: newBinding.filterKey!,
+      activeValue: newBinding.activeValue!,
+      inactiveValue: newBinding.inactiveValue || '1=1'
+    };
+
+    if (editingBindingIndex !== null) {
+      filterBindings = filterBindings.map((b, i) => (i === editingBindingIndex ? binding : b));
+    } else {
+      filterBindings = [...filterBindings, binding];
+    }
+
+    closeFilterBindingModal();
+  }
+
+  function closeFilterBindingModal() {
+    showFilterBindingModal = false;
+    newBinding = {};
+    selectedDashboardFilters = [];
+    editingBindingIndex = null;
+  }
+
+  function getDashboardName(dashboardId: string): string {
+    return dashboards.find((d) => d.id === dashboardId)?.name || dashboardId;
+  }
+
+  function getFilterName(dashboardId: string, filterKey: string): string {
+    const filters = dashboardFilters.get(dashboardId) || [];
+    return filters.find((f) => f.key === filterKey)?.name || filterKey;
+  }
+
+  function insertFilterPlaceholder(filterKey: string) {
+    const placeholder = `{{${filterKey}}}`;
+    sql = sql + placeholder;
   }
 
   function addPreprocessing() {
@@ -334,125 +407,80 @@
             </div>
           </div>
 
-          <!-- Parameters Section -->
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <div class="block text-sm font-medium text-gray-700">Variables</div>
+              <div class="block text-sm font-medium text-gray-700">Filter Bindings</div>
               <button
                 type="button"
                 class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                onclick={addParameter}
+                onclick={openAddFilterBinding}
                 disabled={loading}
               >
                 <span class="mr-1">+</span>
-                Add Variable
+                Add Filter Binding
               </button>
             </div>
 
-            {#if parameters.length > 0}
+            {#if filterBindings.length > 0}
               <div class="space-y-3">
-                {#each parameters as param, index}
+                {#each filterBindings as binding, index}
                   <div class="rounded-md border border-gray-200 bg-gray-50 p-3">
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <div class="space-y-1">
-                        <label
-                          for="variable-name-{index}"
-                          class="block text-xs font-medium text-gray-600">Variable Name</label
-                        >
-                        <input
-                          id="variable-name-{index}"
-                          type="text"
-                          value={param.name}
-                          oninput={(e) =>
-                            updateParameter(
-                              index,
-                              'name',
-                              (e.target as HTMLInputElement)?.value || ''
-                            )}
-                          placeholder="variableName"
-                          disabled={loading}
-                          class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
-                        />
+                    <div class="flex items-start justify-between">
+                      <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                          <span class="font-medium text-gray-900"
+                            >{getFilterName(binding.dashboardId, binding.filterKey)}</span
+                          >
+                          <span class="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800"
+                            >{getDashboardName(binding.dashboardId)}</span
+                          >
+                        </div>
+                        <div class="mt-2 space-y-1">
+                          <div class="text-xs text-gray-600">
+                            <span class="font-medium">Placeholder:</span>
+                            <code class="ml-1 rounded bg-gray-200 px-1"
+                              >{`{{${binding.filterKey}}}`}</code
+                            >
+                            <button
+                              type="button"
+                              class="ml-2 text-blue-600 hover:text-blue-800"
+                              onclick={() => insertFilterPlaceholder(binding.filterKey)}
+                              title="Insert into SQL"
+                            >
+                              <span class="material-symbols-outlined text-xs">add</span>
+                            </button>
+                          </div>
+                          <div class="text-xs text-gray-600">
+                            <span class="font-medium">Active:</span>
+                            <code class="ml-1 rounded bg-green-100 px-1 text-green-800"
+                              >{binding.activeValue}</code
+                            >
+                          </div>
+                          <div class="text-xs text-gray-600">
+                            <span class="font-medium">Inactive:</span>
+                            <code class="ml-1 rounded bg-gray-200 px-1"
+                              >{binding.inactiveValue}</code
+                            >
+                          </div>
+                        </div>
                       </div>
-
-                      <div class="space-y-1">
-                        <label
-                          for="variable-type-{index}"
-                          class="block text-xs font-medium text-gray-600">Type</label
-                        >
-                        <select
-                          id="variable-type-{index}"
-                          value={param.type}
-                          onchange={(e) =>
-                            updateParameter(
-                              index,
-                              'type',
-                              (e.target as HTMLSelectElement)?.value || ''
-                            )}
-                          disabled={loading}
-                          class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
-                        >
-                          <option value="string">String</option>
-                          <option value="number">Number</option>
-                          <option value="boolean">Boolean</option>
-                          <option value="date">Date</option>
-                          <option value="list">List</option>
-                        </select>
-                      </div>
-
-                      <div class="space-y-1">
-                        <label
-                          for="default-value-{index}"
-                          class="block text-xs font-medium text-gray-600">Default Value</label
-                        >
-                        <input
-                          type="text"
-                          id="default-value-{index}"
-                          value={param.defaultValue || ''}
-                          oninput={(e) =>
-                            updateParameter(
-                              index,
-                              'defaultValue',
-                              (e.target as HTMLInputElement)?.value || ''
-                            )}
-                          placeholder="Default value"
-                          disabled={loading}
-                          class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
-                        />
-                      </div>
-
-                      <div class="flex items-center justify-end">
+                      <div class="flex gap-1">
                         <button
                           type="button"
-                          class="inline-flex items-center rounded-md border border-red-300 bg-white px-2 py-1 text-sm font-medium text-red-700 hover:bg-red-50"
-                          onclick={() => removeParameter(index)}
+                          class="rounded p-1 text-gray-400 hover:text-blue-600"
+                          onclick={() => editFilterBinding(index)}
                           disabled={loading}
                         >
-                          Remove
+                          <span class="material-symbols-outlined text-sm">edit</span>
                         </button>
-                      </div>
-                    </div>
-
-                    <div class="mt-3">
-                      <div class="space-y-1">
-                        <label
-                          for="description-{index}"
-                          class="block text-xs font-medium text-gray-600">Description</label
-                        >
-                        <input
-                          type="text"
-                          id="description-{index}"
-                          value={param.description || ''}
-                          oninput={(e) =>
-                            updateParameter(
-                              index,
-                              'description',
-                              (e.target as HTMLInputElement)?.value || ''
-                            )}
-                          placeholder="Variable description"
+                        <button
+                          type="button"
+                          class="rounded p-1 text-gray-400 hover:text-red-600"
+                          onclick={() => removeFilterBinding(index)}
                           disabled={loading}
-                          class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
-                        />
+                        >
+                          <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -461,8 +489,8 @@
             {:else}
               <div class="py-4 text-center">
                 <p class="text-sm text-gray-500">
-                  No variables defined. Variables can be used in SQL queries with {`{{variableName}}`}
-                  syntax.
+                  No filter bindings defined. Filter bindings connect dashboard filters to this
+                  query using {`{{filterKey}}`} syntax.
                 </p>
               </div>
             {/if}
@@ -584,7 +612,6 @@
                 bind:value={sql}
                 disabled={loading}
                 {dashboardService}
-                variables={getVariableNames()}
                 onExecute={testQuery}
                 onSave={saveQuery}
                 {onOpenSchema}
@@ -693,6 +720,16 @@
 
               {#if query.description}
                 <p class="mb-2 line-clamp-2 text-xs text-gray-500">{query.description}</p>
+              {/if}
+
+              {#if query.filterBindings && query.filterBindings.length > 0}
+                <div class="mb-2 flex flex-wrap gap-1">
+                  {#each query.filterBindings as binding}
+                    <span class="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">
+                      {binding.filterKey}
+                    </span>
+                  {/each}
+                </div>
               {/if}
 
               <div class="flex justify-between text-xs text-gray-400">
@@ -827,4 +864,110 @@
       </div>
     {/if}
   </div>
+</Modal>
+
+<Modal
+  isOpen={showFilterBindingModal}
+  title={editingBindingIndex !== null ? 'Edit Filter Binding' : 'Add Filter Binding'}
+  close={closeFilterBindingModal}
+  size="medium"
+>
+  <div class="space-y-4 p-4">
+    <div class="space-y-2">
+      <label for="binding-dashboard" class="block text-sm font-medium text-gray-700"
+        >Dashboard *</label
+      >
+      <select
+        id="binding-dashboard"
+        value={newBinding.dashboardId || ''}
+        onchange={(e) => onDashboardSelect((e.target as HTMLSelectElement).value)}
+        class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+      >
+        <option value="">Select a dashboard...</option>
+        {#each dashboards as dashboard}
+          <option value={dashboard.id}>{dashboard.name}</option>
+        {/each}
+      </select>
+    </div>
+
+    {#if newBinding.dashboardId && selectedDashboardFilters.length > 0}
+      <div class="space-y-2">
+        <label for="binding-filter" class="block text-sm font-medium text-gray-700">Filter *</label>
+        <select
+          id="binding-filter"
+          bind:value={newBinding.filterKey}
+          class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        >
+          <option value="">Select a filter...</option>
+          {#each selectedDashboardFilters as filter}
+            <option value={filter.key}>{filter.name} ({filter.key})</option>
+          {/each}
+        </select>
+      </div>
+    {:else if newBinding.dashboardId}
+      <div class="rounded-md border border-yellow-200 bg-yellow-50 p-3">
+        <p class="text-sm text-yellow-800">
+          This dashboard has no filters defined. Please add filters to the dashboard first.
+        </p>
+      </div>
+    {/if}
+
+    {#if newBinding.filterKey}
+      <div class="space-y-2">
+        <label for="binding-active" class="block text-sm font-medium text-gray-700"
+          >Active Value *</label
+        >
+        <input
+          id="binding-active"
+          type="text"
+          bind:value={newBinding.activeValue}
+          placeholder={"e.g., AND createdOn < '{{val}}'"}
+          class="w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        />
+        <p class="text-xs text-gray-500">
+          SQL fragment when the filter is active. Use <code class="rounded bg-gray-200 px-1"
+            >{`{{val}}`}</code
+          > to reference the filter's current value.
+        </p>
+      </div>
+
+      <div class="space-y-2">
+        <label for="binding-inactive" class="block text-sm font-medium text-gray-700"
+          >Inactive Value</label
+        >
+        <input
+          id="binding-inactive"
+          type="text"
+          bind:value={newBinding.inactiveValue}
+          placeholder="e.g., 1=1"
+          class="w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        />
+        <p class="text-xs text-gray-500">
+          SQL fragment when the filter is inactive (default: <code class="rounded bg-gray-200 px-1"
+            >1=1</code
+          >).
+        </p>
+      </div>
+    {/if}
+  </div>
+
+  {#snippet footer()}
+    <div class="flex justify-end gap-3 border-t border-gray-200 bg-gray-50 p-4">
+      <button
+        type="button"
+        class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        onclick={closeFilterBindingModal}
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        onclick={saveFilterBinding}
+        disabled={!newBinding.dashboardId || !newBinding.filterKey || !newBinding.activeValue}
+      >
+        {editingBindingIndex !== null ? 'Update' : 'Add'} Binding
+      </button>
+    </div>
+  {/snippet}
 </Modal>

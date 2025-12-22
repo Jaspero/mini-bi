@@ -53,7 +53,7 @@ export type {
   Query,
   QueryResult,
   QueryColumn,
-  QueryParameter,
+  QueryFilterBinding,
   QueryPreprocessing,
   DatabaseSchema,
   TableSchema,
@@ -71,11 +71,13 @@ export type {
 // Utilities
 export {
   processTemplate,
+  processQueryWithFilters,
   getSystemVariables,
   extractVariables,
   validateTemplate,
   sanitizeHtml,
-  type TemplateContext
+  type TemplateContext,
+  type FilterBindingContext
 } from './utils/template.js';
 
 export {

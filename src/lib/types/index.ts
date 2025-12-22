@@ -201,7 +201,7 @@ export interface Query {
   name: string;
   description?: string;
   sql: string;
-  parameters?: QueryParameter[];
+  filterBindings?: QueryFilterBinding[];
   preprocessing?: QueryPreprocessing[];
   created: Date;
   lastModified: Date;
@@ -210,12 +210,11 @@ export interface Query {
   public?: boolean;
 }
 
-export interface QueryParameter {
-  name: string;
-  type: 'string' | 'number' | 'date' | 'boolean' | 'list';
-  defaultValue?: any;
-  required?: boolean;
-  description?: string;
+export interface QueryFilterBinding {
+  dashboardId: string;
+  filterKey: string;
+  activeValue: string;
+  inactiveValue: string;
 }
 
 export interface QueryResult {

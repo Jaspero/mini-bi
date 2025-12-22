@@ -8,7 +8,6 @@
     value = $bindable(''),
     disabled = false,
     dashboardService = null,
-    variables = [],
     onChange = () => {},
     onExecute = () => {},
     onSave = () => {},
@@ -18,7 +17,6 @@
     value?: string;
     disabled?: boolean;
     dashboardService?: any;
-    variables?: string[];
     onChange?: (value: string) => void;
     onExecute?: () => void;
     onSave?: () => void;
@@ -211,7 +209,6 @@
       language="sql"
       theme="vs"
       {disabled}
-      {variables}
       placeholder="Enter your SQL query here..."
     />
   </div>

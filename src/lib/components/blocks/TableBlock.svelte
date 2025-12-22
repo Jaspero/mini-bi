@@ -68,13 +68,19 @@
     filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   );
 
+  let previousFilterParams = '';
+  let initialLoadDone = false;
+
   onMount(async () => {
     await loadData();
+    initialLoadDone = true;
+    previousFilterParams = JSON.stringify(filterParams);
   });
 
-  // Reload data when filter parameters change
   $effect(() => {
-    if (filterParams) {
+    const currentFilterParams = JSON.stringify(filterParams);
+    if (initialLoadDone && currentFilterParams !== previousFilterParams) {
+      previousFilterParams = currentFilterParams;
       loadData();
     }
   });

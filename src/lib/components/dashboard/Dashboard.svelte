@@ -171,11 +171,9 @@
 
   function onFilterValueChange(filterId: string, value: any) {
     filters = filters.map((f) => (f.id === filterId ? { ...f, currentValue: value } : f));
-    // Filters changing values doesn't mark as unsaved since these are runtime values
   }
 
-  // Get active filter values for use in queries
-  function getActiveFilterValues(): Record<string, any> {
+  const activeFilterValues = $derived.by(() => {
     const activeFilters = filters.filter((f) => f.active);
     const filterValues: Record<string, any> = {};
 
@@ -184,7 +182,7 @@
     }
 
     return filterValues;
-  }
+  });
 
   async function saveDashboard() {
     if (!dashboard) return;
@@ -703,7 +701,7 @@
         editable={editable && !editMode && !checkIsReadOnly()}
         editMode={editable && editMode && !checkIsReadOnly()}
         readOnly={checkIsReadOnly()}
-        filterParams={getActiveFilterValues()}
+        filterParams={activeFilterValues}
         {onDashboardUpdated}
         {onBlockMoved}
         {onBlockResized}

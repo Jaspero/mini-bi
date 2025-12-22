@@ -361,8 +361,21 @@ export class MockDashboardService implements IDashboardService {
       id: 'sales-query',
       name: 'Monthly Sales Data',
       description: 'Retrieves monthly sales and target data',
-      sql: 'SELECT month, sales, target FROM monthly_sales ORDER BY month',
-      parameters: [],
+      sql: 'SELECT month, sales, target FROM monthly_sales WHERE {{date_range}} AND {{region}} ORDER BY month',
+      filterBindings: [
+        {
+          dashboardId: '1',
+          filterKey: 'date_range',
+          activeValue: "created_at BETWEEN '{{val}}'",
+          inactiveValue: '1=1'
+        },
+        {
+          dashboardId: '1',
+          filterKey: 'region',
+          activeValue: 'region IN ({{val}})',
+          inactiveValue: '1=1'
+        }
+      ],
       preprocessing: [
         {
           id: 'prep-cumulative-sales',
@@ -387,8 +400,21 @@ export class MockDashboardService implements IDashboardService {
       id: 'campaign-query',
       name: 'Campaign Performance Data',
       description: 'Retrieves campaign performance metrics',
-      sql: 'SELECT campaign_name, impressions, clicks FROM campaign_stats ORDER BY campaign_name',
-      parameters: [],
+      sql: 'SELECT campaign_name, impressions, clicks FROM campaign_stats WHERE {{status}} AND {{min_budget}} ORDER BY campaign_name',
+      filterBindings: [
+        {
+          dashboardId: '2',
+          filterKey: 'status',
+          activeValue: 'status IN ({{val}})',
+          inactiveValue: '1=1'
+        },
+        {
+          dashboardId: '2',
+          filterKey: 'min_budget',
+          activeValue: 'budget >= {{val}}',
+          inactiveValue: '1=1'
+        }
+      ],
       preprocessing: [
         {
           id: 'prep-ctr',
@@ -408,7 +434,7 @@ export class MockDashboardService implements IDashboardService {
       name: 'User Growth Analytics',
       description: 'Monthly user registration and churn data',
       sql: 'SELECT month, new_users, churned_users FROM user_analytics ORDER BY month',
-      parameters: [],
+      filterBindings: [],
       created: new Date('2024-02-01'),
       lastModified: new Date('2024-05-15'),
       lastExecuted: new Date('2024-05-15'),
@@ -420,7 +446,7 @@ export class MockDashboardService implements IDashboardService {
       name: 'Revenue Breakdown',
       description: 'Revenue by product category',
       sql: 'SELECT category, revenue, profit_margin FROM revenue_breakdown ORDER BY revenue DESC',
-      parameters: [],
+      filterBindings: [],
       created: new Date('2024-03-10'),
       lastModified: new Date('2024-05-20'),
       lastExecuted: new Date('2024-05-20'),
@@ -432,7 +458,7 @@ export class MockDashboardService implements IDashboardService {
       name: 'Public Company Metrics',
       description: 'Public-facing company performance metrics',
       sql: 'SELECT month, sales FROM monthly_sales WHERE year = 2024 ORDER BY month',
-      parameters: [],
+      filterBindings: [],
       created: new Date('2024-01-01'),
       lastModified: new Date('2024-06-15'),
       lastExecuted: new Date('2024-06-15'),
