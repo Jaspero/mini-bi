@@ -25,8 +25,16 @@
   let queryOptions: Record<string, FilterOption[]> = $state({});
   let loadingOptions: Record<string, boolean> = $state({});
 
+  $effect(() => {
+    for (const filter of filters) {
+      if (filter.optionsQuery && !queryOptions[filter.id] && !loadingOptions[filter.id]) {
+        loadQueryOptions(filter);
+      }
+    }
+  });
+
   async function loadQueryOptions(filter: Filter) {
-    if (!filter.optionsQuery || !dashboardService || queryOptions[filter.id]) {
+    if (!filter.optionsQuery || !dashboardService) {
       return;
     }
 
@@ -63,7 +71,6 @@
 
   function getFilterOptions(filter: Filter): FilterOption[] {
     if (filter.optionsQuery) {
-      loadQueryOptions(filter);
       return queryOptions[filter.id] || [];
     }
     return filter.options || [];
