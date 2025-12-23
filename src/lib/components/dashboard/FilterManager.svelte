@@ -1,19 +1,21 @@
 <script lang="ts">
   import Modal from '../ui/Modal.svelte';
-  import type { Filter } from '../../types/index';
+  import type { Filter, IDashboardService, FilterOption, QueryColumn } from '../../types/index';
 
   let {
     filters = $bindable([]),
     isOpen = false,
     onClose = () => {},
     onFiltersChange = () => {},
-    dashboardId = ''
+    dashboardId = '',
+    dashboardService
   }: {
     filters: Filter[];
     isOpen: boolean;
     onClose: () => void;
     onFiltersChange: (filters: Filter[]) => void;
     dashboardId?: string;
+    dashboardService?: IDashboardService;
   } = $props();
 
   let editingFilter: Filter | null = $state(null);
@@ -24,6 +26,10 @@
   let initialDateRangeEnd = $state('');
   let initialRangeStart: number = $state(0);
   let initialRangeEnd: number = $state(100);
+  let useQueryForOptions = $state(false);
+  let queryTestResult: FilterOption[] | null = $state(null);
+  let queryTestError: string | null = $state(null);
+  let testingQuery = $state(false);
 
   function formatDateForInput(date: Date | string): string {
     if (!date) return '';
@@ -46,6 +52,9 @@
     initialDateRangeEnd = formatDateForInput(new Date());
     initialRangeStart = 0;
     initialRangeEnd = 100;
+    useQueryForOptions = false;
+    queryTestResult = null;
+    queryTestError = null;
     editingFilter = null;
     showFilterEditor = true;
   }
@@ -64,6 +73,9 @@
       initialRangeStart = filter.initialValue[0];
       initialRangeEnd = filter.initialValue[1];
     }
+    useQueryForOptions = !!filter.optionsQuery;
+    queryTestResult = null;
+    queryTestError = null;
     showFilterEditor = true;
   }
 
@@ -89,7 +101,10 @@
       active: newFilter.active ?? true,
       initialValue: initialValue,
       currentValue: initialValue,
-      options: newFilter.options || [],
+      options: useQueryForOptions ? [] : newFilter.options || [],
+      optionsQuery: useQueryForOptions ? newFilter.optionsQuery : undefined,
+      labelColumn: useQueryForOptions ? newFilter.labelColumn : undefined,
+      valueColumn: useQueryForOptions ? newFilter.valueColumn : undefined,
       min: newFilter.min,
       max: newFilter.max,
       placeholder: newFilter.placeholder,
@@ -99,7 +114,8 @@
     };
 
     if (editingFilter) {
-      filters = filters.map((f) => (f.id === editingFilter.id ? savedFilter : f));
+      const editId = editingFilter.id;
+      filters = filters.map((f) => (f.id === editId ? savedFilter : f));
     } else {
       filters = [...filters, savedFilter];
     }
@@ -182,6 +198,61 @@
   function removeFilterOption(index: number) {
     if (newFilter.options) {
       newFilter.options = newFilter.options.filter((_, i) => i !== index);
+    }
+  }
+
+  async function testOptionsQuery() {
+    if (!newFilter.optionsQuery || !dashboardService) {
+      return;
+    }
+
+    testingQuery = true;
+    queryTestError = null;
+    queryTestResult = null;
+
+    try {
+      const result = await dashboardService.getQueryPreview(newFilter.optionsQuery, 100);
+
+      if (result.error) {
+        queryTestError = result.error;
+        return;
+      }
+
+      if (result.columns.length < 1) {
+        queryTestError = 'Query must return at least one column';
+        return;
+      }
+
+      const labelCol = newFilter.labelColumn || result.columns[0].name;
+      const valueCol = newFilter.valueColumn || result.columns[1]?.name || result.columns[0].name;
+
+      const labelIndex = result.columns.findIndex((c: QueryColumn) => c.name === labelCol);
+      const valueIndex = result.columns.findIndex((c: QueryColumn) => c.name === valueCol);
+
+      if (labelIndex === -1) {
+        queryTestError = `Label column "${labelCol}" not found in query results`;
+        return;
+      }
+      if (valueIndex === -1) {
+        queryTestError = `Value column "${valueCol}" not found in query results`;
+        return;
+      }
+
+      queryTestResult = result.rows.map((row: any[]) => ({
+        label: String(row[labelIndex]),
+        value: row[valueIndex]
+      }));
+
+      if (!newFilter.labelColumn) {
+        newFilter.labelColumn = labelCol;
+      }
+      if (!newFilter.valueColumn) {
+        newFilter.valueColumn = valueCol;
+      }
+    } catch (err) {
+      queryTestError = err instanceof Error ? err.message : 'Failed to execute query';
+    } finally {
+      testingQuery = false;
     }
   }
 
@@ -541,50 +612,187 @@
 
     <!-- Options for list type -->
     {#if newFilter.type === 'list'}
-      <div>
-        <div class="flex items-center justify-between">
-          <div class="block text-sm font-medium text-gray-700">Options</div>
-          <button
-            type="button"
-            onclick={addFilterOption}
-            class="text-sm text-blue-600 hover:text-blue-500"
-          >
-            Add Option
-          </button>
+      <div class="space-y-4">
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-2">
+            <input
+              type="radio"
+              name="options-source"
+              checked={!useQueryForOptions}
+              onchange={() => {
+                useQueryForOptions = false;
+              }}
+              class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span class="text-sm text-gray-700">Manual Options</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input
+              type="radio"
+              name="options-source"
+              checked={useQueryForOptions}
+              onchange={() => {
+                useQueryForOptions = true;
+              }}
+              class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span class="text-sm text-gray-700">Generate from Query</span>
+          </label>
         </div>
-        <div class="mt-2 space-y-2">
-          {#each newFilter.options || [] as option, index}
-            <div class="flex gap-2">
-              <input
-                type="text"
-                bind:value={option.label}
-                placeholder="Label"
-                class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-              />
-              <input
-                type="text"
-                bind:value={option.value}
-                placeholder="Value"
-                class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-              />
+
+        {#if useQueryForOptions}
+          <div class="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div>
+              <label for="options-query" class="block text-sm font-medium text-gray-700"
+                >SQL Query</label
+              >
+              <textarea
+                id="options-query"
+                rows="3"
+                bind:value={newFilter.optionsQuery}
+                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                placeholder="SELECT label, value FROM table"
+              ></textarea>
+              <p class="mt-1 text-xs text-gray-500">
+                Query should return columns for label and value
+              </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="label-column" class="block text-sm font-medium text-gray-700"
+                  >Label Column</label
+                >
+                <input
+                  id="label-column"
+                  type="text"
+                  bind:value={newFilter.labelColumn}
+                  class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  placeholder="First column if empty"
+                />
+              </div>
+              <div>
+                <label for="value-column" class="block text-sm font-medium text-gray-700"
+                  >Value Column</label
+                >
+                <input
+                  id="value-column"
+                  type="text"
+                  bind:value={newFilter.valueColumn}
+                  class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Second column if empty"
+                />
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
               <button
                 type="button"
-                onclick={() => removeFilterOption(index)}
-                class="text-red-600 hover:text-red-500"
-                aria-label="Remove option"
+                onclick={testOptionsQuery}
+                disabled={!newFilter.optionsQuery || testingQuery || !dashboardService}
+                class="inline-flex items-center gap-2 rounded-md bg-gray-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  ></path>
-                </svg>
+                {#if testingQuery}
+                  <span class="material-symbols-outlined animate-spin text-sm"
+                    >progress_activity</span
+                  >
+                  Testing...
+                {:else}
+                  <span class="material-symbols-outlined text-sm">play_arrow</span>
+                  Test Query
+                {/if}
+              </button>
+              {#if !dashboardService}
+                <span class="text-xs text-amber-600">Dashboard service required for testing</span>
+              {/if}
+            </div>
+
+            {#if queryTestError}
+              <div class="rounded-md bg-red-50 p-3 text-sm text-red-700">
+                {queryTestError}
+              </div>
+            {/if}
+
+            {#if queryTestResult}
+              <div class="space-y-2">
+                <div class="text-sm font-medium text-gray-700">
+                  Preview ({queryTestResult.length} options)
+                </div>
+                <div class="max-h-40 overflow-y-auto rounded-md border border-gray-200 bg-white">
+                  <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="px-3 py-2 text-left font-medium text-gray-500">Label</th>
+                        <th class="px-3 py-2 text-left font-medium text-gray-500">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                      {#each queryTestResult.slice(0, 10) as opt}
+                        <tr>
+                          <td class="px-3 py-2 text-gray-900">{opt.label}</td>
+                          <td class="px-3 py-2 text-gray-500">{opt.value}</td>
+                        </tr>
+                      {/each}
+                      {#if queryTestResult.length > 10}
+                        <tr>
+                          <td colspan="2" class="px-3 py-2 text-center text-gray-500">
+                            ... and {queryTestResult.length - 10} more
+                          </td>
+                        </tr>
+                      {/if}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            {/if}
+          </div>
+        {:else}
+          <div>
+            <div class="flex items-center justify-between">
+              <div class="block text-sm font-medium text-gray-700">Options</div>
+              <button
+                type="button"
+                onclick={addFilterOption}
+                class="text-sm text-blue-600 hover:text-blue-500"
+              >
+                Add Option
               </button>
             </div>
-          {/each}
-        </div>
+            <div class="mt-2 space-y-2">
+              {#each newFilter.options || [] as option, index}
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    bind:value={option.label}
+                    placeholder="Label"
+                    class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    bind:value={option.value}
+                    placeholder="Value"
+                    class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onclick={() => removeFilterOption(index)}
+                    class="text-red-600 hover:text-red-500"
+                    aria-label="Remove option"
+                  >
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
       </div>
     {/if}
 

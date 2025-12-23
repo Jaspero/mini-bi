@@ -1,6 +1,6 @@
 <script lang="ts">
   import Sidebar from '../ui/Sidebar.svelte';
-  import type { Filter } from '../../types/index';
+  import type { Filter, IDashboardService, FilterOption, QueryColumn } from '../../types/index';
 
   let {
     isOpen = false,
@@ -9,7 +9,8 @@
     onClose = () => {},
     onFilterValueChange = () => {},
     onToggleFilterManager = () => {},
-    onToggleFilterActive = () => {}
+    onToggleFilterActive = () => {},
+    dashboardService
   }: {
     isOpen: boolean;
     filters: Filter[];
@@ -18,7 +19,55 @@
     onFilterValueChange: (filterId: string, value: any) => void;
     onToggleFilterManager: () => void;
     onToggleFilterActive: (filterId: string) => void;
+    dashboardService?: IDashboardService;
   } = $props();
+
+  let queryOptions: Record<string, FilterOption[]> = $state({});
+  let loadingOptions: Record<string, boolean> = $state({});
+
+  async function loadQueryOptions(filter: Filter) {
+    if (!filter.optionsQuery || !dashboardService || queryOptions[filter.id]) {
+      return;
+    }
+
+    loadingOptions[filter.id] = true;
+    try {
+      const result = await dashboardService.getQueryPreview(filter.optionsQuery, 1000);
+
+      if (result.error || result.columns.length < 1) {
+        queryOptions[filter.id] = [];
+        return;
+      }
+
+      const labelCol = filter.labelColumn || result.columns[0].name;
+      const valueCol = filter.valueColumn || result.columns[1]?.name || result.columns[0].name;
+
+      const labelIndex = result.columns.findIndex((c: QueryColumn) => c.name === labelCol);
+      const valueIndex = result.columns.findIndex((c: QueryColumn) => c.name === valueCol);
+
+      if (labelIndex === -1 || valueIndex === -1) {
+        queryOptions[filter.id] = [];
+        return;
+      }
+
+      queryOptions[filter.id] = result.rows.map((row: any[]) => ({
+        label: String(row[labelIndex]),
+        value: row[valueIndex]
+      }));
+    } catch {
+      queryOptions[filter.id] = [];
+    } finally {
+      loadingOptions[filter.id] = false;
+    }
+  }
+
+  function getFilterOptions(filter: Filter): FilterOption[] {
+    if (filter.optionsQuery) {
+      loadQueryOptions(filter);
+      return queryOptions[filter.id] || [];
+    }
+    return filter.options || [];
+  }
 
   function updateFilterValue(filter: Filter, value: any) {
     onFilterValueChange(filter.id, value);
@@ -322,23 +371,35 @@
                 </div>
 
                 <!-- List Select -->
-              {:else if filter.type === 'list' && filter.options}
-                <select
-                  multiple
-                  value={Array.isArray(filter.currentValue)
-                    ? filter.currentValue
-                    : Array.isArray(filter.initialValue)
-                      ? filter.initialValue
-                      : []}
-                  onchange={(e) => handleListChange(filter, e)}
-                  class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  style="min-height: 80px;"
-                >
-                  {#each filter.options as option}
-                    <option value={option.value}>{option.label}</option>
-                  {/each}
-                </select>
-                <p class="text-xs text-gray-500">Hold Ctrl/Cmd to select multiple options</p>
+              {:else if filter.type === 'list'}
+                {@const options = getFilterOptions(filter)}
+                {#if loadingOptions[filter.id]}
+                  <div class="flex items-center justify-center py-4 text-sm text-gray-500">
+                    <span class="material-symbols-outlined mr-2 animate-spin text-sm"
+                      >progress_activity</span
+                    >
+                    Loading options...
+                  </div>
+                {:else if options.length > 0}
+                  <select
+                    multiple
+                    value={Array.isArray(filter.currentValue)
+                      ? filter.currentValue
+                      : Array.isArray(filter.initialValue)
+                        ? filter.initialValue
+                        : []}
+                    onchange={(e) => handleListChange(filter, e)}
+                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    style="min-height: 80px;"
+                  >
+                    {#each options as option}
+                      <option value={option.value}>{option.label}</option>
+                    {/each}
+                  </select>
+                  <p class="text-xs text-gray-500">Hold Ctrl/Cmd to select multiple options</p>
+                {:else}
+                  <p class="text-xs text-gray-500">No options available</p>
+                {/if}
               {/if}
 
               <!-- Current Value Display -->

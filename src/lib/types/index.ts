@@ -406,13 +406,16 @@ export interface Filter {
   active: boolean;
   initialValue: any;
   currentValue?: any;
-  options?: FilterOption[]; // For list type filters
-  min?: number; // For range type filters
-  max?: number; // For range type filters
+  options?: FilterOption[];
+  optionsQuery?: string;
+  labelColumn?: string;
+  valueColumn?: string;
+  min?: number;
+  max?: number;
   placeholder?: string;
   description?: string;
-  useNow?: boolean; // For date type - always use current date
-  useNowEnd?: boolean; // For date_range type - always use current date for end
+  useNow?: boolean;
+  useNowEnd?: boolean;
 }
 
 export interface FilterOption {

@@ -767,6 +767,7 @@
   {onFilterValueChange}
   {onToggleFilterActive}
   onToggleFilterManager={toggleFilterManager}
+  {dashboardService}
 />
 
 <!-- Filter Manager Sidebar -->
@@ -805,6 +806,7 @@
         dashboardId={dashboardId || ''}
         bind:filters
         {onFiltersChange}
+        {dashboardService}
       />
     </div>
   </div>
