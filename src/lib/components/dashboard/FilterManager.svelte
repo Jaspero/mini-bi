@@ -93,7 +93,9 @@
       min: newFilter.min,
       max: newFilter.max,
       placeholder: newFilter.placeholder,
-      description: newFilter.description
+      description: newFilter.description,
+      useNow: newFilter.useNow,
+      useNowEnd: newFilter.useNowEnd
     };
 
     if (editingFilter) {
@@ -108,11 +110,6 @@
 
   function deleteFilter(filterId: string) {
     filters = filters.filter((f) => f.id !== filterId);
-    onFiltersChange(filters);
-  }
-
-  function toggleFilterActive(filterId: string) {
-    filters = filters.map((f) => (f.id === filterId ? { ...f, active: !f.active } : f));
     onFiltersChange(filters);
   }
 
@@ -250,39 +247,31 @@
             class="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4"
           >
             <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-3">
-                <button class="flex-shrink-0" onclick={() => toggleFilterActive(filter.id)}>
-                  <div
-                    class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {filter.active
-                      ? 'bg-blue-600'
-                      : 'bg-gray-200'}"
+              <div class="flex items-center gap-2">
+                <h4 class="truncate text-sm font-medium text-gray-900">{filter.name}</h4>
+                <span
+                  class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800"
+                >
+                  {filter.type}
+                </span>
+                {#if filter.active}
+                  <span
+                    class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800"
+                    >Active</span
                   >
-                    <span class="sr-only">Toggle filter</span>
-                    <span
-                      class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out {filter.active
-                        ? 'translate-x-4'
-                        : 'translate-x-0'}"
-                    ></span>
-                  </div>
-                </button>
-
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-2">
-                    <h4 class="truncate text-sm font-medium text-gray-900">{filter.name}</h4>
-                    <span
-                      class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800"
-                    >
-                      {filter.type}
-                    </span>
-                  </div>
-                  <div class="mt-1 flex items-center gap-4 text-sm text-gray-500">
-                    <span
-                      >Key: <code class="rounded bg-gray-100 px-1 py-0.5 text-xs">{filter.key}</code
-                      ></span
-                    >
-                    <span>Value: {formatFilterValue(filter)}</span>
-                  </div>
-                </div>
+                {:else}
+                  <span
+                    class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500"
+                    >Inactive</span
+                  >
+                {/if}
+              </div>
+              <div class="mt-1 flex items-center gap-4 text-sm text-gray-500">
+                <span
+                  >Key: <code class="rounded bg-gray-100 px-1 py-0.5 text-xs">{filter.key}</code
+                  ></span
+                >
+                <span>Value: {formatFilterValue(filter)}</span>
               </div>
             </div>
 
@@ -387,32 +376,69 @@
           <option value={false}>False</option>
         </select>
       {:else if newFilter.type === 'date'}
-        <input
-          id="filter-initial-value"
-          type="date"
-          bind:value={newFilter.initialValue}
-          class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
-        />
-      {:else if newFilter.type === 'date_range'}
-        <div class="mt-1 grid grid-cols-2 gap-4">
-          <div>
-            <label for="date-range-start" class="mb-1 block text-xs text-gray-500">Start Date</label
+        <div class="mt-1 space-y-2">
+          <div class="flex items-center">
+            <input
+              id="filter-use-now"
+              type="checkbox"
+              bind:checked={newFilter.useNow}
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label for="filter-use-now" class="ml-2 block text-sm text-gray-900"
+              >Use current date (now)</label
             >
-            <input
-              id="date-range-start"
-              type="date"
-              bind:value={initialDateRangeStart}
-              class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
-            />
           </div>
-          <div>
-            <label for="date-range-end" class="mb-1 block text-xs text-gray-500">End Date</label>
+          {#if !newFilter.useNow}
             <input
-              id="date-range-end"
+              id="filter-initial-value"
               type="date"
-              bind:value={initialDateRangeEnd}
+              bind:value={newFilter.initialValue}
               class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
             />
+          {/if}
+        </div>
+      {:else if newFilter.type === 'date_range'}
+        <div class="mt-1 space-y-3">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="date-range-start" class="mb-1 block text-xs text-gray-500"
+                >Start Date</label
+              >
+              <input
+                id="date-range-start"
+                type="date"
+                bind:value={initialDateRangeStart}
+                class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
+              />
+            </div>
+            <div>
+              <label for="date-range-end" class="mb-1 block text-xs text-gray-500">End Date</label>
+              {#if !newFilter.useNowEnd}
+                <input
+                  id="date-range-end"
+                  type="date"
+                  bind:value={initialDateRangeEnd}
+                  class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
+                />
+              {:else}
+                <div
+                  class="flex h-[38px] items-center rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500"
+                >
+                  Now (current date)
+                </div>
+              {/if}
+            </div>
+          </div>
+          <div class="flex items-center">
+            <input
+              id="filter-use-now-end"
+              type="checkbox"
+              bind:checked={newFilter.useNowEnd}
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label for="filter-use-now-end" class="ml-2 block text-sm text-gray-900"
+              >Use current date for end (now)</label
+            >
           </div>
         </div>
       {:else if newFilter.type === 'integer_range'}

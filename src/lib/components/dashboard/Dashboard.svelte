@@ -173,12 +173,26 @@
     filters = filters.map((f) => (f.id === filterId ? { ...f, currentValue: value } : f));
   }
 
+  function onToggleFilterActive(filterId: string) {
+    filters = filters.map((f) => (f.id === filterId ? { ...f, active: !f.active } : f));
+  }
+
   const activeFilterValues = $derived.by(() => {
     const activeFilters = filters.filter((f) => f.active);
     const filterValues: Record<string, any> = {};
 
     for (const filter of activeFilters) {
-      filterValues[filter.key] = filter.currentValue ?? filter.initialValue;
+      let value = filter.currentValue ?? filter.initialValue;
+
+      if (filter.type === 'date' && filter.useNow) {
+        value = new Date();
+      } else if (filter.type === 'date_range' && filter.useNowEnd) {
+        const currentRange = Array.isArray(value) ? [...value] : [new Date(), new Date()];
+        currentRange[1] = new Date();
+        value = currentRange;
+      }
+
+      filterValues[filter.key] = value;
     }
 
     return filterValues;
@@ -745,11 +759,13 @@
 <FilterSidebar
   isOpen={showFilterSidebar}
   bind:filters
+  readOnly={checkIsReadOnly()}
   onClose={() => {
     showFilterSidebar = false;
     showFilterManager = false;
   }}
   {onFilterValueChange}
+  {onToggleFilterActive}
   onToggleFilterManager={toggleFilterManager}
 />
 

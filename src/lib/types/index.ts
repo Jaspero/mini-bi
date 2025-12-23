@@ -411,6 +411,8 @@ export interface Filter {
   max?: number; // For range type filters
   placeholder?: string;
   description?: string;
+  useNow?: boolean; // For date type - always use current date
+  useNowEnd?: boolean; // For date_range type - always use current date for end
 }
 
 export interface FilterOption {
