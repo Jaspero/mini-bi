@@ -14,6 +14,8 @@ export { default as ConfirmationModal } from './components/ui/ConfirmationModal.
 export { default as SchemaSidebar } from './components/ui/SchemaSidebar.svelte';
 export { default as Sidebar } from './components/ui/Sidebar.svelte';
 export { default as DashboardSkeleton } from './components/ui/DashboardSkeleton.svelte';
+export { default as DatePicker } from './components/ui/DatePicker.svelte';
+export { default as DateRangePicker } from './components/ui/DateRangePicker.svelte';
 
 // Services
 export { MockDashboardService } from './services/MockDashboardService.js';

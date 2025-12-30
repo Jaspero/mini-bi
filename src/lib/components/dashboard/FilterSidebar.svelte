@@ -1,5 +1,7 @@
 <script lang="ts">
   import Sidebar from '../ui/Sidebar.svelte';
+  import DatePicker from '../ui/DatePicker.svelte';
+  import DateRangePicker from '../ui/DateRangePicker.svelte';
   import type { Filter, IDashboardService, FilterOption, QueryColumn } from '../../types/index';
 
   let {
@@ -256,13 +258,15 @@
 
                 <!-- Date Input -->
               {:else if filter.type === 'date'}
-                <input
-                  type="date"
-                  value={formatDateForInput(
-                    filter.useNow ? new Date() : (filter.currentValue ?? filter.initialValue)
-                  )}
-                  onchange={(e) => handleDateChange(filter, e)}
-                  class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                <DatePicker
+                  value={filter.useNow ? new Date() : (filter.currentValue ?? filter.initialValue)}
+                  onchange={(date) => {
+                    if (filter.useNow) {
+                      filter.useNow = false;
+                    }
+                    updateFilterValue(filter, date);
+                  }}
+                  placeholder={filter.placeholder || 'Select date...'}
                 />
 
                 <!-- Date Range -->
@@ -272,30 +276,19 @@
                   : Array.isArray(filter.initialValue)
                     ? filter.initialValue
                     : [new Date(), new Date()]}
-                <div class="space-y-2">
-                  <div>
-                    <label for="from" class="mb-1 block text-xs font-medium text-gray-700"
-                      >From</label
-                    >
-                    <input
-                      id="from"
-                      type="date"
-                      value={formatDateForInput(currentRange[0])}
-                      onchange={(e) => handleDateRangeChange(filter, 0, e)}
-                      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label for="to" class="mb-1 block text-xs font-medium text-gray-700">To</label>
-                    <input
-                      id="to"
-                      type="date"
-                      value={formatDateForInput(filter.useNowEnd ? new Date() : currentRange[1])}
-                      onchange={(e) => handleDateRangeChange(filter, 1, e)}
-                      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
+                <DateRangePicker
+                  value={{
+                    start: currentRange[0],
+                    end: filter.useNowEnd ? new Date() : currentRange[1]
+                  }}
+                  onchange={(range) => {
+                    if (filter.useNowEnd) {
+                      filter.useNowEnd = false;
+                    }
+                    updateFilterValue(filter, [range.start, range.end]);
+                  }}
+                  placeholder={filter.placeholder || 'Select date range...'}
+                />
 
                 <!-- Integer Range -->
               {:else if filter.type === 'integer_range'}
